@@ -69,17 +69,6 @@ declare -A VARS_TO_GENERATE=(
     ["LIGHTRAG_TOKEN_SECRET"]="apikey:64"
     ["LIGHTRAG_AUTH_ACCOUNTS"]="special:lightrag_auth"
     ["PERPLEXICA_PASSWORD"]="password:32"
-    ["ODOO_DB_PASSWORD"]="password:32"
-    ["ODOO_MASTER_PASSWORD"]="password:32"
-    ["ODOO_PASSWORD"]="password:32"
-    ["TWENTY_CRM_DB_PASSWORD"]="password:32"
-    ["TWENTY_CRM_APP_SECRET"]="apikey:64"
-    ["ESPOCRM_DB_PASSWORD"]="password:32"
-    ["ESPOCRM_DB_ROOT_PASSWORD"]="password:32"
-    ["ESPOCRM_ADMIN_PASSWORD"]="password:32"
-    ["MAUTIC_DB_PASSWORD"]="password:32"
-    ["MAUTIC_DB_ROOT_PASSWORD"]="password:32"
-    ["MAUTIC_ADMIN_PASSWORD"]="password:20"
     ["BASEROW_SECRET_KEY"]="secret:64"
     ["NOCODB_ADMIN_PASSWORD"]="password:32"
     ["NOCODB_JWT_SECRET"]="apikey:40"
@@ -89,18 +78,9 @@ declare -A VARS_TO_GENERATE=(
     ["LEANTIME_SESSION_PASSWORD"]="password:64"
     ["CALCOM_NEXTAUTH_SECRET"]="apikey:32"
     ["CALCOM_ENCRYPTION_KEY"]="apikey:32"
-    ["JICOFO_COMPONENT_SECRET"]="password:32"
-    ["JICOFO_AUTH_PASSWORD"]="password:32"
-    ["JVB_AUTH_PASSWORD"]="password:32"
     ["VAULTWARDEN_ADMIN_TOKEN"]="apikey:64"
     ["KOPIA_UI_PASSWORD"]="password:32"
     ["KOPIA_PASSWORD"]="password:32"
-    ["KIMAI_ADMIN_PASSWORD"]="password:32"
-    ["KIMAI_DB_PASSWORD"]="password:32"
-    ["KIMAI_DB_ROOT_PASSWORD"]="password:32"
-    ["INVOICENINJA_ADMIN_PASSWORD"]="password:32"
-    ["INVOICENINJA_DB_PASSWORD"]="password:32"
-    ["INVOICENINJA_DB_ROOT_PASSWORD"]="password:32"
     ["FORMBRICKS_NEXTAUTH_SECRET"]="apikey:32"
     ["FORMBRICKS_ENCRYPTION_KEY"]="apikey:32"
     ["FORMBRICKS_CRON_SECRET"]="apikey:32"
@@ -163,25 +143,6 @@ USER_EMAIL="admin@localhost"  # Default email for local setup
 log_info "Configuring for local network deployment..."
 log_info "Server IP: $SERVER_IP"
 log_info "Admin Email: $USER_EMAIL"
-
-# Auto-detect Docker Host Address for JVB (Jitsi) - use local IP
-if [[ -z "${generated_values[JVB_DOCKER_HOST_ADDRESS]}" ]]; then
-    # For local network, try to detect LAN IP
-    LOCAL_IP=$(ip route get 8.8.8.8 | awk '{print $7; exit}' 2>/dev/null || echo "127.0.0.1")
-    if [[ -n "$LOCAL_IP" && "$LOCAL_IP" != "127.0.0.1" ]]; then
-        generated_values["JVB_DOCKER_HOST_ADDRESS"]="$LOCAL_IP"
-        log_info "Auto-detected local network IP for Jitsi: $LOCAL_IP"
-    else
-        generated_values["JVB_DOCKER_HOST_ADDRESS"]="127.0.0.1"
-        log_info "Using localhost for Jitsi (limited to local access)"
-    fi
-fi
-
-# Configure Jitsi for local network
-generated_values["ENABLE_XMPP_WEBSOCKET"]="true"
-generated_values["XMPP_DOMAIN"]="meet.jitsi"
-generated_values["XMPP_SERVER"]="jitsi-prosody"
-log_info "Jitsi configured for local network access"
 
 # Configure API keys (can be left empty for local use)
 OPENAI_API_KEY="${existing_env_vars[OPENAI_API_KEY]:-}"
@@ -416,13 +377,8 @@ generated_values["WHISPER_AUTH_USER"]="$USER_EMAIL"
 generated_values["TTS_AUTH_USER"]="$USER_EMAIL"
 generated_values["LIGHTRAG_USERNAME"]="$USER_EMAIL"
 generated_values["PERPLEXICA_USERNAME"]="$USER_EMAIL"
-generated_values["ODOO_USERNAME"]="$USER_EMAIL"
-generated_values["MAUTIC_ADMIN_EMAIL"]="$USER_EMAIL"
-generated_values["MAUTIC_DB_USER"]="mautic"
 generated_values["BASEROW_USERNAME"]="$USER_EMAIL"
 generated_values["KOPIA_UI_USERNAME"]="admin"
-generated_values["KIMAI_ADMIN_EMAIL"]="$USER_EMAIL"
-generated_values["INVOICENINJA_ADMIN_EMAIL"]="$USER_EMAIL"
 generated_values["MAILPIT_USERNAME"]="$USER_EMAIL"
 
 # Set API keys if provided
@@ -444,7 +400,7 @@ trap 'rm -f "$TMP_ENV_FILE"' EXIT
 
 # Track custom variables
 declare -A found_vars
-for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "OPENAI_API_KEY" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME" "RAGAPP_USERNAME" "LIBRETRANSLATE_USERNAME" "WHISPER_AUTH_USER" "TTS_AUTH_USER" "ODOO_USERNAME" "BASEROW_USERNAME" "KOPIA_UI_USERNAME" "MAILPIT_USERNAME" "MAUTIC_ADMIN_EMAIL" "MAUTIC_DB_USER" "INVOICENINJA_ADMIN_EMAIL" "EMAIL_FROM" "EMAIL_SMTP" "EMAIL_SMTP_HOST" "EMAIL_SMTP_PORT" "EMAIL_SMTP_USER" "EMAIL_SMTP_PASSWORD" "EMAIL_SMTP_USE_TLS" "SERVER_IP"; do
+for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "OPENAI_API_KEY" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME" "RAGAPP_USERNAME" "LIBRETRANSLATE_USERNAME" "WHISPER_AUTH_USER" "TTS_AUTH_USER" "BASEROW_USERNAME" "KOPIA_UI_USERNAME" "MAILPIT_USERNAME" "EMAIL_FROM" "EMAIL_SMTP" "EMAIL_SMTP_HOST" "EMAIL_SMTP_PORT" "EMAIL_SMTP_USER" "EMAIL_SMTP_PASSWORD" "EMAIL_SMTP_USE_TLS" "SERVER_IP"; do
     found_vars["$var"]=0
 done
 
@@ -597,25 +553,6 @@ done
 # NO PASSWORD HASHING NEEDED FOR LOCAL NETWORK
 # All services run without authentication in local network setup
 log_info "Skipping password hash generation for local network setup"
-
-# Generate Invoice Ninja APP_KEY (if Docker is available)
-if [[ -z "${generated_values[INVOICENINJA_APP_KEY]}" ]] && [[ -z "${existing_env_vars[INVOICENINJA_APP_KEY]}" ]]; then
-    log_info "Generating Invoice Ninja APP_KEY..."
-    
-    if command -v docker &> /dev/null; then
-        APP_KEY=$(docker run --rm invoiceninja/invoiceninja:5 php artisan key:generate --show 2>/dev/null | grep "base64:" || true)
-        if [[ -n "$APP_KEY" ]]; then
-            generated_values["INVOICENINJA_APP_KEY"]="$APP_KEY"
-            _update_or_add_env_var "INVOICENINJA_APP_KEY" "$APP_KEY"
-            log_success "Invoice Ninja APP_KEY generated successfully"
-        else
-            log_warning "Failed to generate APP_KEY - you may need to generate it manually"
-            log_info "Run: docker run --rm invoiceninja/invoiceninja:5 php artisan key:generate --show"
-        fi
-    else
-        log_warning "Docker not available - generate APP_KEY manually if using Invoice Ninja"
-    fi
-fi
 
 # Generate Metabase ENCRYPTION_KEY (exactly 32 hex characters)
 if [[ -z "${generated_values[METABASE_ENCRYPTION_KEY]}" ]]; then

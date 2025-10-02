@@ -229,33 +229,6 @@ EOF
             "Repository Password: ${KOPIA_PASSWORD}\\nNextcloud WebDAV:\\nURL: ${NEXTCLOUD_WEBDAV_URL}\\nUsername: ${NEXTCLOUD_USERNAME}\\nApp Password: ${NEXTCLOUD_APP_PASSWORD}\\nIMPORTANT: Repository password is different from UI password!"
     fi
 
-    # Kimai Time Tracking
-    if is_profile_active "kimai"; then
-        add_login_item \
-            "Kimai Time Tracking" \
-            "${KIMAI_ADMIN_EMAIL}" \
-            "${KIMAI_ADMIN_PASSWORD}" \
-            "https://${KIMAI_HOSTNAME}" \
-            "Professional time tracking system. DSGVO-compliant with 2FA support. First user is Super Admin. Internal API: http://kimai:8001/api"
-    fi
-
-    # Invoice Ninja
-    if is_profile_active "invoiceninja"; then
-        add_login_item \
-            "Invoice Ninja Professional Invoicing" \
-            "${INVOICENINJA_ADMIN_EMAIL}" \
-            "${INVOICENINJA_ADMIN_PASSWORD}" \
-            "https://${INVOICENINJA_HOSTNAME}/login" \
-            "Professional invoicing platform with 40+ payment gateways. Initial admin account - delete IN_USER_EMAIL and IN_PASSWORD from .env after first login. Generate API tokens in Settings → Account Management → API Tokens for n8n integration."
-        
-        # Add APP_KEY as secure note if it exists
-        if [[ -n "${INVOICENINJA_APP_KEY}" ]]; then
-            add_secure_note \
-                "Invoice Ninja APP_KEY" \
-                "APP_KEY: ${INVOICENINJA_APP_KEY}\\nCRITICAL: This key encrypts your data. Never lose it! Required for application to run."
-        fi
-    fi
-
     # Grafana
     if is_profile_active "monitoring"; then
         add_login_item \
@@ -293,40 +266,6 @@ EOF
             "Backend as a Service - Database, Auth, Storage, Realtime"
     fi
 
-    # Odoo
-    if is_profile_active "odoo"; then
-        add_secure_note \
-            "Odoo ERP/CRM Setup" \
-            "URL: https://${ODOO_HOSTNAME}\\nFirst Login Setup:\\nMaster Password: ${ODOO_MASTER_PASSWORD}\\nDatabase Name: odoo\\nAdmin Email: Use your email\\nAdmin Password: Create a strong password\\nDatabase Management Protected with:\\nUsername: ${ODOO_USERNAME}\\nPassword: ${ODOO_PASSWORD}"
-    fi
-
-    # Twenty CRM
-    if is_profile_active "twenty-crm"; then
-        add_secure_note \
-            "Twenty CRM Setup" \
-            "URL: https://${TWENTY_CRM_HOSTNAME}\\nModern Notion-like CRM\\nFirst-time setup:\\n1. Visit URL above\\n2. Create your first workspace\\n3. Configure workspace settings\\n4. Generate API key for integrations\\n\\nAPI Endpoints:\\nGraphQL: http://twenty-crm:3000/graphql\\nREST: http://twenty-crm:3000/rest\\n\\nFeatures:\\n- Kanban pipeline management\\n- Modern UI similar to Notion\\n- GraphQL + REST APIs\\n- Ideal for startups and small teams"
-    fi
-
-    # EspoCRM
-    if is_profile_active "espocrm"; then
-        add_login_item \
-            "EspoCRM Professional CRM" \
-            "${ESPOCRM_ADMIN_USERNAME}" \
-            "${ESPOCRM_ADMIN_PASSWORD}" \
-            "https://${ESPOCRM_HOSTNAME}" \
-            "Full-featured CRM with workflows and automation. Admin account pre-configured. Create additional users at Administration > Users. API endpoint: http://espocrm:80/api/v1/ - Generate API key in user preferences for n8n integration."
-    fi
-
-    # Mautic
-    if is_profile_active "mautic"; then
-        add_login_item \
-            "Mautic Marketing Automation" \
-            "${MAUTIC_ADMIN_EMAIL}" \
-            "${MAUTIC_ADMIN_PASSWORD}" \
-            "https://${MAUTIC_HOSTNAME}" \
-            "Marketing Automation Platform with lead management, email campaigns, landing pages, and analytics. Admin account uses your email. After login: Enable API in Settings → Configuration → API Settings. Create OAuth2 credentials for n8n integration. Internal API: http://mautic_web/api"
-    fi
-
     # Formbricks
     if is_profile_active "formbricks"; then
         add_secure_note \
@@ -338,7 +277,7 @@ EOF
     if is_profile_active "metabase"; then
         add_secure_note \
             "Metabase Business Intelligence" \
-            "URL: https://${METABASE_HOSTNAME}\\nNo-code business intelligence platform\\nFirst-time setup:\\n1. Open URL above\\n2. Complete setup wizard\\n3. Create admin account\\n4. Add data sources\\nConnect to AI LaunchKit databases:\\n- n8n PostgreSQL: postgres:5432\\n- Supabase: supabase-db:5432\\n- Invoice Ninja MySQL: invoiceninja_db:3306\\n- Kimai MySQL: kimai_db:3306\\nFeatures: Visual query builder, X-Ray insights, dashboards, scheduled reports"
+            "URL: https://${METABASE_HOSTNAME}\\nNo-code business intelligence platform\\nFirst-time setup:\\n1. Open URL above\\n2. Complete setup wizard\\n3. Create admin account\\n4. Add data sources\\nConnect to AI LaunchKit databases:\\n- n8n PostgreSQL: postgres:5432\\n- Supabase: supabase-db:5432\\n- Leantime MySQL: leantime_db:3306\\nFeatures: Visual query builder, X-Ray insights, dashboards, scheduled reports"
     fi
 
     # Baserow

@@ -93,21 +93,14 @@ All services are accessible via `http://SERVER_IP:PORT`:
 | 8030 | RAGApp | RAG Interface |
 | 8031 | Letta | Agent Server |
 
-### Business Tools (8040-8059)
+### Learning Tools (8040-8050)
 | Port | Service | Description |
 |------|---------|-------------|
 | 8040 | Cal.com | Scheduling Platform |
-| 8041 | Odoo | ERP/CRM System |
-| 8042 | Kimai | Time Tracking |
-| 8043 | Invoice Ninja | Invoicing Platform |
-| 8044 | Twenty CRM | Modern CRM |
-| 8045 | EspoCRM | Full-featured CRM |
-| 8046 | Mautic | Marketing Automation |
 | 8047 | Baserow | Airtable Alternative |
 | 8048 | NocoDB | Smart Spreadsheet |
 | 8049 | Vikunja | Task Management |
 | 8050 | Leantime | Project Management |
-| 8051 | Jitsi Meet | Video Conferencing |
 
 ### Utilities (8060-8079)
 | Port | Service | Description |
@@ -160,8 +153,168 @@ All services are accessible via `http://SERVER_IP:PORT`:
 ### Special Ports
 | Port | Service | Protocol | Description |
 |------|---------|----------|-------------|
-| 10000 | Jitsi JVB | UDP | WebRTC Video/Audio |
 | 7687 | Neo4j Bolt | TCP | Graph Database Protocol |
+
+---
+
+## 🎓 Learning Use Cases
+
+This AI LaunchKit is designed for **hands-on learning and experimentation**. Here are practical learning scenarios for each service category:
+
+### 🤖 AI Core Services
+
+**n8n - Workflow Automation Learning**
+- **Beginner:** Build your first "Hello World" workflow with 300+ templates
+- **Intermediate:** Connect Ollama LLM to process incoming webhooks and auto-respond
+- **Advanced:** Create multi-agent AI systems using tools, memory, and conditional logic
+
+**Ollama - Local LLM Experimentation**
+- **Beginner:** Run your first local AI model (qwen2.5:7b) and compare with GPT-4
+- **Intermediate:** Test different models for specific tasks (coding, translation, analysis)
+- **Advanced:** Fine-tune models and benchmark performance metrics
+
+**Flowise - AI Agent Builder**
+- **Beginner:** Build a chatbot using drag-and-drop nodes in 5 minutes
+- **Intermediate:** Create a RAG system that searches your documents using Qdrant
+- **Advanced:** Build autonomous agents with tool-calling and memory management
+
+**Open WebUI - Prompt Engineering Lab**
+- **Beginner:** Learn effective prompt engineering with instant feedback
+- **Intermediate:** Compare different models side-by-side for the same prompts
+- **Advanced:** Create custom model pipelines and share them with your team
+
+### 🗄️ RAG & Vector Databases
+
+**Qdrant - Semantic Search Learning**
+- **Beginner:** Upload documents and perform your first vector similarity search
+- **Intermediate:** Build a "Chat with your PDFs" application using n8n
+- **Advanced:** Implement hybrid search combining keywords and semantic vectors
+
+**Weaviate - AI-Powered Recommendations**
+- **Beginner:** Import product data and get AI-generated recommendations
+- **Intermediate:** Build a content recommendation engine with custom schemas
+- **Advanced:** Implement multi-modal search across text, images, and metadata
+
+**LightRAG - Graph-Based Retrieval**
+- **Beginner:** Understand how knowledge graphs improve RAG accuracy
+- **Intermediate:** Build a question-answering system with relationship awareness
+- **Advanced:** Combine graph structure with vector embeddings for complex queries
+
+**Neo4j - Graph Database Mastery**
+- **Beginner:** Model real-world relationships (social networks, org charts)
+- **Intermediate:** Write Cypher queries to find patterns in connected data
+- **Advanced:** Build recommendation engines using graph algorithms
+
+### 📚 Learning Tools
+
+**Cal.com - Scheduling Automation**
+- **Beginner:** Set up automated meeting scheduling with calendar sync
+- **Intermediate:** Create custom booking workflows with n8n webhooks
+- **Advanced:** Build AI-assisted meeting preparation with pre-call research
+
+**Baserow & NocoDB - No-Code Database Learning**
+- **Beginner:** Create your first database with forms and views in the browser
+- **Intermediate:** Connect to n8n workflows for automated data processing
+- **Advanced:** Build custom business applications with API integrations
+
+**Vikunja & Leantime - Project Management Workflows**
+- **Beginner:** Organize personal projects with Kanban boards and Gantt charts
+- **Intermediate:** Automate task creation from emails using n8n + Mailpit
+- **Advanced:** Build AI-powered project analysis and reporting systems
+
+### 🎨 Specialized AI Services
+
+**ComfyUI - Image Generation Pipelines**
+- **Beginner:** Generate your first AI image using pre-built workflows
+- **Intermediate:** Create custom node graphs for specific art styles
+- **Advanced:** Build automated image processing pipelines with batch operations
+
+**bolt.diy - AI Coding Assistant**
+- **Beginner:** Generate a complete web app from a simple prompt
+- **Intermediate:** Learn how AI assistants structure projects and write code
+- **Advanced:** Compare Claude, GPT-4, and Groq for different coding tasks
+
+**Whisper + TTS - Voice AI Learning**
+- **Beginner:** Transcribe audio files and convert text back to speech
+- **Intermediate:** Build voice-controlled workflows with n8n
+- **Advanced:** Create real-time voice translation systems
+
+**OCR Bundle - Document Processing**
+- **Beginner:** Extract text from images and PDFs automatically
+- **Intermediate:** Build automated invoice processing with n8n workflows
+- **Advanced:** Compare Tesseract (fast) vs EasyOCR (accurate) for different document types
+
+**LibreTranslate - Translation Experiments**
+- **Beginner:** Translate text in 20+ languages without external APIs
+- **Intermediate:** Build multilingual content workflows with n8n
+- **Advanced:** Compare neural translation quality across different language pairs
+
+**Perplexica & SearXNG - Search Engine Learning**
+- **Beginner:** Understand privacy-focused search without tracking
+- **Intermediate:** Build custom search APIs with filtering and ranking
+- **Advanced:** Create AI-enhanced research workflows combining search + LLM analysis
+
+### 🔗 Integration Learning Patterns
+
+**Pattern 1: n8n + Ollama + Qdrant**
+Build a complete RAG system that:
+1. Indexes documents into Qdrant
+2. Retrieves relevant context on questions
+3. Uses Ollama to generate informed answers
+
+**Pattern 2: Whisper + LLM + TTS**
+Create a voice assistant that:
+1. Transcribes speech with Whisper
+2. Processes with local LLM
+3. Responds with natural TTS
+
+**Pattern 3: Crawl4AI + LLM + Email**
+Build a research assistant that:
+1. Crawls websites on schedule
+2. Summarizes content with LLM
+3. Emails digests via Mailpit
+
+**Pattern 4: Cal.com + n8n + LLM**
+Create smart scheduling that:
+1. Receives booking webhooks
+2. Analyzes meeting context with AI
+3. Prepares briefing materials
+
+### 📊 Learning Paths
+
+**Path 1: AI Automation Fundamentals (1-2 weeks)**
+1. Set up n8n + Ollama + Mailpit
+2. Build 5 basic workflows with templates
+3. Create your first AI-powered automation
+
+**Path 2: RAG System Development (2-4 weeks)**
+1. Learn vector databases with Qdrant
+2. Build document ingestion pipelines
+3. Create production-ready RAG applications
+
+**Path 3: Multi-Agent Systems (4-8 weeks)**
+1. Master Flowise agent building
+2. Implement tool-calling and memory
+3. Build autonomous multi-agent workflows
+
+**Path 4: Voice AI Development (2-3 weeks)**
+1. Learn transcription with Whisper
+2. Process audio with LLMs
+3. Generate natural speech responses
+
+### 💡 Learning Tips
+
+**Start Small:** Begin with 3-5 core services (n8n, Ollama, Flowise, Mailpit, Monitoring)
+
+**Progressive Complexity:** Master one service before adding others
+
+**Documentation Everything:** Use n8n's notes feature to document your learning
+
+**Experiment Safely:** All services are isolated in Docker - break things and rebuild!
+
+**Monitor Performance:** Use Grafana to understand resource usage patterns
+
+**Join Community:** Share your learning projects in forums and Discord
 
 ---
 
@@ -272,11 +425,11 @@ COMPOSE_PROFILES="n8n,flowise"
 # Full AI stack
 COMPOSE_PROFILES="n8n,flowise,open-webui,cpu,comfyui,monitoring"
 
-# Business suite
-COMPOSE_PROFILES="n8n,calcom,odoo,kimai,invoiceninja,vaultwarden"
+# Learning suite
+COMPOSE_PROFILES="n8n,calcom,baserow,nocodb,vikunja,leantime,vaultwarden"
 
 # Complete installation (all services)
-COMPOSE_PROFILES="n8n,flowise,monitoring,bolt,openui,comfyui,cpu,calcom,odoo,baserow,vikunja,jitsi,vaultwarden,langfuse,qdrant,speech,ocr,libretranslate"
+COMPOSE_PROFILES="n8n,flowise,monitoring,bolt,openui,comfyui,cpu,calcom,baserow,nocodb,vikunja,leantime,vaultwarden,langfuse,qdrant,weaviate,neo4j,lightrag,speech,ocr,libretranslate"
 ```
 
 ---
@@ -497,13 +650,6 @@ docker compose -p localai -f docker-compose.local.yml logs [service_name]
 1. Wait 2-3 minutes for services to fully start
 2. Check service is running: `docker ps | grep service_name`
 3. Check port binding: `docker port container_name`
-
-### Jitsi Video Issues
-
-**No audio/video in meetings:**
-- Ensure UDP port 10000 is open: `sudo ufw allow 10000/udp`
-- Test UDP connectivity from client to server
-- Check JVB logs: `docker logs jitsi-jvb`
 
 ### Database Connection Issues
 
@@ -767,13 +913,13 @@ const response = await fetch('http://192.168.1.100:8000/webhook/my-webhook', {
 Deploy multiple instances:
 ```bash
 # Server 1: Core AI services
-COMPOSE_PROFILES="n8n,flowise,cpu,open-webui"
+COMPOSE_PROFILES="n8n,flowise,cpu,open-webui,monitoring"
 
-# Server 2: Business tools  
-COMPOSE_PROFILES="calcom,odoo,kimai,invoiceninja"
+# Server 2: RAG & Vector databases  
+COMPOSE_PROFILES="qdrant,weaviate,neo4j,lightrag,ragapp"
 
 # Server 3: Specialized services
-COMPOSE_PROFILES="speech,ocr,libretranslate,stirling-pdf"
+COMPOSE_PROFILES="speech,ocr,libretranslate,stirling-pdf,comfyui"
 ```
 
 ---

@@ -131,42 +131,12 @@ fi
 
 echo ""
 
-# Business Tools Status
-log_info "💼 Business Tools"
+# Learning Tools Status
+log_info "📚 Learning Tools"
 echo "=========================================="
 if [[ "$COMPOSE_PROFILES" == *"calcom"* ]]; then
     echo "Cal.com Scheduling Platform: $(is_service_running "calcom")"
     test_port 8040 "Cal.com"
-fi
-
-if [[ "$COMPOSE_PROFILES" == *"odoo"* ]]; then
-    echo "Odoo ERP/CRM: $(is_service_running "odoo")"
-    test_port 8041 "Odoo"
-fi
-
-if [[ "$COMPOSE_PROFILES" == *"kimai"* ]]; then
-    echo "Kimai Time Tracking: $(is_service_running "kimai")"
-    test_port 8042 "Kimai"
-fi
-
-if [[ "$COMPOSE_PROFILES" == *"invoiceninja"* ]]; then
-    echo "Invoice Ninja Invoicing: $(is_service_running "invoiceninja_nginx")"
-    test_port 8043 "Invoice Ninja"
-fi
-
-if [[ "$COMPOSE_PROFILES" == *"twenty-crm"* ]]; then
-    echo "Twenty CRM: $(is_service_running "twenty-crm")"
-    test_port 8044 "Twenty CRM"
-fi
-
-if [[ "$COMPOSE_PROFILES" == *"espocrm"* ]]; then
-    echo "EspoCRM: $(is_service_running "espocrm")"
-    test_port 8045 "EspoCRM"
-fi
-
-if [[ "$COMPOSE_PROFILES" == *"mautic"* ]]; then
-    echo "Mautic Marketing Automation: $(is_service_running "mautic_web")"
-    test_port 8046 "Mautic"
 fi
 
 if [[ "$COMPOSE_PROFILES" == *"baserow"* ]]; then
@@ -191,15 +161,9 @@ fi
 
 echo ""
 
-# Communication & Utilities
-log_info "🔧 Utilities & Communication"
+# Utilities
+log_info "🔧 Utilities"
 echo "=========================================="
-if [[ "$COMPOSE_PROFILES" == *"jitsi"* ]]; then
-    echo "Jitsi Meet Video Conferencing: $(is_service_running "jitsi-web")"
-    test_port 8051 "Jitsi Meet"
-    echo "  ⚠️ UDP Port 10000 required for audio/video"
-fi
-
 if [[ "$COMPOSE_PROFILES" == *"postiz"* ]]; then
     echo "Postiz Social Media Manager: $(is_service_running "postiz")"
     test_port 8060 "Postiz"
@@ -375,10 +339,6 @@ if [[ "$COMPOSE_PROFILES" == *"vaultwarden"* ]]; then
     echo "  Vaultwarden Admin: [Check .env: VAULTWARDEN_ADMIN_TOKEN]"
 fi
 
-if [[ "$COMPOSE_PROFILES" == *"odoo"* ]]; then
-    echo "  Odoo Admin: admin@localhost / [Check .env: ODOO_PASSWORD]"
-fi
-
 echo ""
 
 # Network Configuration Help
@@ -441,23 +401,6 @@ echo "  docker compose -p localai -f docker-compose.local.yml up -d"
 echo ""
 
 # Service-specific information
-if [[ "$COMPOSE_PROFILES" == *"jitsi"* ]]; then
-    log_info "📹 Jitsi Meet Video Conferencing"
-    echo "=========================================="
-    echo "⚠️ IMPORTANT: Jitsi requires UDP port 10000 for audio/video"
-    echo ""
-    echo "Test UDP connectivity:"
-    echo "  # Terminal 1 (on server):"
-    echo "  nc -u -l 10000"
-    echo ""
-    echo "  # Terminal 2 (from client):"
-    echo "  nc -u $SERVER_IP 10000"
-    echo ""
-    echo "Create meeting rooms:"
-    echo "  http://$SERVER_IP:8051/your-room-name"
-    echo ""
-fi
-
 if [[ "$COMPOSE_PROFILES" == *"n8n"* ]]; then
     log_info "⚙️ n8n Workflow Automation"
     echo "=========================================="
@@ -470,6 +413,9 @@ if [[ "$COMPOSE_PROFILES" == *"n8n"* ]]; then
     fi
     echo ""
 fi
+
+# Service-specific information removed for business tools (Odoo, Kimai, Invoice Ninja, Twenty CRM, EspoCRM, Mautic, Jitsi)
+# These services have been removed from the AI Learning Kit
 
 # Final Success Message
 echo ""
@@ -517,11 +463,12 @@ $([ "$COMPOSE_PROFILES" == *"flowise"* ] && echo "Flowise: http://$SERVER_IP:802
 $([ "$COMPOSE_PROFILES" == *"bolt"* ] && echo "bolt.diy: http://$SERVER_IP:8023")
 $([ "$COMPOSE_PROFILES" == *"comfyui"* ] && echo "ComfyUI: http://$SERVER_IP:8024")
 
-# Business Tools:
+# Learning Tools:
 $([ "$COMPOSE_PROFILES" == *"calcom"* ] && echo "Cal.com: http://$SERVER_IP:8040")
-$([ "$COMPOSE_PROFILES" == *"odoo"* ] && echo "Odoo: http://$SERVER_IP:8041")
-$([ "$COMPOSE_PROFILES" == *"kimai"* ] && echo "Kimai: http://$SERVER_IP:8042")
-$([ "$COMPOSE_PROFILES" == *"invoiceninja"* ] && echo "Invoice Ninja: http://$SERVER_IP:8043")
+$([ "$COMPOSE_PROFILES" == *"baserow"* ] && echo "Baserow: http://$SERVER_IP:8047")
+$([ "$COMPOSE_PROFILES" == *"nocodb"* ] && echo "NocoDB: http://$SERVER_IP:8048")
+$([ "$COMPOSE_PROFILES" == *"vikunja"* ] && echo "Vikunja: http://$SERVER_IP:8049")
+$([ "$COMPOSE_PROFILES" == *"leantime"* ] && echo "Leantime: http://$SERVER_IP:8050")
 
 # Change SERVER_IP=127.0.0.1 to your server's LAN IP in .env for network access
 EOF
