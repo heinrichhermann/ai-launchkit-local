@@ -32,7 +32,6 @@ volumes:
   leantime-logs:
   mailpit_data:
   calcom_data:
-  snappymail_data:
   jitsi-web:
   jitsi-transcripts:
   jitsi-prosody-config:
@@ -1577,8 +1576,7 @@ services:
     container_name: mailpit
     restart: unless-stopped
     ports:
-      - "8070:1025"  # SMTP
-      - "8071:8025"  # Web UI
+      - "8071:8025"  # Web UI only (SMTP internal only)
     volumes:
       - mailpit_data:/data
       - ./shared:/data/shared
@@ -1593,90 +1591,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  mailserver:
-    image: ghcr.io/docker-mailserver/docker-mailserver:latest
-    container_name: mailserver
-    hostname: mail.localhost
-    profiles: ["mailserver"]
-    restart: unless-stopped
-    ports:
-      - "25:25"     # SMTP (receiving)
-      - "587:587"   # SMTP (submission)
-      - "993:993"   # IMAP
-    volumes:
-      - ./docker-data/dms/mail-data/:/var/mail/
-      - ./docker-data/dms/mail-state/:/var/mail-state/
-      - ./docker-data/dms/config/:/tmp/docker-mailserver/
-      - /etc/localtime:/etc/localtime:ro
-      - ./shared:/data/shared
-    environment:
-      # Basic Configuration
-      - OVERRIDE_HOSTNAME=mail.localhost
-      - LOG_LEVEL=info
-      - SUPERVISOR_LOGLEVEL=warn
-      
-      # Network
-      - PERMIT_DOCKER=network
-      - NETWORK_INTERFACE=
-      
-      # Security & SSL (disabled for local)
-      - SSL_TYPE=off
-      
-      # Features
-      - ENABLE_RSPAMD=1
-      - ENABLE_CLAMAV=0
-      - ENABLE_FAIL2BAN=1
-      - ENABLE_POSTGREY=0
-      - ENABLE_SASLAUTHD=0
-      - ENABLE_SPAMASSASSIN=0
-      - ENABLE_FETCHMAIL=0
-      - ENABLE_GETMAIL=0
-      - ENABLE_AMAVIS=0
-      
-      # Mail Settings
-      - ONE_DIR=1
-      - DMS_DEBUG=0
-      - POSTMASTER_ADDRESS=postmaster@localhost
-      - POSTFIX_MESSAGE_SIZE_LIMIT=20480000  # 20MB
-      
-    cap_add:
-      - NET_ADMIN
-      - SYS_PTRACE
-    healthcheck:
-      test: ["CMD", "ss", "-lnp", "|", "grep", ":25"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  snappymail:
-    image: djmaze/snappymail:latest
-    container_name: snappymail
-    profiles: ["snappymail"]
-    restart: unless-stopped
-    ports:
-      - "8072:8888"
-    volumes:
-      - snappymail_data:/var/lib/snappymail
-      - ./shared:/data/shared
-    environment:
-      - UPLOAD_MAX_SIZE=25M
-      - PHP_MEMORY_LIMIT=128M
-      - TZ=${TZ:-UTC}
-    depends_on:
-      - mailserver
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8888/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  smtp-relay:
-    image: alpine/socat
-    container_name: smtp-relay
-    profiles: ["baserow", "calcom", "leantime"]
-    restart: unless-stopped
-    command: tcp-listen:8025,fork,reuseaddr tcp-connect:mailserver:25
 
   # ============================================================================
   # SPECIALIZED SERVICES (8080-8099)

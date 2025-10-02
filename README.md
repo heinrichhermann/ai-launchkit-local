@@ -1,10 +1,10 @@
-# 🚀 AI LaunchKit - Local Network Edition
+# 🎓 Local AI Learning Kit
 
 <div align="center">
 
-**Complete AI Development Stack for Local Networks**
+**Learn, Experiment, and Master AI Development**
 
-*Deploy 40+ AI services via IP:PORT - No domains, no SSL, no host modifications needed*
+*40+ AI services for education and testing via IP:PORT - Perfect for learning without production complexity*
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Based on](https://img.shields.io/badge/Based%20on-ai--launchkit-green)](https://github.com/freddy-schuetz/ai-launchkit)
@@ -116,12 +116,12 @@ All services are accessible via `http://SERVER_IP:PORT`:
 | 8061 | Vaultwarden | Password Manager |
 | 8062 | Kopia | Backup System |
 
-### Mail Services (8070-8075)
+### Mail Services (8071 only - Learning/Testing)
 | Port | Service | Description |
 |------|---------|-------------|
-| 8070 | Mailpit SMTP | Mail server for services |
-| 8071 | Mailpit Web | Mail interface |
-| 8072 | SnappyMail | Webmail client |
+| 8071 | Mailpit Web UI | Email catcher for development & testing |
+
+**Note:** Mailpit captures ALL emails for learning purposes. No external email delivery.
 
 ### Specialized Services (8080-8099)
 | Port | Service | Description |
