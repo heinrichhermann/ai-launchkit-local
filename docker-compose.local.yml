@@ -1,0 +1,2223 @@
+volumes:
+  n8n_storage:
+  ollama_storage:
+  qdrant_storage:
+  open-webui:
+  flowise:
+  whisper-models:
+  valkey-data:
+  langfuse_postgres_data:
+  langfuse_clickhouse_data:
+  langfuse_clickhouse_logs:
+  langfuse_minio_data:
+  libretranslate_models:
+  libretranslate_cache:
+  libretranslate_db:
+  grafana:
+  prometheus_data:
+  letta_data:
+  weaviate_data:
+  portainer_data:
+  comfyui_data:
+  postiz-config:
+  postiz-uploads:
+  lightrag_data:
+  odoo_data:
+  baserow_data:
+  vikunja-files:
+  mysql-leantime-data:
+  leantime-public:
+  leantime-userfiles:
+  leantime-plugins:
+  leantime-logs:
+  mailpit_data:
+  calcom_data:
+  snappymail_data:
+  jitsi-web:
+  jitsi-transcripts:
+  jitsi-prosody-config:
+  jitsi-prosody-plugins:
+  jitsi-jicofo:
+  jitsi-jvb:
+  vaultwarden_data:
+  kopia_config:
+  kopia_cache:
+  kopia_logs:
+  kimai_data:
+  kimai_plugins:
+  kimai_mysql:
+  invoiceninja_public:
+  invoiceninja_storage:
+  invoiceninja_mysql:
+  formbricks_uploads:
+  formbricks_postgres:
+  metabase_data:
+  metabase_postgres:
+  nocodb_data:
+  easyocr_models:
+  stirling_data:
+  stirling_configs:
+  stirling_logs:
+  twenty_data:
+  twenty_db_data:
+  twenty_redis_data:
+  espocrm_data:
+  espocrm_db_data:
+  mautic_data:
+  mautic_db_data:
+  mautic_redis_data:
+  scriberr_data:
+  chatterbox_models:
+
+x-n8n: &service-n8n
+  build:
+    context: ./n8n
+    pull: true
+  environment: &service-n8n-env
+    DB_POSTGRESDB_DATABASE: postgres
+    DB_POSTGRESDB_HOST: postgres
+    DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+    DB_POSTGRESDB_USER: postgres
+    DB_TYPE: postgresdb
+    EXECUTIONS_MODE: queue
+    LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+    LANGCHAIN_ENDPOINT: ${LANGCHAIN_ENDPOINT}
+    LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2}
+    N8N_BINARY_DATA_MODE: filesystem
+    N8N_PAYLOAD_SIZE_MAX: 256
+    N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE: true
+    N8N_DIAGNOSTICS_ENABLED: false
+    N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+    N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: true
+    N8N_METRICS: true
+    N8N_PERSONALIZATION_ENABLED: false
+    N8N_RUNNERS_ENABLED: true
+    N8N_TRUST_PROXY: false
+    N8N_USER_MANAGEMENT_JWT_SECRET: ${N8N_USER_MANAGEMENT_JWT_SECRET}
+    NODE_ENV: production
+    NODE_FUNCTION_ALLOW_BUILTIN: "*"
+    NODE_FUNCTION_ALLOW_EXTERNAL: cheerio,axios,moment,lodash
+    QUEUE_BULL_REDIS_HOST: ${REDIS_HOST:-redis}
+    QUEUE_BULL_REDIS_PORT: ${REDIS_PORT:-6379}
+    QUEUE_HEALTH_CHECK_ACTIVE: true
+    WEBHOOK_URL: http://127.0.0.1:8000/
+
+x-ollama: &service-ollama
+  image: ollama/ollama:latest
+  container_name: ollama
+  restart: unless-stopped
+  environment:
+    - OLLAMA_CONTEXT_LENGTH=8192
+    - OLLAMA_FLASH_ATTENTION=1
+    - OLLAMA_KV_CACHE_TYPE=q8_0
+    - OLLAMA_MAX_LOADED_MODELS=2
+  volumes:
+    - ollama_storage:/root/.ollama
+
+x-init-ollama: &init-ollama
+  image: ollama/ollama:latest
+  container_name: ollama-pull-llama
+  volumes:
+    - ollama_storage:/root/.ollama
+  entrypoint: /bin/sh
+  command:
+    - "-c"
+    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
+
+services:
+  # ============================================================================
+  # CORE SERVICES (8000-8019)
+  # ============================================================================
+  
+  n8n:
+    <<: *service-n8n
+    container_name: n8n
+    profiles: ["n8n"]
+    restart: unless-stopped
+    ports:
+      - "8000:5678"
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./n8n/backup:/backup
+      - ./shared:/data/shared
+      - ./media:/data/media
+      - ./temp:/data/temp
+    depends_on:
+      n8n-import:
+        condition: service_completed_successfully
+
+  n8n-import:
+    <<: *service-n8n
+    container_name: n8n-import
+    profiles: ["n8n"]
+    environment:
+      <<: *service-n8n-env
+      RUN_N8N_IMPORT: ${RUN_N8N_IMPORT:-false}
+    entrypoint: /bin/sh
+    command: /scripts/n8n_import_script.sh
+    volumes:
+      - ./n8n/backup:/backup
+      - ./n8n/n8n_import_script.sh:/scripts/n8n_import_script.sh:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  n8n-worker:
+    <<: *service-n8n
+    profiles: ["n8n"]
+    restart: unless-stopped
+    command: worker
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./shared:/data/shared
+      - ./media:/data/media
+      - ./temp:/data/temp
+    depends_on:
+      n8n:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    deploy:
+      replicas: ${N8N_WORKER_COUNT:-1}
+
+  postgres:
+    container_name: postgres
+    image: postgres:${POSTGRES_VERSION:-17-alpine}
+    restart: unless-stopped
+    ports:
+      - "8001:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - langfuse_postgres_data:/var/lib/postgresql/data
+
+  redis:
+    container_name: redis
+    image: docker.io/valkey/valkey:8-alpine
+    command: valkey-server --save 30 1 --loglevel warning
+    restart: unless-stopped
+    ports:
+      - "8002:6379"
+    volumes:
+      - valkey-data:/data
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 3s
+      timeout: 10s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    ports:
+      - "8003:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_PROVISIONING_PATH=/etc/grafana/provisioning
+      - GF_SERVER_ROOT_URL=http://127.0.0.1:8003
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    ports:
+      - "8004:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    ports:
+      - "8005:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    ports:
+      - "8006:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    profiles: ["portainer"]
+    restart: unless-stopped
+    ports:
+      - "8007:9000"
+    volumes:
+      - portainer_data:/data
+      - ${DOCKER_SOCKET_LOCATION:-/var/run/docker.sock}:/var/run/docker.sock
+
+  # ============================================================================
+  # AI SERVICES (8020-8039)
+  # ============================================================================
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    restart: unless-stopped
+    container_name: open-webui
+    profiles: ["open-webui"]
+    ports:
+      - "8020:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - open-webui:/app/backend/data
+
+  ollama-cpu:
+    profiles: ["cpu"]
+    <<: *service-ollama
+    ports:
+      - "8021:11434"
+
+  ollama-gpu:
+    profiles: ["gpu-nvidia"]
+    <<: *service-ollama
+    ports:
+      - "8021:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ollama-gpu-amd:
+    profiles: ["gpu-amd"]
+    <<: *service-ollama
+    ports:
+      - "8021:11434"
+    image: ollama/ollama:rocm
+    devices:
+      - "/dev/kfd"
+      - "/dev/dri"
+
+  ollama-pull-llama-cpu:
+    profiles: ["cpu"]
+    <<: *init-ollama
+    depends_on:
+      - ollama-cpu
+
+  ollama-pull-llama-gpu:
+    profiles: ["gpu-nvidia"]
+    <<: *init-ollama
+    depends_on:
+      - ollama-gpu
+
+  ollama-pull-llama-gpu-amd:
+    profiles: [gpu-amd]
+    <<: *init-ollama
+    image: ollama/ollama:rocm
+    depends_on:
+      - ollama-gpu-amd
+
+  flowise:
+    image: flowiseai/flowise
+    restart: unless-stopped
+    container_name: flowise
+    profiles: ["flowise"]
+    ports:
+      - "8022:3001"
+    environment:
+      - PORT=3001
+      - FLOWISE_USERNAME=${FLOWISE_USERNAME}
+      - FLOWISE_PASSWORD=${FLOWISE_PASSWORD}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ~/.flowise:/root/.flowise
+    entrypoint: /bin/sh -c "sleep 3; flowise start"
+
+  bolt:
+    build:
+      context: ./docker/bolt-diy
+      dockerfile: Dockerfile
+    container_name: bolt
+    profiles: ["bolt"]
+    ports:
+      - "8023:5173"
+    environment:
+      - BOLT_HOSTNAME=127.0.0.1:8023
+      - OLLAMA_API_BASE_URL=http://ollama:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+    volumes:
+      - ./bolt-data:/app/data
+      - ./shared:/workspace
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  comfyui:
+    image: yanwk/comfyui-boot:cu124-slim
+    container_name: comfyui
+    profiles: ["comfyui"]
+    restart: unless-stopped
+    ports:
+      - "8024:8188"
+    environment:
+      - CLI_ARGS=--listen 0.0.0.0 --cpu
+    volumes:
+      - comfyui_data:/home/runner
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:8188"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  openui:
+    image: ghcr.io/wandb/openui:latest
+    container_name: openui
+    profiles: ["openui"]
+    restart: unless-stopped
+    ports:
+      - "8025:7878"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-xxx}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_COMPATIBLE_ENDPOINT=${OPENAI_COMPATIBLE_ENDPOINT:-}
+    volumes:
+      - ./openui-data:/app/data
+      - ./shared:/workspace
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    profiles: ["qdrant"]
+    restart: unless-stopped
+    ports:
+      - "8026:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY}
+
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:latest
+    container_name: weaviate
+    profiles: ["weaviate"]
+    restart: unless-stopped
+    ports:
+      - "8027:8080"
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "false"
+      AUTHENTICATION_APIKEY_ENABLED: "true"
+      AUTHENTICATION_APIKEY_ALLOWED_KEYS: ${WEAVIATE_API_KEY}
+      AUTHENTICATION_APIKEY_USERS: ${WEAVIATE_USERNAME}
+      AUTHORIZATION_ENABLE_RBAC: "true"
+      AUTHORIZATION_RBAC_ROOT_USERS: ${WEAVIATE_USERNAME}
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      ENABLE_API_BASED_MODULES: "true"
+      CLUSTER_HOSTNAME: "node1"
+      DEFAULT_VECTORIZER_MODULE: "none"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider http://localhost:8080/v1/.well-known/ready || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j
+    profiles: ["neo4j"]
+    restart: unless-stopped
+    ports:
+      - "8028:7474"
+      - "7687:7687"
+    volumes:
+      - ./neo4j/logs:/logs
+      - ./neo4j/config:/config
+      - ./neo4j/data:/data
+      - ./neo4j/plugins:/plugins
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH_USERNAME}/${NEO4J_AUTH_PASSWORD}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    ulimits:
+      nofile:
+        soft: 40000
+        hard: 40000
+
+  lightrag:
+    image: ghcr.io/hkuds/lightrag:latest
+    container_name: lightrag
+    profiles: ["lightrag"]
+    restart: unless-stopped
+    ports:
+      - "8029:9621"
+    volumes:
+      - lightrag_data:/app/data/rag_storage
+      - ./shared:/app/data/inputs
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LLM_BINDING=openai
+      - LLM_BINDING_HOST=https://api.openai.com/v1
+      - EMBEDDING_BINDING=openai
+      - EMBEDDING_BINDING_HOST=https://api.openai.com/v1
+      - LLM_MODEL=gpt-4o-mini
+      - EMBEDDING_MODEL=text-embedding-3-small
+      - EMBEDDING_DIM=1536
+      - WORKSPACE=${LIGHTRAG_WORKSPACE:-default}
+      - AUTH_ACCOUNTS=${LIGHTRAG_AUTH_ACCOUNTS}
+      - TOKEN_SECRET=${LIGHTRAG_TOKEN_SECRET}
+      - TIMEOUT=600
+
+  ragapp:
+    image: ragapp/ragapp:latest
+    container_name: ragapp
+    profiles: ["ragapp"]
+    restart: unless-stopped
+    ports:
+      - "8030:8000"
+
+  letta:
+    image: letta/letta:latest
+    container_name: letta
+    profiles: ["letta"]
+    restart: unless-stopped
+    ports:
+      - "8031:8283"
+    volumes:
+      - letta_data:/var/lib/postgresql/data
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-}
+      SECURE: ${LETTA_SECURE:-true}
+      LETTA_SERVER_PASSWORD: ${LETTA_SERVER_PASSWORD:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ============================================================================
+  # BUSINESS TOOLS (8040-8059)
+  # ============================================================================
+
+  calcom:
+    build:
+      context: ./calcom-docker
+      dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/calcom
+        - NEXT_PUBLIC_WEBAPP_URL=http://127.0.0.1:8040
+        - NEXT_PUBLIC_API_V2_URL=http://127.0.0.1:8040/api/v2
+        - NEXT_PUBLIC_WEBSITE_URL=http://127.0.0.1:8040
+    container_name: calcom
+    profiles: ["calcom"]
+    restart: unless-stopped
+    ports:
+      - "8040:3000"
+    environment:
+      # Database
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/calcom
+      - DATABASE_DIRECT_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/calcom
+      
+      # URLs
+      - NEXT_PUBLIC_WEBAPP_URL=http://127.0.0.1:8040
+      - NEXT_PUBLIC_API_V2_URL=http://127.0.0.1:8040/api/v2
+      - NEXT_PUBLIC_WEBSITE_URL=http://127.0.0.1:8040
+      - NEXTAUTH_URL=http://127.0.0.1:8040
+      - CAL_URL=http://127.0.0.1:8040
+      
+      # Security
+      - NEXTAUTH_SECRET=${CALCOM_NEXTAUTH_SECRET}
+      - CALENDSO_ENCRYPTION_KEY=${CALCOM_ENCRYPTION_KEY}
+      
+      # Email (using mailpit)
+      - EMAIL_FROM=${EMAIL_FROM}
+      - EMAIL_SERVER_HOST=mailpit
+      - EMAIL_SERVER_PORT=1025
+      - EMAIL_SERVER_USER=${SMTP_USER:-}
+      - EMAIL_SERVER_PASSWORD=${SMTP_PASSWORD:-}
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - SEND_FEEDBACK_EMAIL=false
+      
+      # Features
+      - NEXT_PUBLIC_DISABLE_SIGNUP=false
+      - TELEMETRY_DISABLED=1
+      - NODE_ENV=production
+    volumes:
+      - calcom_data:/app/data
+      - ./shared:/data/shared
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
+  odoo:
+    image: odoo:18.0
+    container_name: odoo
+    profiles: ["odoo"]
+    restart: unless-stopped
+    ports:
+      - "8041:8069"
+    depends_on:
+      odoo-schema-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    environment:
+      - HOST=postgres
+      - USER=odoo
+      - PASSWORD=${ODOO_DB_PASSWORD}
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - ./shared:/data/shared:ro
+    command: odoo --proxy-mode
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8069/web/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  odoo-init:
+    image: postgres:latest
+    container_name: odoo-init
+    profiles: ["odoo"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command: >
+      sh -c "
+      psql -h postgres -U postgres -c \"CREATE USER odoo WITH PASSWORD '${ODOO_DB_PASSWORD}' CREATEDB\" || true &&
+      psql -h postgres -U postgres -c \"CREATE DATABASE odoo OWNER odoo\" || true &&
+      echo 'Odoo user and database ready'
+      "
+    restart: "no"
+
+  odoo-schema-init:
+    image: odoo:18.0
+    container_name: odoo-schema-init
+    profiles: ["odoo"]
+    depends_on:
+      odoo-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    environment:
+      - HOST=postgres
+      - USER=odoo
+      - PASSWORD=${ODOO_DB_PASSWORD}
+    command: >
+      sh -c "
+      odoo --db_host postgres --db_user odoo --db_password ${ODOO_DB_PASSWORD} -d odoo -i base --stop-after-init || 
+      echo 'Database already initialized'
+      "
+    restart: "no"
+
+  kimai:
+    image: kimai/kimai2:apache
+    container_name: kimai
+    profiles: ["kimai"]
+    restart: unless-stopped
+    ports:
+      - "8042:8001"
+    volumes:
+      - kimai_data:/opt/kimai/var/data
+      - kimai_plugins:/opt/kimai/var/plugins
+      - ./shared:/data/shared
+    environment:
+      - ADMINMAIL=${KIMAI_ADMIN_EMAIL:-${USER_EMAIL}}
+      - ADMINPASS=${KIMAI_ADMIN_PASSWORD}
+      - DATABASE_URL=mysql://${KIMAI_DB_USER}:${KIMAI_DB_PASSWORD}@kimai_db:3306/${KIMAI_DB_NAME}?charset=utf8mb4&serverVersion=8.3.0
+      - TRUSTED_HOSTS=127.0.0.1,localhost
+      - APP_ENV=prod
+      - memory_limit=256M
+      - MAILER_URL=smtp://mailpit:1025
+      - MAILER_FROM=${KIMAI_MAIL_FROM:-kimai@localhost}
+      - memory_limit=512M
+      - post_max_size=50M
+      - upload_max_filesize=50M
+    depends_on:
+      kimai_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8001 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kimai_db:
+    image: mysql:8.3
+    container_name: kimai_db
+    profiles: ["kimai"]
+    restart: unless-stopped
+    volumes:
+      - kimai_mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${KIMAI_DB_NAME:-kimai}
+      - MYSQL_USER=${KIMAI_DB_USER:-kimai}
+      - MYSQL_PASSWORD=${KIMAI_DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${KIMAI_DB_ROOT_PASSWORD}
+    command: --default-storage-engine=innodb --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${KIMAI_DB_ROOT_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  invoiceninja:
+    image: invoiceninja/invoiceninja:5
+    container_name: invoiceninja
+    profiles: ["invoiceninja"]
+    restart: unless-stopped
+    volumes:
+      - invoiceninja_public:/var/www/app/public
+      - invoiceninja_storage:/var/www/app/storage
+      - ./shared:/data/shared
+    environment:
+      # Application Settings
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=http://127.0.0.1:8043
+      - APP_KEY=${INVOICENINJA_APP_KEY}
+      - APP_CIPHER=AES-256-CBC
+      - REQUIRE_HTTPS=false
+      - TRUSTED_PROXIES=*
+      
+      # Database Configuration
+      - DB_HOST=invoiceninja_db
+      - DB_PORT=3306
+      - DB_DATABASE=${INVOICENINJA_DB_NAME:-invoiceninja}
+      - DB_USERNAME=${INVOICENINJA_DB_USER:-invoiceninja}
+      - DB_PASSWORD=${INVOICENINJA_DB_PASSWORD}
+      
+      # Initial Admin Account
+      - IN_USER_EMAIL=${INVOICENINJA_ADMIN_EMAIL:-${USER_EMAIL}}
+      - IN_PASSWORD=${INVOICENINJA_ADMIN_PASSWORD}
+      
+      # Mail Configuration
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=mailpit
+      - MAIL_PORT=1025
+      - MAIL_USERNAME=${SMTP_USER}
+      - MAIL_PASSWORD=${SMTP_PASSWORD}
+      - MAIL_ENCRYPTION=null
+      - MAIL_FROM_ADDRESS=${INVOICENINJA_MAIL_FROM:-noreply@localhost}
+      - MAIL_FROM_NAME="Invoice Ninja"
+      
+      # PDF Generation
+      - PDF_GENERATOR=snappdf
+      - SNAPPDF_EXECUTABLE_PATH=/usr/bin/chromium-browser
+      
+      # Queue Configuration
+      - QUEUE_CONNECTION=database
+      - BROADCAST_DRIVER=log
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=6379
+      
+    depends_on:
+      invoiceninja_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep php-fpm | grep -v grep || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  invoiceninja_db:
+    image: mysql:8.3
+    container_name: invoiceninja_db
+    profiles: ["invoiceninja"]
+    restart: unless-stopped
+    volumes:
+      - invoiceninja_mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${INVOICENINJA_DB_NAME:-invoiceninja}
+      - MYSQL_USER=${INVOICENINJA_DB_USER:-invoiceninja}
+      - MYSQL_PASSWORD=${INVOICENINJA_DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${INVOICENINJA_DB_ROOT_PASSWORD}
+    command: --default-storage-engine=innodb --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${INVOICENINJA_DB_ROOT_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  invoiceninja_nginx:
+    image: nginx:alpine
+    container_name: invoiceninja_nginx
+    profiles: ["invoiceninja"]
+    restart: unless-stopped
+    ports:
+      - "8043:80"
+    volumes:
+      - invoiceninja_public:/var/www/app/public:ro
+      - invoiceninja_storage:/var/www/app/storage:ro
+      - ./invoiceninja-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      invoiceninja:
+        condition: service_healthy
+
+  twenty-crm:
+    image: twentycrm/twenty:latest
+    container_name: twenty-crm
+    profiles: ["twenty-crm"]
+    restart: unless-stopped
+    ports:
+      - "8044:3000"
+    volumes:
+      - twenty_data:/app/packages/twenty-server/.local-storage
+      - ./shared:/data/shared
+    environment:
+      - NODE_PORT=3000
+      - PG_DATABASE_URL=postgresql://${TWENTY_CRM_DB_USER}:${TWENTY_CRM_DB_PASSWORD}@twenty-db:5432/default
+      - REDIS_URL=redis://twenty-redis:6379
+      - SERVER_URL=http://127.0.0.1:8044
+      - APP_SECRET=${TWENTY_CRM_APP_SECRET}
+      - STORAGE_TYPE=local
+      - DISABLE_DB_MIGRATIONS=false
+    depends_on:
+      twenty-db:
+        condition: service_healthy
+      twenty-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  twenty-db:
+    image: postgres:16-alpine
+    container_name: twenty-db
+    profiles: ["twenty-crm"]
+    restart: unless-stopped
+    volumes:
+      - twenty_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${TWENTY_CRM_DB_PASSWORD}
+      - POSTGRES_USER=${TWENTY_CRM_DB_USER}
+      - POSTGRES_DB=default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TWENTY_CRM_DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  twenty-redis:
+    image: redis:7-alpine
+    container_name: twenty-redis
+    profiles: ["twenty-crm"]
+    restart: unless-stopped
+    volumes:
+      - twenty_redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  espocrm:
+    image: espocrm/espocrm:latest
+    container_name: espocrm
+    profiles: ["espocrm"]
+    restart: unless-stopped
+    ports:
+      - "8045:80"
+    volumes:
+      - espocrm_data:/var/www/html
+      - ./shared:/data/shared
+    environment:
+      - ESPOCRM_DATABASE_PLATFORM=Mysql
+      - ESPOCRM_DATABASE_HOST=espocrm-db
+      - ESPOCRM_DATABASE_NAME=${ESPOCRM_DB_NAME}
+      - ESPOCRM_DATABASE_USER=${ESPOCRM_DB_USER}
+      - ESPOCRM_DATABASE_PASSWORD=${ESPOCRM_DB_PASSWORD}
+      - ESPOCRM_ADMIN_USERNAME=${ESPOCRM_ADMIN_USERNAME}
+      - ESPOCRM_ADMIN_PASSWORD=${ESPOCRM_ADMIN_PASSWORD}
+      - ESPOCRM_SITE_URL=http://127.0.0.1:8045
+    depends_on:
+      espocrm-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/index.php || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+  espocrm-db:
+    image: mariadb:latest
+    container_name: espocrm-db
+    profiles: ["espocrm"]
+    restart: unless-stopped
+    volumes:
+      - espocrm_db_data:/var/lib/mysql
+    environment:
+      - MARIADB_ROOT_PASSWORD=${ESPOCRM_DB_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${ESPOCRM_DB_NAME}
+      - MARIADB_USER=${ESPOCRM_DB_USER}
+      - MARIADB_PASSWORD=${ESPOCRM_DB_PASSWORD}
+    command: --max-allowed-packet=64MB
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  espocrm-daemon:
+    image: espocrm/espocrm:latest
+    container_name: espocrm-daemon
+    profiles: ["espocrm"]
+    restart: unless-stopped
+    volumes:
+      - espocrm_data:/var/www/html
+    entrypoint: docker-daemon.sh
+    depends_on:
+      - espocrm
+
+  mautic_db:
+    image: mariadb:10.11
+    container_name: mautic_db
+    profiles: ["mautic"]
+    restart: unless-stopped
+    volumes:
+      - mautic_db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MAUTIC_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=mautic
+      - MYSQL_USER=${MAUTIC_DB_USER}
+      - MYSQL_PASSWORD=${MAUTIC_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p${MAUTIC_DB_ROOT_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  mautic_redis:
+    image: redis:7-alpine
+    container_name: mautic_redis
+    profiles: ["mautic"]
+    restart: unless-stopped
+    volumes:
+      - mautic_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mautic_web:
+    image: mautic/mautic:latest
+    container_name: mautic_web
+    profiles: ["mautic"]
+    restart: unless-stopped
+    ports:
+      - "8046:80"
+    depends_on:
+      mautic_db:
+        condition: service_healthy
+      mautic_redis:
+        condition: service_healthy
+    volumes:
+      - mautic_data:/var/www/html
+      - ./shared:/data/shared
+    environment:
+      # Database Configuration
+      - MAUTIC_DB_HOST=mautic_db
+      - MAUTIC_DB_PORT=3306
+      - MAUTIC_DB_NAME=mautic
+      - MAUTIC_DB_USER=${MAUTIC_DB_USER}
+      - MAUTIC_DB_PASSWORD=${MAUTIC_DB_PASSWORD}
+      
+      # Redis Cache
+      - MAUTIC_REDIS_HOST=mautic_redis
+      - MAUTIC_REDIS_PORT=6379
+      
+      # Mautic Configuration
+      - MAUTIC_ADMIN_EMAIL=${MAUTIC_ADMIN_EMAIL}
+      - MAUTIC_ADMIN_PASSWORD=${MAUTIC_ADMIN_PASSWORD}
+      - MAUTIC_TRUSTED_PROXIES=["0.0.0.0/0"]
+      - MAUTIC_URL=http://127.0.0.1:8046
+      
+      # Mail Configuration (using Mailpit)
+      - MAUTIC_MAILER_DSN=smtp://mailpit:1025
+      
+      # Performance Settings
+      - PHP_MEMORY_LIMIT=512M
+      - PHP_MAX_EXECUTION_TIME=300
+      - PHP_UPLOAD_MAX_FILESIZE=50M
+      - PHP_POST_MAX_SIZE=50M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/s/login || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  mautic_worker:
+    image: mautic/mautic:latest
+    container_name: mautic_worker
+    profiles: ["mautic"]
+    restart: unless-stopped
+    depends_on:
+      mautic_web:
+        condition: service_healthy
+    volumes:
+      - mautic_data:/var/www/html
+      - ./shared:/data/shared
+    environment:
+      # Same as mautic_web
+      - MAUTIC_DB_HOST=mautic_db
+      - MAUTIC_DB_PORT=3306
+      - MAUTIC_DB_NAME=mautic
+      - MAUTIC_DB_USER=${MAUTIC_DB_USER}
+      - MAUTIC_DB_PASSWORD=${MAUTIC_DB_PASSWORD}
+      - MAUTIC_REDIS_HOST=mautic_redis
+      - MAUTIC_REDIS_PORT=6379
+    command: >
+      sh -c "
+        while true; do
+          php /var/www/html/bin/console mautic:segments:update --no-interaction
+          php /var/www/html/bin/console mautic:campaigns:update --no-interaction
+          php /var/www/html/bin/console mautic:campaigns:trigger --no-interaction
+          php /var/www/html/bin/console mautic:messages:send --no-interaction
+          php /var/www/html/bin/console mautic:webhooks:process --no-interaction
+          php /var/www/html/bin/console mautic:reports:scheduler --no-interaction
+          php /var/www/html/bin/console mautic:import --no-interaction
+          sleep 300
+        done
+      "
+
+  baserow:
+    image: baserow/baserow:1.35.0
+    container_name: baserow
+    profiles: ["baserow"]
+    privileged: true
+    restart: unless-stopped
+    ports:
+      - "8047:80"
+    environment:
+      - BASEROW_PUBLIC_URL=http://127.0.0.1:8047
+      - SECRET_KEY=${BASEROW_SECRET_KEY}
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/baserow
+      - REDIS_URL=redis://redis:6379
+      - DISABLE_VOLUME_CHECK=yes
+      # Memory optimization for AI LaunchKit
+      - BASEROW_RUN_MINIMAL=yes
+      - BASEROW_AMOUNT_OF_WORKERS=1
+      # Email configuration (uses existing AI LaunchKit settings)
+      - FROM_EMAIL=${EMAIL_FROM}
+      - EMAIL_SMTP=mailpit
+      - EMAIL_SMTP_HOST=mailpit
+      - EMAIL_SMTP_USER=${EMAIL_SMTP_USER}
+      - EMAIL_SMTP_PASSWORD=${EMAIL_SMTP_PASSWORD}
+      - EMAIL_SMTP_PORT=1025
+      - EMAIL_SMTP_USE_TLS=false
+    volumes:
+      - baserow_data:/baserow/data
+      - ./shared:/data/shared
+    depends_on:
+      baserow-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/api/_health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  baserow-init:
+    image: postgres:latest
+    container_name: baserow-init
+    profiles: ["baserow"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command: >
+      sh -c "
+      psql -h postgres -U postgres -c \"CREATE DATABASE baserow\" || true &&
+      echo 'Baserow database ready'
+      "
+    restart: "no"
+
+  nocodb:
+    image: nocodb/nocodb:latest
+    container_name: nocodb
+    profiles: ["nocodb"]
+    restart: unless-stopped
+    ports:
+      - "8048:8080"
+    volumes:
+      - nocodb_data:/usr/app/data
+      - ./shared:/data/shared
+    environment:
+      # Minimal database configuration
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/nocodb
+      - NC_AUTH_JWT_SECRET=${NOCODB_JWT_SECRET}
+      - NC_DISABLE_TELE=true
+    depends_on:
+      nocodb-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  nocodb-init:
+    image: postgres:latest
+    container_name: nocodb-init
+    profiles: ["nocodb"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command: >
+      sh -c "
+      psql -h postgres -U postgres -c \"CREATE DATABASE nocodb\" || true &&
+      echo 'NocoDB database ready'
+      "
+    restart: "no"
+
+  vikunja:
+    image: vikunja/vikunja:latest
+    container_name: vikunja
+    profiles: ["vikunja"]
+    restart: unless-stopped
+    ports:
+      - "8049:3456"
+    environment:
+      # Database Configuration (uses existing PostgreSQL)
+      - VIKUNJA_DATABASE_TYPE=postgres
+      - VIKUNJA_DATABASE_HOST=postgres
+      - VIKUNJA_DATABASE_USER=${POSTGRES_USER}
+      - VIKUNJA_DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+      - VIKUNJA_DATABASE_DATABASE=vikunja
+      # Service Configuration
+      - VIKUNJA_SERVICE_PUBLICURL=http://127.0.0.1:8049
+      - VIKUNJA_SERVICE_JWTSECRET=${VIKUNJA_JWT_SECRET}
+      - VIKUNJA_SERVICE_ENABLEREGISTRATION=true
+      - VIKUNJA_SERVICE_ENABLETASKATTACHMENTS=true
+      - VIKUNJA_SERVICE_MAXAVATARSIZE=1024
+      - VIKUNJA_SERVICE_MAXATTACHMENTSIZE=20971520  # 20MB
+      # Optional: Set timezone
+      - VIKUNJA_SERVICE_TIMEZONE=${TZ:-UTC}
+    volumes:
+      - vikunja-files:/app/vikunja/files
+      - ./shared:/data/shared
+    depends_on:
+      vikunja-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3456/api/v1/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  vikunja-init:
+    image: postgres:latest
+    container_name: vikunja-init
+    profiles: ["vikunja"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command: >
+      sh -c "
+      psql -h postgres -U postgres -c \"CREATE DATABASE vikunja\" || true &&
+      echo 'Vikunja database ready'
+      "
+    restart: "no"
+
+  mysql_leantime:
+    image: mysql:8.4
+    container_name: mysql_leantime
+    profiles: ["mysql"]
+    restart: unless-stopped
+    volumes:
+      - mysql-leantime-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=leantime
+      - MYSQL_USER=leantime
+      - MYSQL_PASSWORD=${LEANTIME_DB_PASSWORD}
+    command: --character-set-server=UTF8MB4 --collation-server=UTF8MB4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  leantime:
+    image: leantime/leantime:latest
+    container_name: leantime
+    profiles: ["leantime"]
+    restart: unless-stopped
+    ports:
+      - "8050:8080"
+    environment:
+      # Database Configuration
+      - LEAN_DB_HOST=mysql_leantime
+      - LEAN_DB_USER=leantime
+      - LEAN_DB_PASSWORD=${LEANTIME_DB_PASSWORD}
+      - LEAN_DB_DATABASE=leantime
+      - LEAN_DB_PORT=3306
+      # Application Configuration
+      - LEAN_APP_URL=http://127.0.0.1:8050
+      - LEAN_SITENAME=Leantime
+      - LEAN_SESSION_PASSWORD=${LEANTIME_SESSION_PASSWORD}
+      - LEAN_SESSION_EXPIRATION=28800  # 8 hours
+      - LEAN_DEFAULT_TIMEZONE=${TZ:-UTC}
+      # Language & Theme
+      - LEAN_LANGUAGE=en-US
+      - LEAN_DEFAULT_THEME=default
+      # User/Group mapping (optional)
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      # Features
+      - LEAN_ENABLE_MENU_TYPE=true
+      - LEAN_ENABLE_FOOTER=true
+      # Email configuration (using mailpit)
+      - LEAN_EMAIL_RETURN=noreply@localhost
+      - LEAN_EMAIL_USE_SMTP=true
+      - LEAN_EMAIL_SMTP_HOSTS=mailpit
+      - LEAN_EMAIL_SMTP_PORT=1025
+      - LEAN_EMAIL_SMTP_AUTH=false
+      - LEAN_EMAIL_SMTP_USERNAME=
+      - LEAN_EMAIL_SMTP_PASSWORD=
+      - LEAN_EMAIL_SMTP_AUTO_TLS=false
+      - LEAN_EMAIL_SMTP_SECURE=
+    volumes:
+      - leantime-public:/var/www/html/public/userfiles
+      - leantime-userfiles:/var/www/html/userfiles
+      - leantime-plugins:/var/www/html/app/Plugins
+      - leantime-logs:/var/www/html/storage/logs
+      - ./shared:/data/shared
+    depends_on:
+      mysql_leantime:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ============================================================================
+  # COMMUNICATION & COLLABORATION (8051-8059)
+  # ============================================================================
+
+  jitsi-web:
+    image: jitsi/web:stable-10008
+    container_name: jitsi-web
+    profiles: ["jitsi"]
+    restart: unless-stopped
+    ports:
+      - "8051:80"
+    volumes:
+      - ./jitsi-web:/config
+      - ./jitsi-transcripts:/usr/share/jitsi-meet/transcripts
+    environment:
+      - ENABLE_LETSENCRYPT=0
+      - ENABLE_HTTP_REDIRECT=0
+      - DISABLE_HTTPS=1
+      - PUBLIC_URL=http://127.0.0.1:8051
+      - XMPP_DOMAIN=${JITSI_XMPP_DOMAIN}
+      - XMPP_AUTH_DOMAIN=auth.${JITSI_XMPP_DOMAIN}
+      - XMPP_BOSH_URL_BASE=http://jitsi-prosody:5280
+      - XMPP_MUC_DOMAIN=muc.${JITSI_XMPP_DOMAIN}
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${JITSI_XMPP_DOMAIN}
+      - JICOFO_AUTH_USER=jicofo
+      - JVB_WS_DOMAIN=127.0.0.1:8051
+      - JVB_WS_SERVER_ID=jvb1
+      - TZ=${TZ}
+    depends_on:
+      - jitsi-prosody
+
+  jitsi-prosody:
+    image: jitsi/prosody:stable-10008
+    container_name: jitsi-prosody
+    profiles: ["jitsi"]
+    restart: unless-stopped
+    volumes:
+      - ./jitsi-prosody-config:/config
+      - ./jitsi-prosody-plugins:/prosody-plugins-custom
+    environment:
+      - AUTH_TYPE=internal
+      - ENABLE_GUESTS=1
+      - XMPP_DOMAIN=${JITSI_XMPP_DOMAIN}
+      - XMPP_AUTH_DOMAIN=auth.${JITSI_XMPP_DOMAIN}
+      - XMPP_GUEST_DOMAIN=guest.${JITSI_XMPP_DOMAIN}
+      - XMPP_MUC_DOMAIN=muc.${JITSI_XMPP_DOMAIN}
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${JITSI_XMPP_DOMAIN}
+      - JICOFO_COMPONENT_SECRET=${JICOFO_COMPONENT_SECRET}
+      - JICOFO_AUTH_USER=jicofo
+      - JICOFO_AUTH_PASSWORD=${JICOFO_AUTH_PASSWORD}
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD=${JVB_AUTH_PASSWORD}
+      - TZ=${TZ}
+
+  jitsi-jicofo:
+    image: jitsi/jicofo:stable-10008
+    container_name: jitsi-jicofo
+    profiles: ["jitsi"]
+    restart: unless-stopped
+    volumes:
+      - ./jitsi-jicofo:/config
+    environment:
+      - XMPP_DOMAIN=${JITSI_XMPP_DOMAIN}
+      - XMPP_AUTH_DOMAIN=auth.${JITSI_XMPP_DOMAIN}
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${JITSI_XMPP_DOMAIN}
+      - XMPP_MUC_DOMAIN=muc.${JITSI_XMPP_DOMAIN}
+      - XMPP_SERVER=jitsi-prosody
+      - JICOFO_COMPONENT_SECRET=${JICOFO_COMPONENT_SECRET}
+      - JICOFO_AUTH_USER=jicofo
+      - JICOFO_AUTH_PASSWORD=${JICOFO_AUTH_PASSWORD}
+      - JVB_BREWERY_MUC=jvbbrewery
+      - TZ=${TZ}
+    depends_on:
+      - jitsi-prosody
+
+  jitsi-jvb:
+    image: jitsi/jvb:stable-10008
+    container_name: jitsi-jvb
+    profiles: ["jitsi"]
+    restart: unless-stopped
+    ports:
+      - "10000:10000/udp"
+    volumes:
+      - ./jitsi-jvb:/config
+    environment:
+      - DOCKER_HOST_ADDRESS=${JVB_DOCKER_HOST_ADDRESS}
+      - XMPP_AUTH_DOMAIN=auth.${JITSI_XMPP_DOMAIN}
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${JITSI_XMPP_DOMAIN}
+      - XMPP_SERVER=jitsi-prosody
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD=${JVB_AUTH_PASSWORD}
+      - JVB_BREWERY_MUC=jvbbrewery
+      - JVB_PORT=10000
+      - JVB_STUN_SERVERS=meet-jit-si-turnrelay.jitsi.net:443
+      - PUBLIC_URL=http://127.0.0.1:8051
+      - JVB_WS_DOMAIN=127.0.0.1:8051
+      - JVB_WS_SERVER_ID=jvb1
+      - TZ=${TZ}
+    depends_on:
+      - jitsi-prosody
+
+  # ============================================================================
+  # UTILITIES & TOOLS (8060-8079)
+  # ============================================================================
+
+  postiz:
+    image: ghcr.io/gitroomhq/postiz-app:latest
+    container_name: postiz
+    profiles: ["postiz"]
+    restart: always
+    ports:
+      - "8060:5000"
+    environment:
+      BACKEND_INTERNAL_URL: http://postiz:3000
+      DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres?schema=postiz"
+      DISABLE_REGISTRATION: ${POSTIZ_DISABLE_REGISTRATION}
+      FRONTEND_URL: http://127.0.0.1:8060
+      IS_GENERAL: "true"
+      JWT_SECRET: ${JWT_SECRET}
+      MAIN_URL: http://127.0.0.1:8060
+      NEXT_PUBLIC_BACKEND_URL: http://127.0.0.1:8060/api
+      NEXT_PUBLIC_UPLOAD_DIRECTORY: "/uploads"
+      REDIS_URL: "redis://redis:6379"
+      STORAGE_PROVIDER: "local"
+      UPLOAD_DIRECTORY: "/uploads"
+      # Social Media API Settings
+      X_API_KEY: ${X_API_KEY}
+      X_API_SECRET: ${X_API_SECRET}
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET}
+      REDDIT_CLIENT_ID: ${REDDIT_CLIENT_ID}
+      REDDIT_CLIENT_SECRET: ${REDDIT_CLIENT_SECRET}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      BEEHIIVE_API_KEY: ${BEEHIIVE_API_KEY}
+      BEEHIIVE_PUBLICATION_ID: ${BEEHIIVE_PUBLICATION_ID}
+      THREADS_APP_ID: ${THREADS_APP_ID}
+      THREADS_APP_SECRET: ${THREADS_APP_SECRET}
+      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID}
+      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET}
+      YOUTUBE_CLIENT_ID: ${YOUTUBE_CLIENT_ID}
+      YOUTUBE_CLIENT_SECRET: ${YOUTUBE_CLIENT_SECRET}
+      TIKTOK_CLIENT_ID: ${TIKTOK_CLIENT_ID}
+      TIKTOK_CLIENT_SECRET: ${TIKTOK_CLIENT_SECRET}
+      PINTEREST_CLIENT_ID: ${PINTEREST_CLIENT_ID}
+      PINTEREST_CLIENT_SECRET: ${PINTEREST_CLIENT_SECRET}
+      DRIBBBLE_CLIENT_ID: ${DRIBBBLE_CLIENT_ID}
+      DRIBBBLE_CLIENT_SECRET: ${DRIBBBLE_CLIENT_SECRET}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      DISCORD_BOT_TOKEN_ID: ${DISCORD_BOT_TOKEN_ID}
+      SLACK_ID: ${SLACK_ID}
+      SLACK_SECRET: ${SLACK_SECRET}
+      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
+      MASTODON_URL: ${MASTODON_URL}
+      MASTODON_CLIENT_ID: ${MASTODON_CLIENT_ID}
+      MASTODON_CLIENT_SECRET: ${MASTODON_CLIENT_SECRET}
+    volumes:
+      - postiz-config:/config/
+      - postiz-uploads:/uploads/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    profiles: ["vaultwarden"]
+    restart: unless-stopped
+    ports:
+      - "8061:80"
+    volumes:
+      - vaultwarden_data:/data
+      - ./shared:/data/shared
+    environment:
+      - DOMAIN=http://127.0.0.1:8061
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - SMTP_HOST=mailpit
+      - SMTP_FROM=${EMAIL_FROM:-vault@localhost}
+      - SMTP_FROM_NAME=Vaultwarden
+      - SMTP_PORT=1025
+      - SMTP_AUTH_MECHANISM=Plain
+      - SMTP_SECURITY=off
+      - SMTP_TIMEOUT=15
+      - SIGNUPS_ALLOWED=false
+      - SIGNUPS_DOMAINS_WHITELIST=${SIGNUPS_DOMAINS_WHITELIST:-}
+      - SHOW_PASSWORD_HINT=false
+      - WEB_VAULT_ENABLED=true
+      - WEBSOCKET_ENABLED=true
+      - INVITATIONS_ALLOWED=true
+      - EMERGENCY_ACCESS_ALLOWED=true
+      - SENDS_ALLOWED=true
+      - PASSWORD_ITERATIONS=600000
+      - ICON_CACHE_TTL=2592000
+      - ICON_CACHE_NEGTTL=259200
+      - IP_HEADER=X-Forwarded-For
+      - LOG_LEVEL=warn
+      - EXTENDED_LOGGING=true
+      - TZ=${TZ:-UTC}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:80/alive"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  kopia:
+    image: kopia/kopia:latest
+    container_name: kopia
+    hostname: kopia-server
+    profiles: ["kopia"]
+    restart: unless-stopped
+    ports:
+      - "8062:51515"
+    volumes:
+      - kopia_config:/app/config
+      - kopia_cache:/app/cache
+      - kopia_logs:/app/logs
+      # Mount Docker volumes for backup (read-only)
+      - /var/lib/docker/volumes:/data/docker-volumes:ro
+      # Mount shared directory for backup (read-only)
+      - ./shared:/data/shared:ro
+      # Mount AI LaunchKit configuration (read-only)
+      - .:/data/ai-launchkit:ro
+    environment:
+      # Repository encryption password (different from Nextcloud password!)
+      - KOPIA_PASSWORD=${KOPIA_PASSWORD}
+      # Web UI credentials
+      - KOPIA_UI_USERNAME=${KOPIA_UI_USERNAME}
+      - KOPIA_UI_PASSWORD=${KOPIA_UI_PASSWORD}
+      # Nextcloud WebDAV configuration
+      - NEXTCLOUD_WEBDAV_URL=${NEXTCLOUD_WEBDAV_URL}
+      - NEXTCLOUD_USERNAME=${NEXTCLOUD_USERNAME}
+      - NEXTCLOUD_APP_PASSWORD=${NEXTCLOUD_APP_PASSWORD}
+      # Server configuration
+      - KOPIA_PERSIST_CREDENTIALS_ON_CONNECT=true
+      - TZ=${TZ}
+      # Logging
+      - KOPIA_LOG_LEVEL=info
+    command: >
+      server start
+      --address=0.0.0.0:51515
+      --server-username=${KOPIA_UI_USERNAME}
+      --server-password=${KOPIA_UI_PASSWORD}
+      --disable-csrf-token-checks
+      --insecure
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:51515"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - postgres
+      - redis
+
+  # ============================================================================
+  # MAIL SERVICES (8070-8075)
+  # ============================================================================
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8070:1025"  # SMTP
+      - "8071:8025"  # Web UI
+    volumes:
+      - mailpit_data:/data
+      - ./shared:/data/shared
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+      MP_UI_AUTH_FILE: ${MAILPIT_UI_AUTH_FILE:-}
+      MP_MAX_MESSAGES: ${MAILPIT_MAX_MESSAGES:-5000}
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "1025"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: mailserver
+    hostname: mail.localhost
+    profiles: ["mailserver"]
+    restart: unless-stopped
+    ports:
+      - "25:25"     # SMTP (receiving)
+      - "587:587"   # SMTP (submission)
+      - "993:993"   # IMAP
+    volumes:
+      - ./docker-data/dms/mail-data/:/var/mail/
+      - ./docker-data/dms/mail-state/:/var/mail-state/
+      - ./docker-data/dms/config/:/tmp/docker-mailserver/
+      - /etc/localtime:/etc/localtime:ro
+      - ./shared:/data/shared
+    environment:
+      # Basic Configuration
+      - OVERRIDE_HOSTNAME=mail.localhost
+      - LOG_LEVEL=info
+      - SUPERVISOR_LOGLEVEL=warn
+      
+      # Network
+      - PERMIT_DOCKER=network
+      - NETWORK_INTERFACE=
+      
+      # Security & SSL (disabled for local)
+      - SSL_TYPE=off
+      
+      # Features
+      - ENABLE_RSPAMD=1
+      - ENABLE_CLAMAV=0
+      - ENABLE_FAIL2BAN=1
+      - ENABLE_POSTGREY=0
+      - ENABLE_SASLAUTHD=0
+      - ENABLE_SPAMASSASSIN=0
+      - ENABLE_FETCHMAIL=0
+      - ENABLE_GETMAIL=0
+      - ENABLE_AMAVIS=0
+      
+      # Mail Settings
+      - ONE_DIR=1
+      - DMS_DEBUG=0
+      - POSTMASTER_ADDRESS=postmaster@localhost
+      - POSTFIX_MESSAGE_SIZE_LIMIT=20480000  # 20MB
+      
+    cap_add:
+      - NET_ADMIN
+      - SYS_PTRACE
+    healthcheck:
+      test: ["CMD", "ss", "-lnp", "|", "grep", ":25"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  snappymail:
+    image: djmaze/snappymail:latest
+    container_name: snappymail
+    profiles: ["snappymail"]
+    restart: unless-stopped
+    ports:
+      - "8072:8888"
+    volumes:
+      - snappymail_data:/var/lib/snappymail
+      - ./shared:/data/shared
+    environment:
+      - UPLOAD_MAX_SIZE=25M
+      - PHP_MEMORY_LIMIT=128M
+      - TZ=${TZ:-UTC}
+    depends_on:
+      - mailserver
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8888/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  smtp-relay:
+    image: alpine/socat
+    container_name: smtp-relay
+    profiles: ["baserow", "calcom", "leantime"]
+    restart: unless-stopped
+    command: tcp-listen:8025,fork,reuseaddr tcp-connect:mailserver:25
+
+  # ============================================================================
+  # SPECIALIZED SERVICES (8080-8099)
+  # ============================================================================
+
+  faster-whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    container_name: faster-whisper
+    profiles: ["speech"]
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+    environment:
+      - WHISPER__MODEL=${WHISPER_MODEL:-Systran/faster-distil-whisper-large-v3}
+      - WHISPER__COMPUTE_TYPE=int8
+      - WHISPER__DEVICE=cpu
+      - WHISPER__CPU_THREADS=4
+    volumes:
+      - whisper-models:/root/.cache/huggingface
+      - ./shared:/data/shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  openedai-speech:
+    image: ghcr.io/matatonic/openedai-speech-min:latest
+    container_name: openedai-speech
+    profiles: ["speech"]
+    restart: unless-stopped
+    ports:
+      - "8081:8000"
+    volumes:
+      - ./openedai-voices:/app/voices
+      - ./openedai-config:/app/config
+    environment:
+      - TTS_HOME=voices
+      - HF_HOME=voices
+
+  libretranslate:
+    image: libretranslate/libretranslate:v1.6.1
+    container_name: libretranslate
+    profiles: ["libretranslate"]
+    restart: unless-stopped
+    ports:
+      - "8082:5000"
+    environment:
+      - LT_HOST=0.0.0.0
+      - LT_PORT=5000
+      - LT_CHAR_LIMIT=${LIBRETRANSLATE_CHAR_LIMIT:-10000}
+      - LT_FRONTEND_LANGUAGE_SOURCE=${LIBRETRANSLATE_DEFAULT_SOURCE:-auto}
+      - LT_FRONTEND_LANGUAGE_TARGET=${LIBRETRANSLATE_DEFAULT_TARGET:-en}
+      - LT_API_KEYS=${LIBRETRANSLATE_API_KEYS:-false}
+      - LT_API_KEYS_DB_PATH=/app/db/api_keys.db
+      - LT_THREADS=${LIBRETRANSLATE_THREADS:-4}
+      - LT_SUGGESTIONS=${LIBRETRANSLATE_SUGGESTIONS:-false}
+      - LT_DISABLE_WEB_UI=${LIBRETRANSLATE_DISABLE_WEB_UI:-false}
+      - LT_UPDATE_MODELS=${LIBRETRANSLATE_UPDATE_MODELS:-true}
+      - LT_LOAD_ONLY=${LIBRETRANSLATE_LOAD_ONLY:-en,de,fr,es,it,nl,pl,pt,ru}
+      - LT_METRICS=${LIBRETRANSLATE_METRICS:-false}
+    volumes:
+      - libretranslate_models:/home/libretranslate/.local
+      - libretranslate_db:/app/db
+      - ./shared:/data/shared
+
+  scriberr:
+    image: ghcr.io/rishikanthc/scriberr:latest
+    container_name: scriberr
+    profiles: ["scriberr"]
+    restart: unless-stopped
+    ports:
+      - "8083:8080"
+    volumes:
+      - scriberr_data:/app/data
+      - ./shared/audio:/app/data/uploads
+    environment:
+      # Server Configuration
+      - HOST=0.0.0.0
+      - PORT=8080
+      # Storage Paths
+      - DATABASE_PATH=/app/data/scriberr.db
+      - UPLOAD_DIR=/app/data/uploads
+      - WHISPERX_ENV=/app/data/whisperx-env
+      # Optional API Keys for summaries
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # Whisper Model Configuration
+      - WHISPER_MODEL=${SCRIBERR_WHISPER_MODEL:-base}
+      # Speaker Diarization
+      - ENABLE_SPEAKER_DIARIZATION=${SCRIBERR_SPEAKER_DIARIZATION:-true}
+      - MIN_SPEAKERS=${SCRIBERR_MIN_SPEAKERS:-2}
+      - MAX_SPEAKERS=${SCRIBERR_MAX_SPEAKERS:-4}
+      # Performance Settings
+      - WHISPER_THREADS=${SCRIBERR_THREADS:-4}
+      - BATCH_SIZE=${SCRIBERR_BATCH_SIZE:-16}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || wget -q --spider http://localhost:8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  tesseract-ocr:
+    image: hertzg/tesseract-server:latest
+    container_name: tesseract-ocr
+    profiles: ["ocr"]
+    restart: unless-stopped
+    ports:
+      - "8084:8884"
+    volumes:
+      - ./shared:/tmp
+    environment:
+      - HTTP_LISTEN_PORT=8884
+      - HTTP_UPLOAD_TMPDIR=/tmp
+      - POOL_DEFAULT_MAX=${OCR_CPU_CORES:-4}
+      - POOL_DEFAULT_IDLETIMEOUTMILLIS=5000
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8884/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  easyocr:
+    image: voduytuan/restful-easyocr:latest
+    container_name: easyocr
+    profiles: ["ocr"]
+    restart: unless-stopped
+    ports:
+      - "8085:2000"
+    volumes:
+      - easyocr_models:/root/.EasyOCR/model
+      - ./shared:/data/shared
+    environment:
+      - SECRET_KEY=${EASYOCR_SECRET_KEY:-launchkit}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    profiles: ["stirling-pdf"]
+    restart: unless-stopped
+    ports:
+      - "8086:8080"
+    volumes:
+      - stirling_data:/usr/share/tessdata
+      - stirling_configs:/configs
+      - stirling_logs:/logs
+      - ./shared:/data/shared
+    environment:
+      - SYSTEM_DEFAULTLOCALE=${STIRLING_LOCALE:-de-DE}
+      - UI_APPNAME=${STIRLING_APP_NAME:-AI LaunchKit PDF}
+      - UI_HOMEDESCRIPTION=${STIRLING_APP_DESC:-PDF-Tools für AI LaunchKit}
+      - UI_APPNAMENAVBAR=${STIRLING_APP_NAME:-AI LaunchKit PDF}
+      - SECURITY_ENABLELOGIN=${STIRLING_ENABLE_LOGIN:-false}
+      - SECURITY_INITIALLOGINUSERNAME=${STIRLING_USERNAME}
+      - SECURITY_INITIALLOGINPASSWORD=${STIRLING_PASSWORD}
+      - DISABLE_ADDITIONAL_FEATURES=false
+      - LANGS=de-DE,en-GB,en-US
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  chatterbox-tts:
+    build:
+      context: ./chatterbox-frontend
+      dockerfile: docker/Dockerfile
+    container_name: chatterbox-tts
+    profiles: ["tts-chatterbox"]
+    restart: unless-stopped
+    ports:
+      - "8087:4123"
+    volumes:
+      - chatterbox_models:/app/models
+      - ./shared/tts/voices:/app/voice-samples
+      - ./shared:/data/shared
+    environment:
+      - DEVICE=${CHATTERBOX_DEVICE:-cpu}
+      - EXAGGERATION=${CHATTERBOX_EXAGGERATION:-0.5}
+      - API_KEY=${CHATTERBOX_API_KEY}
+      - MAX_LENGTH=${CHATTERBOX_MAX_LENGTH:-500}
+      - DEFAULT_VOICE=${CHATTERBOX_DEFAULT_VOICE:-default}
+      - MEMORY_CLEANUP_INTERVAL=${CHATTERBOX_MEMORY_CLEANUP:-60}
+      - CUDA_CACHE_CLEAR_INTERVAL=${CHATTERBOX_CUDA_CLEANUP:-120}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4123/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  chatterbox-frontend:
+    build:
+      context: ./chatterbox-frontend/frontend
+      dockerfile: Dockerfile
+    container_name: chatterbox-frontend
+    profiles: ["tts-chatterbox"]
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    depends_on:
+      - chatterbox-tts
+    environment:
+      - VITE_API_URL=http://127.0.0.1:8087
+
+  searxng:
+    container_name: searxng
+    image: docker.io/searxng/searxng:latest
+    profiles: ["searxng"]
+    restart: unless-stopped
+    ports:
+      - "8089:8080"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=http://127.0.0.1:8089/
+      - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
+      - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+
+  perplexica:
+    build:
+      context: ./perplexica
+      dockerfile: app.dockerfile
+    container_name: perplexica
+    profiles: ["perplexica"]
+    restart: unless-stopped
+    ports:
+      - "8090:3000"
+    environment:
+      - SEARXNG_API_URL=http://searxng:8080
+      - DATA_DIR=/home/perplexica
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./perplexica/backend-dbstore:/home/perplexica/data
+      - ./perplexica/uploads:/home/perplexica/uploads
+      - ./perplexica/config.toml:/home/perplexica/config.toml
+      - ./shared:/data/shared
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - searxng
+
+  formbricks_db:
+    image: pgvector/pgvector:pg17
+    container_name: formbricks_db
+    profiles: ["formbricks"]
+    restart: unless-stopped
+    volumes:
+      - formbricks_postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=formbricks
+      - POSTGRES_USER=formbricks
+      - POSTGRES_PASSWORD=${FORMBRICKS_DB_PASSWORD:-formbricks_secure_password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U formbricks"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  formbricks:
+    image: formbricks/formbricks:latest
+    container_name: formbricks
+    profiles: ["formbricks"]
+    restart: unless-stopped
+    ports:
+      - "8091:3000"
+    volumes:
+      - formbricks_uploads:/home/nextjs/apps/web/uploads
+      - ./shared:/data/shared
+    environment:
+      # Core Configuration
+      - WEBAPP_URL=http://127.0.0.1:8091
+      - NEXTAUTH_URL=http://127.0.0.1:8091
+      
+      # Database - eigene PostgreSQL mit pgvector!
+      - DATABASE_URL=postgresql://formbricks:${FORMBRICKS_DB_PASSWORD:-formbricks_secure_password}@formbricks_db:5432/formbricks?schema=public
+      - NEXTAUTH_SECRET=${FORMBRICKS_NEXTAUTH_SECRET}
+      - ENCRYPTION_KEY=${FORMBRICKS_ENCRYPTION_KEY}
+      - CRON_SECRET=${FORMBRICKS_CRON_SECRET}
+      - EMAIL_VERIFICATION_DISABLED=1
+      - PASSWORD_RESET_DISABLED=0
+      - INVITE_DISABLED=0
+      - EMAIL_AUTH_DISABLED=0
+      - MAIL_FROM=${FORMBRICKS_MAIL_FROM:-noreply@localhost}
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_USER=dummy
+      - SMTP_PASSWORD=dummy
+      - SMTP_SECURE_ENABLED=0
+      - UPLOADS_DIR=/home/nextjs/apps/web/uploads
+      - ASSET_PREFIX_URL=
+      - TELEMETRY_DISABLED=1
+      - DEFAULT_ORGANIZATION_ID=
+      - DEFAULT_ORGANIZATION_ROLE=owner
+      - REDIS_URL=redis://redis:6379
+      - REDIS_HTTP_URL=redis://redis:6379
+      
+    depends_on:
+      formbricks_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    profiles: ["metabase"]
+    restart: unless-stopped
+    ports:
+      - "8092:3000"
+    volumes:
+      - metabase_data:/metabase-data
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=metabase
+      - MB_DB_PORT=5432
+      - MB_DB_USER=metabase
+      - MB_DB_PASS=${METABASE_DB_PASSWORD}
+      - MB_DB_HOST=metabase_db
+    depends_on:
+      metabase_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  metabase_db:
+    image: postgres:16-alpine
+    container_name: metabase_db
+    profiles: ["metabase"]
+    restart: unless-stopped
+    volumes:
+      - metabase_postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${METABASE_DB_NAME:-metabase}
+      - POSTGRES_USER=${METABASE_DB_USER:-metabase}
+      - POSTGRES_PASSWORD=${METABASE_DB_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --lc-collate=C --lc-ctype=C
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${METABASE_DB_USER:-metabase}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    container_name: crawl4ai
+    profiles: ["crawl4ai"]
+    restart: unless-stopped
+    ports:
+      - "8093:8000"
+    shm_size: 1g
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 4G
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: gotenberg
+    profiles: ["gotenberg"]
+    restart: unless-stopped
+    ports:
+      - "8094:3000"
+    environment:
+      - DISABLE_GOOGLE_CHROME=false
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  python-runner:
+    image: python:3.11-slim
+    container_name: python-runner
+    profiles: ["python-runner"]
+    restart: unless-stopped
+    ports:
+      - "8095:8000"
+    working_dir: /app
+    command: /bin/sh -c 'if [ -f /app/requirements.txt ]; then python -m pip install --no-cache-dir -r /app/requirements.txt; fi; python /app/main.py'
+    volumes:
+      - ./python-runner:/app
+
+  # ============================================================================
+  # LANGFUSE STACK (8096-8099)
+  # ============================================================================
+
+  langfuse-web:
+    image: langfuse/langfuse:3
+    restart: always
+    container_name: langfuse-web
+    profiles: ["langfuse"]
+    ports:
+      - "8096:3000"
+    depends_on: &langfuse-depends-on
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    environment: &langfuse-worker-env
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/langfuse
+      SALT: ${LANGFUSE_SALT}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      TELEMETRY_ENABLED: ${TELEMETRY_ENABLED:-true}
+      LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: ${LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES:-true}
+      CLICKHOUSE_MIGRATION_URL: ${CLICKHOUSE_MIGRATION_URL:-clickhouse://clickhouse:9000}
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL:-http://clickhouse:8123}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-clickhouse}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_CLUSTER_ENABLED: ${CLICKHOUSE_CLUSTER_ENABLED:-false}
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: ${LANGFUSE_S3_EVENT_UPLOAD_BUCKET:-langfuse}
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: ${LANGFUSE_S3_EVENT_UPLOAD_REGION:-auto}
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: ${LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID:-minio}
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: ${LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT:-http://minio:9000}
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: ${LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE:-true}
+      LANGFUSE_S3_EVENT_UPLOAD_PREFIX: ${LANGFUSE_S3_EVENT_UPLOAD_PREFIX:-events/}
+      LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: ${LANGFUSE_S3_MEDIA_UPLOAD_BUCKET:-langfuse}
+      LANGFUSE_S3_MEDIA_UPLOAD_REGION: ${LANGFUSE_S3_MEDIA_UPLOAD_REGION:-auto}
+      LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: ${LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID:-minio}
+      LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: ${LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT:-http://localhost:9090}
+      LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: ${LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE:-true}
+      LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: ${LANGFUSE_S3_MEDIA_UPLOAD_PREFIX:-media/}
+      LANGFUSE_S3_BATCH_EXPORT_ENABLED: ${LANGFUSE_S3_BATCH_EXPORT_ENABLED:-false}
+      LANGFUSE_S3_BATCH_EXPORT_BUCKET: ${LANGFUSE_S3_BATCH_EXPORT_BUCKET:-langfuse}
+      LANGFUSE_S3_BATCH_EXPORT_PREFIX: ${LANGFUSE_S3_BATCH_EXPORT_PREFIX:-exports/}
+      LANGFUSE_S3_BATCH_EXPORT_REGION: ${LANGFUSE_S3_BATCH_EXPORT_REGION:-auto}
+      LANGFUSE_S3_BATCH_EXPORT_ENDPOINT: ${LANGFUSE_S3_BATCH_EXPORT_ENDPOINT:-http://minio:9000}
+      LANGFUSE_S3_BATCH_EXPORT_EXTERNAL_ENDPOINT: ${LANGFUSE_S3_BATCH_EXPORT_EXTERNAL_ENDPOINT:-http://localhost:9090}
+      LANGFUSE_S3_BATCH_EXPORT_ACCESS_KEY_ID: ${LANGFUSE_S3_BATCH_EXPORT_ACCESS_KEY_ID:-minio}
+      LANGFUSE_S3_BATCH_EXPORT_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      LANGFUSE_S3_BATCH_EXPORT_FORCE_PATH_STYLE: ${LANGFUSE_S3_BATCH_EXPORT_FORCE_PATH_STYLE:-true}
+      LANGFUSE_INGESTION_QUEUE_DELAY_MS: ${LANGFUSE_INGESTION_QUEUE_DELAY_MS:-}
+      LANGFUSE_INGESTION_CLICKHOUSE_WRITE_INTERVAL_MS: ${LANGFUSE_INGESTION_CLICKHOUSE_WRITE_INTERVAL_MS:-}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_AUTH: ${REDIS_AUTH:-LOCALONLYREDIS}
+      REDIS_TLS_ENABLED: ${REDIS_TLS_ENABLED:-false}
+      REDIS_TLS_CA: ${REDIS_TLS_CA:-/certs/ca.crt}
+      REDIS_TLS_CERT: ${REDIS_TLS_CERT:-/certs/redis.crt}
+      REDIS_TLS_KEY: ${REDIS_TLS_KEY:-/certs/redis.key}
+      NEXTAUTH_URL: http://127.0.0.1:8096
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      LANGFUSE_INIT_ORG_ID: ${LANGFUSE_INIT_ORG_ID:-organization_id}
+      LANGFUSE_INIT_ORG_NAME: ${LANGFUSE_INIT_ORG_NAME:-Organization}
+      LANGFUSE_INIT_PROJECT_ID: ${LANGFUSE_INIT_PROJECT_ID:-project_id}
+      LANGFUSE_INIT_PROJECT_NAME: ${LANGFUSE_INIT_PROJECT_NAME:-Project}
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: ${LANGFUSE_INIT_PROJECT_PUBLIC_KEY:-}
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: ${LANGFUSE_INIT_PROJECT_SECRET_KEY:-}
+      LANGFUSE_INIT_USER_EMAIL: ${LANGFUSE_INIT_USER_EMAIL:-}
+      LANGFUSE_INIT_USER_NAME: ${LANGFUSE_INIT_USER_NAME:-}
+      LANGFUSE_INIT_USER_PASSWORD: ${LANGFUSE_INIT_USER_PASSWORD:-}
+      AUTH_DISABLE_SIGNUP: ${AUTH_DISABLE_SIGNUP:-true}
+
+  langfuse-worker:
+    image: langfuse/langfuse-worker:3
+    restart: always
+    container_name: langfuse-worker
+    profiles: ["langfuse"]
+    depends_on: *langfuse-depends-on
+    environment: *langfuse-worker-env
+
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    restart: always
+    container_name: clickhouse
+    profiles: ["langfuse"]
+    ports:
+      - "8097:8123"
+    user: "101:101"
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+    volumes:
+      - langfuse_clickhouse_data:/var/lib/clickhouse
+      - langfuse_clickhouse_logs:/var/log/clickhouse-server
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 1s
+
+  minio:
+    image: minio/minio
+    restart: always
+    container_name: minio
+    profiles: ["langfuse"]
+    ports:
+      - "8098:9000"
+      - "8099:9001"
+    entrypoint: sh
+    # create the 'langfuse' bucket before starting the service
+    command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - langfuse_minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 1s
+      timeout: 5s
+      retries: 5
+      start_period: 1s
