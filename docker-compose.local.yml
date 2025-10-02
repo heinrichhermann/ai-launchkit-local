@@ -22,7 +22,6 @@ volumes:
   postiz-config:
   postiz-uploads:
   lightrag_data:
-  odoo_data:
   baserow_data:
   vikunja-files:
   mysql-leantime-data:
@@ -32,22 +31,10 @@ volumes:
   leantime-logs:
   mailpit_data:
   calcom_data:
-  jitsi-web:
-  jitsi-transcripts:
-  jitsi-prosody-config:
-  jitsi-prosody-plugins:
-  jitsi-jicofo:
-  jitsi-jvb:
   vaultwarden_data:
   kopia_config:
   kopia_cache:
   kopia_logs:
-  kimai_data:
-  kimai_plugins:
-  kimai_mysql:
-  invoiceninja_public:
-  invoiceninja_storage:
-  invoiceninja_mysql:
   formbricks_uploads:
   formbricks_postgres:
   metabase_data:
@@ -57,14 +44,6 @@ volumes:
   stirling_data:
   stirling_configs:
   stirling_logs:
-  twenty_data:
-  twenty_db_data:
-  twenty_redis_data:
-  espocrm_data:
-  espocrm_db_data:
-  mautic_data:
-  mautic_db_data:
-  mautic_redis_data:
   scriberr_data:
   chatterbox_models:
 
@@ -742,340 +721,19 @@ services:
       retries: 5
       start_period: 30s
 
-  invoiceninja:
-    image: invoiceninja/invoiceninja:5
-    container_name: invoiceninja
-    profiles: ["invoiceninja"]
-    restart: unless-stopped
     volumes:
-      - invoiceninja_public:/var/www/app/public
-      - invoiceninja_storage:/var/www/app/storage
-      - ./shared:/data/shared
-    environment:
-      # Application Settings
-      - APP_ENV=production
-      - APP_DEBUG=false
-      - APP_URL=http://127.0.0.1:8043
-      - APP_KEY=${INVOICENINJA_APP_KEY}
-      - APP_CIPHER=AES-256-CBC
-      - REQUIRE_HTTPS=false
-      - TRUSTED_PROXIES=*
-      
-      # Database Configuration
-      - DB_HOST=invoiceninja_db
-      - DB_PORT=3306
-      - DB_DATABASE=${INVOICENINJA_DB_NAME:-invoiceninja}
-      - DB_USERNAME=${INVOICENINJA_DB_USER:-invoiceninja}
-      - DB_PASSWORD=${INVOICENINJA_DB_PASSWORD}
-      
-      # Initial Admin Account
-      - IN_USER_EMAIL=${INVOICENINJA_ADMIN_EMAIL:-${USER_EMAIL}}
-      - IN_PASSWORD=${INVOICENINJA_ADMIN_PASSWORD}
-      
-      # Mail Configuration
-      - MAIL_MAILER=smtp
-      - MAIL_HOST=mailpit
-      - MAIL_PORT=1025
-      - MAIL_USERNAME=${SMTP_USER}
-      - MAIL_PASSWORD=${SMTP_PASSWORD}
-      - MAIL_ENCRYPTION=null
-      - MAIL_FROM_ADDRESS=${INVOICENINJA_MAIL_FROM:-noreply@localhost}
-      - MAIL_FROM_NAME="Invoice Ninja"
-      
-      # PDF Generation
-      - PDF_GENERATOR=snappdf
-      - SNAPPDF_EXECUTABLE_PATH=/usr/bin/chromium-browser
-      
-      # Queue Configuration
-      - QUEUE_CONNECTION=database
-      - BROADCAST_DRIVER=log
-      - CACHE_DRIVER=redis
-      - SESSION_DRIVER=redis
-      - REDIS_HOST=redis
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_PORT=6379
-      
-    depends_on:
-      invoiceninja_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "ps aux | grep php-fpm | grep -v grep || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-
-  invoiceninja_db:
-    image: mysql:8.3
-    container_name: invoiceninja_db
-    profiles: ["invoiceninja"]
-    restart: unless-stopped
     volumes:
-      - invoiceninja_mysql:/var/lib/mysql
-    environment:
-      - MYSQL_DATABASE=${INVOICENINJA_DB_NAME:-invoiceninja}
-      - MYSQL_USER=${INVOICENINJA_DB_USER:-invoiceninja}
-      - MYSQL_PASSWORD=${INVOICENINJA_DB_PASSWORD}
-      - MYSQL_ROOT_PASSWORD=${INVOICENINJA_DB_ROOT_PASSWORD}
-    command: --default-storage-engine=innodb --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${INVOICENINJA_DB_ROOT_PASSWORD}"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-  invoiceninja_nginx:
-    image: nginx:alpine
-    container_name: invoiceninja_nginx
-    profiles: ["invoiceninja"]
-    restart: unless-stopped
-    ports:
-      - "8043:80"
     volumes:
-      - invoiceninja_public:/var/www/app/public:ro
-      - invoiceninja_storage:/var/www/app/storage:ro
-      - ./invoiceninja-nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      invoiceninja:
-        condition: service_healthy
-
-  twenty-crm:
-    image: twentycrm/twenty:latest
-    container_name: twenty-crm
-    profiles: ["twenty-crm"]
-    restart: unless-stopped
-    ports:
-      - "8044:3000"
     volumes:
-      - twenty_data:/app/packages/twenty-server/.local-storage
-      - ./shared:/data/shared
-    environment:
-      - NODE_PORT=3000
-      - PG_DATABASE_URL=postgresql://${TWENTY_CRM_DB_USER}:${TWENTY_CRM_DB_PASSWORD}@twenty-db:5432/default
-      - REDIS_URL=redis://twenty-redis:6379
-      - SERVER_URL=http://127.0.0.1:8044
-      - APP_SECRET=${TWENTY_CRM_APP_SECRET}
-      - STORAGE_TYPE=local
-      - DISABLE_DB_MIGRATIONS=false
-    depends_on:
-      twenty-db:
-        condition: service_healthy
-      twenty-redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  twenty-db:
-    image: postgres:16-alpine
-    container_name: twenty-db
-    profiles: ["twenty-crm"]
-    restart: unless-stopped
     volumes:
-      - twenty_db_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=${TWENTY_CRM_DB_PASSWORD}
-      - POSTGRES_USER=${TWENTY_CRM_DB_USER}
-      - POSTGRES_DB=default
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${TWENTY_CRM_DB_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  twenty-redis:
-    image: redis:7-alpine
-    container_name: twenty-redis
-    profiles: ["twenty-crm"]
-    restart: unless-stopped
     volumes:
-      - twenty_redis_data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  espocrm:
-    image: espocrm/espocrm:latest
-    container_name: espocrm
-    profiles: ["espocrm"]
-    restart: unless-stopped
-    ports:
-      - "8045:80"
     volumes:
-      - espocrm_data:/var/www/html
-      - ./shared:/data/shared
-    environment:
-      - ESPOCRM_DATABASE_PLATFORM=Mysql
-      - ESPOCRM_DATABASE_HOST=espocrm-db
-      - ESPOCRM_DATABASE_NAME=${ESPOCRM_DB_NAME}
-      - ESPOCRM_DATABASE_USER=${ESPOCRM_DB_USER}
-      - ESPOCRM_DATABASE_PASSWORD=${ESPOCRM_DB_PASSWORD}
-      - ESPOCRM_ADMIN_USERNAME=${ESPOCRM_ADMIN_USERNAME}
-      - ESPOCRM_ADMIN_PASSWORD=${ESPOCRM_ADMIN_PASSWORD}
-      - ESPOCRM_SITE_URL=http://127.0.0.1:8045
-    depends_on:
-      espocrm-db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost/index.php || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 180s
-
-  espocrm-db:
-    image: mariadb:latest
-    container_name: espocrm-db
-    profiles: ["espocrm"]
-    restart: unless-stopped
     volumes:
-      - espocrm_db_data:/var/lib/mysql
-    environment:
-      - MARIADB_ROOT_PASSWORD=${ESPOCRM_DB_ROOT_PASSWORD}
-      - MARIADB_DATABASE=${ESPOCRM_DB_NAME}
-      - MARIADB_USER=${ESPOCRM_DB_USER}
-      - MARIADB_PASSWORD=${ESPOCRM_DB_PASSWORD}
-    command: --max-allowed-packet=64MB
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 20s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-  espocrm-daemon:
-    image: espocrm/espocrm:latest
-    container_name: espocrm-daemon
-    profiles: ["espocrm"]
-    restart: unless-stopped
     volumes:
-      - espocrm_data:/var/www/html
-    entrypoint: docker-daemon.sh
-    depends_on:
-      - espocrm
-
-  mautic_db:
-    image: mariadb:10.11
-    container_name: mautic_db
-    profiles: ["mautic"]
-    restart: unless-stopped
     volumes:
-      - mautic_db_data:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MAUTIC_DB_ROOT_PASSWORD}
-      - MYSQL_DATABASE=mautic
-      - MYSQL_USER=${MAUTIC_DB_USER}
-      - MYSQL_PASSWORD=${MAUTIC_DB_PASSWORD}
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p${MAUTIC_DB_ROOT_PASSWORD}"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-  mautic_redis:
-    image: redis:7-alpine
-    container_name: mautic_redis
-    profiles: ["mautic"]
-    restart: unless-stopped
     volumes:
-      - mautic_redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  mautic_web:
-    image: mautic/mautic:latest
-    container_name: mautic_web
-    profiles: ["mautic"]
-    restart: unless-stopped
-    ports:
-      - "8046:80"
-    depends_on:
-      mautic_db:
-        condition: service_healthy
-      mautic_redis:
-        condition: service_healthy
     volumes:
-      - mautic_data:/var/www/html
-      - ./shared:/data/shared
-    environment:
-      # Database Configuration
-      - MAUTIC_DB_HOST=mautic_db
-      - MAUTIC_DB_PORT=3306
-      - MAUTIC_DB_NAME=mautic
-      - MAUTIC_DB_USER=${MAUTIC_DB_USER}
-      - MAUTIC_DB_PASSWORD=${MAUTIC_DB_PASSWORD}
-      
-      # Redis Cache
-      - MAUTIC_REDIS_HOST=mautic_redis
-      - MAUTIC_REDIS_PORT=6379
-      
-      # Mautic Configuration
-      - MAUTIC_ADMIN_EMAIL=${MAUTIC_ADMIN_EMAIL}
-      - MAUTIC_ADMIN_PASSWORD=${MAUTIC_ADMIN_PASSWORD}
-      - MAUTIC_TRUSTED_PROXIES=["0.0.0.0/0"]
-      - MAUTIC_URL=http://127.0.0.1:8046
-      
-      # Mail Configuration (using Mailpit)
-      - MAUTIC_MAILER_DSN=smtp://mailpit:1025
-      
-      # Performance Settings
-      - PHP_MEMORY_LIMIT=512M
-      - PHP_MAX_EXECUTION_TIME=300
-      - PHP_UPLOAD_MAX_FILESIZE=50M
-      - PHP_POST_MAX_SIZE=50M
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost/s/login || exit 1"]
-      interval: 60s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  mautic_worker:
-    image: mautic/mautic:latest
-    container_name: mautic_worker
-    profiles: ["mautic"]
-    restart: unless-stopped
-    depends_on:
-      mautic_web:
-        condition: service_healthy
     volumes:
-      - mautic_data:/var/www/html
-      - ./shared:/data/shared
-    environment:
-      # Same as mautic_web
-      - MAUTIC_DB_HOST=mautic_db
-      - MAUTIC_DB_PORT=3306
-      - MAUTIC_DB_NAME=mautic
-      - MAUTIC_DB_USER=${MAUTIC_DB_USER}
-      - MAUTIC_DB_PASSWORD=${MAUTIC_DB_PASSWORD}
-      - MAUTIC_REDIS_HOST=mautic_redis
-      - MAUTIC_REDIS_PORT=6379
-    command: >
-      sh -c "
-        while true; do
-          php /var/www/html/bin/console mautic:segments:update --no-interaction
-          php /var/www/html/bin/console mautic:campaigns:update --no-interaction
-          php /var/www/html/bin/console mautic:campaigns:trigger --no-interaction
-          php /var/www/html/bin/console mautic:messages:send --no-interaction
-          php /var/www/html/bin/console mautic:webhooks:process --no-interaction
-          php /var/www/html/bin/console mautic:reports:scheduler --no-interaction
-          php /var/www/html/bin/console mautic:import --no-interaction
-          sleep 300
-        done
-      "
-
   baserow:
     image: baserow/baserow:1.35.0
     container_name: baserow
@@ -1313,7 +971,6 @@ services:
   # COMMUNICATION & COLLABORATION (8051-8059)
   # ============================================================================
 
-  jitsi-web:
     image: jitsi/web:stable-10008
     container_name: jitsi-web
     profiles: ["jitsi"]
@@ -1340,80 +997,9 @@ services:
     depends_on:
       - jitsi-prosody
 
-  jitsi-prosody:
-    image: jitsi/prosody:stable-10008
-    container_name: jitsi-prosody
-    profiles: ["jitsi"]
-    restart: unless-stopped
     volumes:
-      - ./jitsi-prosody-config:/config
-      - ./jitsi-prosody-plugins:/prosody-plugins-custom
-    environment:
-      - AUTH_TYPE=internal
-      - ENABLE_GUESTS=1
-      - XMPP_DOMAIN=${JITSI_XMPP_DOMAIN}
-      - XMPP_AUTH_DOMAIN=auth.${JITSI_XMPP_DOMAIN}
-      - XMPP_GUEST_DOMAIN=guest.${JITSI_XMPP_DOMAIN}
-      - XMPP_MUC_DOMAIN=muc.${JITSI_XMPP_DOMAIN}
-      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${JITSI_XMPP_DOMAIN}
-      - JICOFO_COMPONENT_SECRET=${JICOFO_COMPONENT_SECRET}
-      - JICOFO_AUTH_USER=jicofo
-      - JICOFO_AUTH_PASSWORD=${JICOFO_AUTH_PASSWORD}
-      - JVB_AUTH_USER=jvb
-      - JVB_AUTH_PASSWORD=${JVB_AUTH_PASSWORD}
-      - TZ=${TZ}
-
-  jitsi-jicofo:
-    image: jitsi/jicofo:stable-10008
-    container_name: jitsi-jicofo
-    profiles: ["jitsi"]
-    restart: unless-stopped
     volumes:
-      - ./jitsi-jicofo:/config
-    environment:
-      - XMPP_DOMAIN=${JITSI_XMPP_DOMAIN}
-      - XMPP_AUTH_DOMAIN=auth.${JITSI_XMPP_DOMAIN}
-      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${JITSI_XMPP_DOMAIN}
-      - XMPP_MUC_DOMAIN=muc.${JITSI_XMPP_DOMAIN}
-      - XMPP_SERVER=jitsi-prosody
-      - JICOFO_COMPONENT_SECRET=${JICOFO_COMPONENT_SECRET}
-      - JICOFO_AUTH_USER=jicofo
-      - JICOFO_AUTH_PASSWORD=${JICOFO_AUTH_PASSWORD}
-      - JVB_BREWERY_MUC=jvbbrewery
-      - TZ=${TZ}
-    depends_on:
-      - jitsi-prosody
-
-  jitsi-jvb:
-    image: jitsi/jvb:stable-10008
-    container_name: jitsi-jvb
-    profiles: ["jitsi"]
-    restart: unless-stopped
-    ports:
-      - "10000:10000/udp"
     volumes:
-      - ./jitsi-jvb:/config
-    environment:
-      - DOCKER_HOST_ADDRESS=${JVB_DOCKER_HOST_ADDRESS}
-      - XMPP_AUTH_DOMAIN=auth.${JITSI_XMPP_DOMAIN}
-      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${JITSI_XMPP_DOMAIN}
-      - XMPP_SERVER=jitsi-prosody
-      - JVB_AUTH_USER=jvb
-      - JVB_AUTH_PASSWORD=${JVB_AUTH_PASSWORD}
-      - JVB_BREWERY_MUC=jvbbrewery
-      - JVB_PORT=10000
-      - JVB_STUN_SERVERS=meet-jit-si-turnrelay.jitsi.net:443
-      - PUBLIC_URL=http://127.0.0.1:8051
-      - JVB_WS_DOMAIN=127.0.0.1:8051
-      - JVB_WS_SERVER_ID=jvb1
-      - TZ=${TZ}
-    depends_on:
-      - jitsi-prosody
-
-  # ============================================================================
-  # UTILITIES & TOOLS (8060-8079)
-  # ============================================================================
-
   postiz:
     image: ghcr.io/gitroomhq/postiz-app:latest
     container_name: postiz
