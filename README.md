@@ -434,6 +434,56 @@ COMPOSE_PROFILES="n8n,flowise,monitoring,bolt,openui,comfyui,cpu,calcom,baserow,
 
 ---
 
+## 🗑️ Uninstalling AI LaunchKit
+
+If you need to remove AI LaunchKit from your system:
+
+### Safe Uninstall with Backup
+
+```bash
+# Run the uninstall script
+sudo bash ./scripts/uninstall_local.sh
+```
+
+The uninstall script will:
+1. ✅ Show current AI LaunchKit status
+2. ✅ Ask for confirmation before proceeding
+3. ✅ Offer to create backup (workflows, databases, volumes)
+4. ✅ Remove only AI LaunchKit containers and volumes
+5. ✅ Preserve Portainer (or install it if missing)
+6. ✅ Optionally keep or remove .env configuration
+
+### Manual Uninstall
+
+If you prefer manual removal:
+
+```bash
+# Stop all services
+docker compose -p localai -f docker-compose.local.yml down
+
+# Remove with volumes (⚠️ DATA LOSS!)
+docker compose -p localai -f docker-compose.local.yml down -v
+
+# Remove images (optional)
+docker image prune -a -f --filter "label=com.docker.compose.project=localai"
+```
+
+### What Gets Removed
+
+- ❌ All AI LaunchKit containers (n8n, Flowise, Ollama, etc.)
+- ❌ All data volumes (workflows, databases, uploaded files)
+- ❌ AI LaunchKit Docker networks
+- ❌ Unused AI LaunchKit Docker images
+
+### What Gets Preserved
+
+- ✅ Portainer (Docker Management UI)
+- ✅ Other Docker containers not part of AI LaunchKit
+- ✅ Project directory and scripts (can reinstall anytime)
+- ✅ Your .env configuration (optionally backed up)
+
+---
+
 ## 🔧 Management Commands
 
 ### Service Management
