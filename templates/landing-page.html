@@ -3,277 +3,437 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI LaunchKit Dashboard</title>
+    <title>🎓 AI Learning Kit - Service Dashboard</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 2rem 1rem;
+            padding: 20px;
         }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
         }
-        h1 {
-            color: white;
+
+        header {
             text-align: center;
-            margin-bottom: 1rem;
-            font-size: 3rem;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
+
         .subtitle {
-            color: rgba(255,255,255,0.9);
-            text-align: center;
-            margin-bottom: 3rem;
-            font-size: 1.2rem;
+            font-size: 1.2em;
+            opacity: 0.9;
         }
-        .category {
-            margin-bottom: 3rem;
-        }
-        .category-title {
+
+        .server-info {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 30px;
             color: white;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            padding-left: 1rem;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            text-align: center;
         }
+
         .services-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.2rem;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
         }
-        .service-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.3s;
-            text-decoration: none;
-            color: #333;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-        }
-        .service-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            transform: translateX(-100%);
-            transition: transform 0.3s;
-        }
-        .service-card:hover::before {
-            transform: translateX(0);
-        }
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
+        .category {
             background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease-out;
         }
+
+        .category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .category-icon {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        .category-title {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .service-link {
+            display: block;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .service-link:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
         .service-name {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: #2d3748;
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 5px;
         }
-        .service-desc {
-            color: #718096;
-            font-size: 0.9rem;
-            line-height: 1.4;
+
+        .service-description {
+            font-size: 0.9em;
+            opacity: 0.9;
         }
-        .footer {
+
+        .port-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-left: 8px;
+        }
+
+        footer {
             text-align: center;
-            color: rgba(255,255,255,0.8);
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+            animation: fadeIn 1s ease-out;
         }
-        .domain-info {
-            text-align: center;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s ease-in-out infinite;
         }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         @media (max-width: 768px) {
-            h1 { font-size: 2rem; }
-            .category-title { font-size: 1.5rem; }
-            .services-grid { grid-template-columns: 1fr; }
+            h1 {
+                font-size: 2em;
+            }
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 AI LaunchKit</h1>
-        <p class="subtitle">Your Complete AI Development & Automation Platform</p>
-        <p class="domain-info" id="domainInfo"></p>
-        
-        <div id="servicesContainer">
-            <!-- Services will be injected here by JavaScript -->
+        <header>
+            <h1>🎓 AI Learning Kit</h1>
+            <p class="subtitle">Your Local AI Development Environment</p>
+        </header>
+
+        <div class="server-info">
+            <span class="status-indicator"></span>
+            <strong>Server Status: Online</strong> | 
+            <span id="server-ip">Loading...</span> | 
+            <span id="service-count">40+ Services Available</span>
         </div>
 
-        <div class="footer">
-            <p>🚀 AI LaunchKit v1.0 | Created by Friedemann Schuetz</p>
-            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                <a href="https://github.com/freddy-schuetz/ai-launchkit" style="color: white; text-decoration: none;">
-                    GitHub Repository
+        <div class="services-grid">
+            <!-- AI Core Services -->
+            <div class="category">
+                <div class="category-header">
+                    <span class="category-icon">🤖</span>
+                    <h2 class="category-title">AI Core</h2>
+                </div>
+                <a href="http://SERVER_IP:8000" class="service-link" target="_blank">
+                    <span class="service-name">n8n <span class="port-badge">:8000</span></span>
+                    <span class="service-description">Workflow Automation & AI Orchestration</span>
                 </a>
-            </p>
+                <a href="http://SERVER_IP:8022" class="service-link" target="_blank">
+                    <span class="service-name">Flowise <span class="port-badge">:8022</span></span>
+                    <span class="service-description">AI Agent Builder (Drag & Drop)</span>
+                </a>
+                <a href="http://SERVER_IP:8020" class="service-link" target="_blank">
+                    <span class="service-name">Open WebUI <span class="port-badge">:8020</span></span>
+                    <span class="service-description">ChatGPT-like Interface</span>
+                </a>
+                <a href="http://SERVER_IP:8021" class="service-link" target="_blank">
+                    <span class="service-name">Ollama API <span class="port-badge">:8021</span></span>
+                    <span class="service-description">Local LLM Runtime</span>
+                </a>
+                <a href="http://SERVER_IP:8023" class="service-link" target="_blank">
+                    <span class="service-name">bolt.diy <span class="port-badge">:8023</span></span>
+                    <span class="service-description">AI Web Development</span>
+                </a>
+                <a href="http://SERVER_IP:8024" class="service-link" target="_blank">
+                    <span class="service-name">ComfyUI <span class="port-badge">:8024</span></span>
+                    <span class="service-description">AI Image Generation</span>
+                </a>
+                <a href="http://SERVER_IP:8025" class="service-link" target="_blank">
+                    <span class="service-name">OpenUI <span class="port-badge">:8025</span></span>
+                    <span class="service-description">AI UI Component Generator</span>
+                </a>
+            </div>
+
+            <!-- RAG & Vector Databases -->
+            <div class="category">
+                <div class="category-header">
+                    <span class="category-icon">🗄️</span>
+                    <h2 class="category-title">RAG & Vectors</h2>
+                </div>
+                <a href="http://SERVER_IP:8026" class="service-link" target="_blank">
+                    <span class="service-name">Qdrant <span class="port-badge">:8026</span></span>
+                    <span class="service-description">Vector Database for Semantic Search</span>
+                </a>
+                <a href="http://SERVER_IP:8027" class="service-link" target="_blank">
+                    <span class="service-name">Weaviate <span class="port-badge">:8027</span></span>
+                    <span class="service-description">Vector DB with AI Modules</span>
+                </a>
+                <a href="http://SERVER_IP:8028" class="service-link" target="_blank">
+                    <span class="service-name">Neo4j <span class="port-badge">:8028</span></span>
+                    <span class="service-description">Graph Database</span>
+                </a>
+                <a href="http://SERVER_IP:8029" class="service-link" target="_blank">
+                    <span class="service-name">LightRAG <span class="port-badge">:8029</span></span>
+                    <span class="service-description">Graph-based RAG System</span>
+                </a>
+                <a href="http://SERVER_IP:8030" class="service-link" target="_blank">
+                    <span class="service-name">RAGApp <span class="port-badge">:8030</span></span>
+                    <span class="service-description">Open-source RAG Interface</span>
+                </a>
+                <a href="http://SERVER_IP:8031" class="service-link" target="_blank">
+                    <span class="service-name">Letta <span class="port-badge">:8031</span></span>
+                    <span class="service-description">Agent Server & SDK</span>
+                </a>
+            </div>
+
+            <!-- Learning Tools -->
+            <div class="category">
+                <div class="category-header">
+                    <span class="category-icon">📚</span>
+                    <h2 class="category-title">Learning Tools</h2>
+                </div>
+                <a href="http://SERVER_IP:8040" class="service-link" target="_blank">
+                    <span class="service-name">Cal.com <span class="port-badge">:8040</span></span>
+                    <span class="service-description">Meeting Scheduling Platform</span>
+                </a>
+                <a href="http://SERVER_IP:8047" class="service-link" target="_blank">
+                    <span class="service-name">Baserow <span class="port-badge">:8047</span></span>
+                    <span class="service-description">No-Code Database (Airtable Alternative)</span>
+                </a>
+                <a href="http://SERVER_IP:8048" class="service-link" target="_blank">
+                    <span class="service-name">NocoDB <span class="port-badge">:8048</span></span>
+                    <span class="service-description">Smart Spreadsheet UI</span>
+                </a>
+                <a href="http://SERVER_IP:8049" class="service-link" target="_blank">
+                    <span class="service-name">Vikunja <span class="port-badge">:8049</span></span>
+                    <span class="service-description">Task Management</span>
+                </a>
+                <a href="http://SERVER_IP:8050" class="service-link" target="_blank">
+                    <span class="service-name">Leantime <span class="port-badge">:8050</span></span>
+                    <span class="service-description">Project Management</span>
+                </a>
+            </div>
+
+            <!-- Voice & Document Processing -->
+            <div class="category">
+                <div class="category-header">
+                    <span class="category-icon">🎙️</span>
+                    <h2 class="category-title">Voice & Documents</h2>
+                </div>
+                <a href="http://SERVER_IP:8080" class="service-link" target="_blank">
+                    <span class="service-name">Whisper STT <span class="port-badge">:8080</span></span>
+                    <span class="service-description">Speech-to-Text Transcription</span>
+                </a>
+                <a href="http://SERVER_IP:8081" class="service-link" target="_blank">
+                    <span class="service-name">OpenedAI TTS <span class="port-badge">:8081</span></span>
+                    <span class="service-description">Text-to-Speech Synthesis</span>
+                </a>
+                <a href="http://SERVER_IP:8083" class="service-link" target="_blank">
+                    <span class="service-name">Scriberr <span class="port-badge">:8083</span></span>
+                    <span class="service-description">AI Audio Transcription with Diarization</span>
+                </a>
+                <a href="http://SERVER_IP:8084" class="service-link" target="_blank">
+                    <span class="service-name">Tesseract OCR <span class="port-badge">:8084</span></span>
+                    <span class="service-description">Fast Text Recognition</span>
+                </a>
+                <a href="http://SERVER_IP:8085" class="service-link" target="_blank">
+                    <span class="service-name">EasyOCR <span class="port-badge">:8085</span></span>
+                    <span class="service-description">Quality Text Recognition</span>
+                </a>
+                <a href="http://SERVER_IP:8086" class="service-link" target="_blank">
+                    <span class="service-name">Stirling-PDF <span class="port-badge">:8086</span></span>
+                    <span class="service-description">100+ PDF Tools</span>
+                </a>
+            </div>
+
+            <!-- Search & Discovery -->
+            <div class="category">
+                <div class="category-header">
+                    <span class="category-icon">🔍</span>
+                    <h2 class="category-title">Search & Discovery</h2>
+                </div>
+                <a href="http://SERVER_IP:8089" class="service-link" target="_blank">
+                    <span class="service-name">SearXNG <span class="port-badge">:8089</span></span>
+                    <span class="service-description">Private Metasearch Engine</span>
+                </a>
+                <a href="http://SERVER_IP:8090" class="service-link" target="_blank">
+                    <span class="service-name">Perplexica <span class="port-badge">:8090</span></span>
+                    <span class="service-description">AI-Powered Search</span>
+                </a>
+                <a href="http://SERVER_IP:8093" class="service-link" target="_blank">
+                    <span class="service-name">Crawl4AI <span class="port-badge">:8093</span></span>
+                    <span class="service-description">Intelligent Web Crawler</span>
+                </a>
+            </div>
+
+            <!-- Monitoring & Management -->
+            <div class="category">
+                <div class="category-header">
+                    <span class="category-icon">📊</span>
+                    <h2 class="category-title">Monitoring</h2>
+                </div>
+                <a href="http://SERVER_IP:8003" class="service-link" target="_blank">
+                    <span class="service-name">Grafana <span class="port-badge">:8003</span></span>
+                    <span class="service-description">System Monitoring Dashboards</span>
+                </a>
+                <a href="http://SERVER_IP:8004" class="service-link" target="_blank">
+                    <span class="service-name">Prometheus <span class="port-badge">:8004</span></span>
+                    <span class="service-description">Metrics Collection</span>
+                </a>
+                <a href="https://SERVER_IP:9443" class="service-link" target="_blank">
+                    <span class="service-name">Portainer <span class="port-badge">:9443</span></span>
+                    <span class="service-description">Docker Management UI</span>
+                </a>
+                <a href="http://SERVER_IP:8096" class="service-link" target="_blank">
+                    <span class="service-name">Langfuse <span class="port-badge">:8096</span></span>
+                    <span class="service-description">LLM Performance Tracking</span>
+                </a>
+            </div>
+
+            <!-- Utilities -->
+            <div class="category">
+                <div class="category-header">
+                    <span class="category-icon">🔧</span>
+                    <h2 class="category-title">Utilities</h2>
+                </div>
+                <a href="http://SERVER_IP:8071" class="service-link" target="_blank">
+                    <span class="service-name">Mailpit <span class="port-badge">:8071</span></span>
+                    <span class="service-description">Email Testing & Capture</span>
+                </a>
+                <a href="http://SERVER_IP:8060" class="service-link" target="_blank">
+                    <span class="service-name">Postiz <span class="port-badge">:8060</span></span>
+                    <span class="service-description">Social Media Manager</span>
+                </a>
+                <a href="http://SERVER_IP:8061" class="service-link" target="_blank">
+                    <span class="service-name">Vaultwarden <span class="port-badge">:8061</span></span>
+                    <span class="service-description">Password Manager</span>
+                </a>
+                <a href="http://SERVER_IP:8062" class="service-link" target="_blank">
+                    <span class="service-name">Kopia <span class="port-badge">:8062</span></span>
+                    <span class="service-description">Backup System</span>
+                </a>
+                <a href="http://SERVER_IP:8082" class="service-link" target="_blank">
+                    <span class="service-name">LibreTranslate <span class="port-badge">:8082</span></span>
+                    <span class="service-description">Translation Service</span>
+                </a>
+                <a href="http://SERVER_IP:8094" class="service-link" target="_blank">
+                    <span class="service-name">Gotenberg <span class="port-badge">:8094</span></span>
+                    <span class="service-description">Document Conversion API</span>
+                </a>
+            </div>
         </div>
+
+        <footer>
+            <p>🚀 <strong>AI Learning Kit</strong> - Local Network Edition</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                <a href="https://github.com/hermannheinrich/ai-launchkit-local" style="color: white;">GitHub Repository</a> | 
+                <a href="http://SERVER_IP:8000" style="color: white;">Start with n8n</a>
+            </p>
+        </footer>
     </div>
 
     <script>
-        // Get the current domain
-        const currentDomain = window.location.hostname;
-        const protocol = window.location.protocol;
-        
-        // Display current domain
-        document.getElementById('domainInfo').textContent = `Services running on: ${currentDomain}`;
-
-        // Define all services organized by category
-        const serviceCategories = [
-            {
-                name: "🔧 Workflow Automation",
-                services: [
-                    { subdomain: "n8n", name: "📊 n8n", desc: "Visual workflow automation with 300+ pre-built templates" }
-                ]
-            },
-            {
-                name: "💻 AI-Powered Development",
-                services: [
-                    { subdomain: "bolt", name: "⚡ bolt.diy", desc: "Build full-stack apps with AI prompts" },
-                    { subdomain: "openui", name: "🎨 OpenUI", desc: "AI-powered UI component generation" }
-                ]
-            },
-            {
-                name: "🎨 AI Content Generation",
-                services: [
-                    { subdomain: "comfyui", name: "🖼️ ComfyUI", desc: "Node-based Stable Diffusion for AI art" },
-                    { subdomain: "webui", name: "💬 Open WebUI", desc: "ChatGPT-like interface for LLMs" }
-                ]
-            },
-            {
-                name: "🤖 AI Agents & Platforms",
-                services: [
-                    { subdomain: "flowise", name: "🔄 Flowise", desc: "Visual AI agent builder & chatbots" },
-                    { subdomain: "dify", name: "🏗️ Dify", desc: "LLMOps platform for production AI apps" },
-                    { subdomain: "letta", name: "🧠 Letta", desc: "Stateful AI agents with memory" }
-                ]
-            },
-            {
-                name: "📚 RAG & Vector Databases",
-                services: [
-                    { subdomain: "ragapp", name: "📖 RAGApp", desc: "Build RAG assistants over your data" },
-                    { subdomain: "qdrant", name: "🔍 Qdrant", desc: "High-performance vector database" },
-                    { subdomain: "weaviate", name: "🌐 Weaviate", desc: "AI-native vector DB with GraphQL" }
-                ]
-            },
-            {
-                name: "🎙️ Speech & Language Processing",
-                services: [
-                    { subdomain: "asr", name: "🎤 Faster-Whisper", desc: "OpenAI-compatible Speech-to-Text" },
-                    { subdomain: "tts", name: "🔊 OpenedAI-Speech", desc: "OpenAI-compatible Text-to-Speech" },
-                    { subdomain: "chatterbox", name: "🎭 TTS Chatterbox", desc: "Advanced TTS with emotion & voice cloning" },
-                    { subdomain: "translate", name: "🌍 LibreTranslate", desc: "Self-hosted translation for 50+ languages" },
-                    { subdomain: "scriberr", name: "📝 Scriberr", desc: "AI transcription with speaker diarization" }
-                ]
-            },
-            {
-                name: "🔍 Search & Web Data",
-                services: [
-                    { subdomain: "searxng", name: "🔎 SearXNG", desc: "Privacy-respecting metasearch engine" },
-                    { subdomain: "perplexica", name: "🧪 Perplexica", desc: "Open-source AI-powered search" }
-                ]
-            },
-            {
-                name: "🧠 Knowledge Graphs",
-                services: [
-                    { subdomain: "neo4j", name: "🕸️ Neo4j", desc: "Graph database for knowledge networks" },
-                    { subdomain: "lightrag", name: "💡 LightRAG", desc: "Graph-based RAG with entity extraction" }
-                ]
-            },
-            {
-                name: "💼 Business & Productivity",
-                services: [
-                    { subdomain: "cal", name: "📅 Cal.com", desc: "Open-source scheduling platform" },
-                    { subdomain: "vikunja", name: "✅ Vikunja", desc: "Modern task management with Kanban" },
-                    { subdomain: "leantime", name: "🎯 Leantime", desc: "Goal-oriented project management" },
-                    { subdomain: "time", name: "⏰ Kimai", desc: "Professional time tracking & billing" },
-                    { subdomain: "invoices", name: "💳 Invoice Ninja", desc: "Invoicing & payment platform" },
-                    { subdomain: "baserow", name: "📊 Baserow", desc: "Airtable alternative with real-time collab" },
-                    { subdomain: "nocodb", name: "🗃️ NocoDB", desc: "Smart spreadsheet with API & webhooks" },
-                    { subdomain: "forms", name: "📋 Formbricks", desc: "Privacy-first survey platform" },
-                    { subdomain: "analytics", name: "📈 Metabase", desc: "User-friendly business intelligence" },
-                    { subdomain: "postiz", name: "📱 Postiz", desc: "Social media management platform" }
-                ]
-            },
-            {
-                name: "🏢 CRM & ERP Systems",
-                services: [
-                    { subdomain: "odoo", name: "🏭 Odoo 18", desc: "Open Source ERP/CRM with AI features" },
-                    { subdomain: "twenty", name: "💼 Twenty CRM", desc: "Modern Notion-like CRM" },
-                    { subdomain: "espocrm", name: "🤝 EspoCRM", desc: "Full-featured CRM platform" },
-                    { subdomain: "mautic", name: "🎯 Mautic", desc: "Marketing automation platform" }
-                ]
-            },
-            {
-                name: "📹 Communication",
-                services: [
-                    { subdomain: "meet", name: "🎥 Jitsi Meet", desc: "Professional video conferencing (UDP 10000 required)" },
-                    { subdomain: "mail", name: "📬 Mailpit", desc: "Mail catcher for development" },
-                    { subdomain: "webmail", name: "✉️ SnappyMail", desc: "Modern webmail client" }
-                ]
-            },
-            {
-                name: "💾 Data Infrastructure",
-                services: [
-                    { subdomain: "supabase", name: "🔥 Supabase", desc: "Open-source Firebase alternative" },
-                    { subdomain: "pdf", name: "📄 Stirling-PDF", desc: "Complete PDF toolkit with 100+ features" }
-                ]
-            },
-            {
-                name: "⚙️ System Management",
-                services: [
-                    { subdomain: "vault", name: "🔐 Vaultwarden", desc: "Self-hosted password manager" },
-                    { subdomain: "portainer", name: "🐳 Portainer", desc: "Container management UI" },
-                    { subdomain: "grafana", name: "📊 Grafana", desc: "Metrics visualization platform" },
-                    { subdomain: "prometheus", name: "📉 Prometheus", desc: "Time-series monitoring" },
-                    { subdomain: "backup", name: "💾 Kopia", desc: "Enterprise backup solution" },
-                    { subdomain: "langfuse", name: "🔬 Langfuse", desc: "LLM observability platform" }
-                ]
-            }
-        ];
-
-        // Generate HTML for all services
-        let html = '';
-        serviceCategories.forEach(category => {
-            html += `
-                <div class="category">
-                    <h2 class="category-title">${category.name}</h2>
-                    <div class="services-grid">
-            `;
+        // Auto-replace SERVER_IP with current hostname
+        document.addEventListener('DOMContentLoaded', function() {
+            const hostname = window.location.hostname || 'localhost';
+            const serverIpDisplay = document.getElementById('server-ip');
+            serverIpDisplay.textContent = `Server IP: ${hostname}`;
             
-            category.services.forEach(service => {
-                const serviceUrl = `${protocol}//${service.subdomain}.${currentDomain}`;
-                html += `
-                    <a href="${serviceUrl}" class="service-card" target="_blank">
-                        <div class="service-name">${service.name}</div>
-                        <div class="service-desc">${service.desc}</div>
-                    </a>
-                `;
+            // Replace all SERVER_IP placeholders in links
+            const links = document.querySelectorAll('a[href*="SERVER_IP"]');
+            links.forEach(link => {
+                link.href = link.href.replace(/SERVER_IP/g, hostname);
             });
             
-            html += `
-                    </div>
-                </div>
-            `;
+            // Update service count based on visible services
+            const serviceCount = document.querySelectorAll('.service-link').length;
+            document.getElementById('service-count').textContent = `${serviceCount} Services Available`;
         });
-
-        // Insert the generated HTML
-        document.getElementById('servicesContainer').innerHTML = html;
     </script>
 </body>
 </html>
