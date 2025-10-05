@@ -27,7 +27,6 @@ ufw default allow outgoing
 ufw allow ssh
 ufw allow http
 ufw allow https
-ufw allow 10000/udp comment 'Jitsi WebRTC Media'
 
 # Configure LAN access for AI LaunchKit
 log_info "Configuring firewall for LAN access..."
@@ -40,12 +39,12 @@ echo ""
 read -p "Configure LAN access now? (Y/n): " fw_lan_config
 
 if [[ ! "$fw_lan_config" =~ ^[Nn]$ ]]; then
-    ufw allow from 192.168.0.0/16 to any port 8000:8099 comment 'AI LaunchKit LAN'
-    ufw allow from 10.0.0.0/8 to any port 8000:8099 comment 'AI LaunchKit LAN'
+    ufw allow from 192.168.0.0/16 to any port 8000:8099 proto tcp comment 'AI LaunchKit LAN'
+    ufw allow from 10.0.0.0/8 to any port 8000:8099 proto tcp comment 'AI LaunchKit LAN'
     log_success "✅ Firewall configured for LAN access (ports 8000-8099)"
 else
     log_warning "⚠️ LAN access not configured - you can add it later with:"
-    log_info "   sudo ufw allow from 192.168.0.0/16 to any port 8000:8099"
+    log_info "   sudo ufw allow from 192.168.0.0/16 to any port 8000:8099 proto tcp"
 fi
 
 ufw reload
