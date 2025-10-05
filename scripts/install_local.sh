@@ -5,6 +5,49 @@ set -e
 # Source the utilities file
 source "$(dirname "$0")/utils.sh"
 
+# Global error handler for installation rollback
+CURRENT_STEP="Initialization"
+
+cleanup_on_error() {
+    local exit_code=$?
+    echo ""
+    echo "════════════════════════════════════════"
+    log_error "❌ Installation failed at: $CURRENT_STEP"
+    log_error "Exit code: $exit_code"
+    echo "════════════════════════════════════════"
+    echo ""
+    
+    log_warning "🔄 Rolling back changes..."
+    
+    # Stop any started Docker containers
+    if docker ps -a --filter "label=com.docker.compose.project=localai" -q 2>/dev/null | grep -q .; then
+        log_info "Stopping AI LaunchKit services..."
+        docker compose -p localai -f docker-compose.local.yml down 2>/dev/null || true
+        log_success "✅ Services stopped"
+    fi
+    
+    # Keep .env file for debugging
+    if [ -f ".env" ]; then
+        log_info "📄 .env file preserved for troubleshooting"
+        log_info "Location: $(pwd)/.env"
+    fi
+    
+    echo ""
+    log_info "🔍 Troubleshooting:"
+    log_info "1. Check the error message above"
+    log_info "2. Fix the reported issue"
+    log_info "3. Re-run: sudo bash ./scripts/install_local.sh"
+    echo ""
+    log_info "For help:"
+    log_info "  - GitHub Issues: https://github.com/hermannheinrich/ai-launchkit-local/issues"
+    log_info "  - Check Docker logs: docker compose -p localai -f docker-compose.local.yml logs"
+    
+    exit $exit_code
+}
+
+# Register error trap
+trap 'cleanup_on_error' ERR
+
 # Check for nested n8n-installer directory
 current_path=$(pwd)
 if [[ "$current_path" == *"/n8n-installer/n8n-installer" ]]; then
@@ -76,27 +119,33 @@ log_info "Port range: 8000-8099 (avoiding 9443 used by Portainer)"
 echo ""
 
 # Run installation steps sequentially
-log_info "========== STEP 1: System Preparation =========="
+CURRENT_STEP="System Preparation"
+log_info "========== STEP 1: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/01_system_preparation.sh" || { log_error "System Preparation failed"; exit 1; }
 log_success "System preparation complete!"
 
-log_info "========== STEP 2: Installing Docker =========="
+CURRENT_STEP="Docker Installation"
+log_info "========== STEP 2: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/02_install_docker.sh" || { log_error "Docker Installation failed"; exit 1; }
 log_success "Docker installation complete!"
 
-log_info "========== STEP 3: Generating Local Network Configuration =========="
+CURRENT_STEP="Generating Local Network Configuration"
+log_info "========== STEP 3: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/03_generate_secrets_local.sh" || { log_error "Local Config Generation failed"; exit 1; }
 log_success "Local network configuration complete!"
 
-log_info "========== STEP 4: Running Service Selection Wizard =========="
+CURRENT_STEP="Running Service Selection Wizard"
+log_info "========== STEP 4: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/04_wizard_local.sh" || { log_error "Service Selection Wizard failed"; exit 1; }
 log_success "Service selection complete!"
 
-log_info "========== STEP 4a: Setting up Perplexica (if selected) =========="
+CURRENT_STEP="Setting up Perplexica (if selected)"
+log_info "========== STEP 4a: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/04a_setup_perplexica.sh" || { log_error "Perplexica setup failed"; exit 1; }
 log_success "Perplexica setup complete!"
 
-log_info "========== STEP 4b: Building Cal.com (if selected) =========="
+CURRENT_STEP="Building Cal.com (if selected)"
+log_info "========== STEP 4b: $CURRENT_STEP =========="
 # Check if calcom profile is in COMPOSE_PROFILES
 if grep -q "calcom" .env 2>/dev/null || [[ "$COMPOSE_PROFILES" == *"calcom"* ]]; then
     if [ -f "$SCRIPT_DIR/build_calcom.sh" ]; then
@@ -110,7 +159,22 @@ else
 fi
 log_success "Cal.com build step complete!"
 
-log_info "========== STEP 5: Running Services (Local Network Mode) =========="
+CURRENT_STEP="Docker Daemon Health Check"
+log_info "========== Verifying Docker Daemon =========="
+if ! docker info > /dev/null 2>&1; then
+    log_warning "Docker daemon not responding, attempting to start..."
+    systemctl restart docker
+    sleep 5
+    docker info > /dev/null 2>&1 || {
+        log_error "Docker daemon failed to start"
+        log_info "Check Docker status: sudo systemctl status docker"
+        exit 1
+    }
+fi
+log_success "✅ Docker daemon is healthy"
+
+CURRENT_STEP="Running Services (Local Network Mode)"
+log_info "========== STEP 5: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/05_run_services_local.sh" || { log_error "Running Services failed"; exit 1; }
 log_success "Services started successfully!"
 
