@@ -61,6 +61,691 @@ The installer will:
 
 ---
 
+## 📖 Step-by-Step Installation Guide (For Beginners)
+
+**Perfect for:** People new to Linux, AI, or Docker
+**Time needed:** 30-45 minutes
+**Experience level:** No prior knowledge required!
+
+### What You Need:
+
+✅ **A Server or Computer running Ubuntu**
+- Minimum: 4 GB RAM, 2 CPU cores, 30GB disk
+- Recommended: 8+ GB RAM, 4+ CPU cores
+- Fresh Ubuntu 24.04 LTS installation
+
+✅ **Access to the Server**
+- SSH connection OR direct console access
+- Administrator (sudo) rights
+
+✅ **Internet Connection**
+- For downloading Docker images and services
+
+❌ **What You DON'T Need:**
+- Domain name or website
+- SSL certificates
+- Advanced Linux knowledge
+- Programming experience
+
+---
+
+### Step 1: Connect to Your Ubuntu Server
+
+**What happens:** You'll open a terminal and connect to your server
+
+<details>
+<summary><b>📖 Detailed Connection Instructions</b></summary>
+
+**Option A: Using SSH (Remote Connection)**
+
+If your server is in another room or location:
+
+1. **Find your server's IP address**
+   - Usually printed during Ubuntu installation
+   - Or check your router's connected devices
+   - Example: `192.168.1.100`
+
+2. **Open Terminal/SSH Client:**
+   - **Windows:** Download [PuTTY](https://www.putty.org/) or use Windows Terminal
+   - **Mac:** Open Terminal app (⌘+Space, type "Terminal")
+   - **Linux:** Open Terminal (Ctrl+Alt+T)
+
+3. **Connect via SSH:**
+   ```bash
+   ssh your-username@192.168.1.100
+   ```
+   Replace:
+   - `your-username` with your Ubuntu username
+   - `192.168.1.100` with your server's IP
+
+4. **Enter your password** when prompted
+   - You won't see characters while typing - this is normal!
+   - Press Enter when done
+
+5. **You're connected!** You should see:
+   ```
+   username@server:~$
+   ```
+
+**Option B: Direct Console Access**
+
+If you're sitting at the server:
+
+1. **Login with your username and password**
+2. **You'll see the command prompt:**
+   ```
+   username@server:~$
+   ```
+3. **You're ready!**
+
+</details>
+
+---
+
+### Step 2: Download and Start Installation
+
+**What happens:** One command downloads everything and starts the automated installation
+
+**Copy and paste this into your terminal:**
+```bash
+git clone https://github.com/hermannheinrich/ai-launchkit-local && cd ai-launchkit-local && sudo bash ./scripts/install_local.sh
+```
+
+**Press Enter**, then type your password when asked.
+
+<details>
+<summary><b>📖 What This Command Does</b></summary>
+
+Breaking down the command:
+
+**Part 1:** `git clone https://github.com/hermannheinrich/ai-launchkit-local`
+- Downloads the AI Learning Kit to your server
+- Creates folder: `ai-launchkit-local`
+
+**Part 2:** `cd ai-launchkit-local`
+- Changes into that folder
+- All scripts are now accessible
+
+**Part 3:** `sudo bash ./scripts/install_local.sh`
+- `sudo` = Run as administrator (needed for installation)
+- `bash` = Execute the script
+- `./scripts/install_local.sh` = The installation script
+
+**Why sudo?**
+- Installs system packages (Docker, etc.)
+- Configures firewall
+- Needs administrator privileges
+
+</details>
+
+---
+
+### Step 3: Answer Installation Questions
+
+**What happens:** The wizard asks you a few simple questions to customize your installation
+
+<details>
+<summary><b>📖 Question-by-Question Guide</b></summary>
+
+#### Question 1: Configure LAN Access?
+```
+Allow access from local network (recommended for LAN installation)?
+Configure LAN access now? (Y/n):
+```
+
+**What to do:** ✅ **Press ENTER** (=Yes)
+
+**What it means:**
+- Opens firewall ports for your local network
+- Devices on your network can access the services
+- Example: Access from your laptop, phone, or tablet
+
+**Technical details:** Adds firewall rules for 192.168.x.x and 10.x.x.x networks
+
+---
+
+#### Question 2: Service Selection
+```
+Choose services for your local network AI development stack.
+[Checkbox menu appears]
+```
+
+**What to do:**
+1. Use ↑↓ **Arrow keys** to move up/down
+2. Press **SPACEBAR** to select/deselect services
+3. Press **ENTER** when done
+
+**Recommended for beginners:**
+- ✅ n8n (Workflow Automation) - Already selected
+- ✅ flowise (AI Agent Builder) - Already selected
+- ✅ monitoring (Grafana dashboards) - Already selected
+- ⚠️ Leave others unselected for now (you can add later)
+
+**What each service does:**
+- **n8n**: Build AI automation workflows (like IFTTT for AI)
+- **Flowise**: Create chatbots with drag-and-drop
+- **monitoring**: See system performance (RAM, CPU usage)
+
+---
+
+#### Question 3: LAN IP Address
+```
+✅ Detected LAN IP address: 192.168.1.100
+Use this IP address for network access? (Y/n):
+```
+
+**What to do:** ✅ **Press ENTER** (=Yes)
+
+**What it means:**
+- Your services will be accessible at http://192.168.1.100:PORT
+- This IP was automatically detected
+- You can change it later if needed
+
+---
+
+#### Question 4: Ollama Hardware Profile
+```
+Choose the hardware profile for Ollama local LLM runtime.
+( ) CPU (Recommended for most users)
+( ) NVIDIA GPU (Requires NVIDIA drivers)
+( ) AMD GPU (Requires ROCm drivers)
+```
+
+**What to do:**
+- ✅ **Select "CPU" and press ENTER** (for most users)
+- Only choose GPU options if you have a powerful graphics card
+
+**What it means:**
+- CPU: Uses processor for AI (slower but works everywhere)
+- GPU: Uses graphics card (much faster but needs setup)
+
+---
+
+#### Question 5: Import n8n Workflows?
+```
+Import workflows? (y/n):
+```
+
+**What to do:** ⚠️ **Type `n` and press ENTER** (skip for now)
+
+**Why skip:**
+- Takes 30 minutes to import 300+ workflows
+- You probably want to explore first
+- You can import later anytime
+
+**If you choose yes:**
+- Installation continues in background
+- Check progress: `docker logs n8n-import`
+
+---
+
+#### Question 6: n8n Worker Count
+```
+Enter the number of n8n workers to run (default is 1):
+```
+
+**What to do:** ✅ **Press ENTER** (use default: 1)
+
+**What it means:**
+- Workers process workflows in parallel
+- 1 worker is fine for learning
+- More workers = can run more workflows simultaneously
+
+---
+
+#### Question 7-9: API Keys (Optional)
+```
+OpenAI API Key (press Enter to skip):
+Anthropic API Key (press Enter to skip):
+Groq API Key (press Enter to skip):
+```
+
+**What to do:** ✅ **Press ENTER 3 times** (skip all)
+
+**What are these:**
+- Optional paid API keys for cloud AI services
+- Not needed for local AI with Ollama
+- You can add them later in the .env file
+
+---
+
+**Installation Progress:**
+
+You'll now see:
+```
+========== STEP 1: System Preparation ==========
+✅ System preparation complete!
+
+========== STEP 2: Installing Docker ==========
+✅ Docker installation complete!
+
+========== STEP 3: Generating Local Network Configuration ==========
+✅ Local network configuration complete!
+
+[... more steps ...]
+
+🎉 AI LaunchKit Local Network Installation Complete!
+```
+
+**Wait for all steps to complete** (10-15 minutes)
+
+</details>
+
+---
+
+### Step 4: Services Are Ready! 🎉
+
+**What happens:** All services are running, you can start using them immediately!
+
+**You'll see a summary like this:**
+```
+🎉 INSTALLATION SUCCESSFUL!
+
+Your services are accessible at:
+- n8n (Workflow Automation): http://192.168.1.100:8000
+- Flowise (AI Agent Builder): http://192.168.1.100:8022
+- Grafana (Monitoring): http://192.168.1.100:8003
+- Mailpit (Email Testing): http://192.168.1.100:8071
+```
+
+**What to do next:**
+
+1. **Open your browser** (can be on any device!)
+2. **Navigate to n8n:** `http://YOUR-SERVER-IP:8000`
+3. **Create your admin account:**
+   - Enter your email
+   - Choose a strong password
+   - Click "Next"
+4. **You're in!** Welcome to n8n 🎉
+
+---
+
+## 🎯 Your First AI Automation (10 Minutes Tutorial)
+
+**Let's build a simple AI workflow to test everything:**
+
+<details>
+<summary><b>📖 Complete Beginner Tutorial</b></summary>
+
+### Tutorial: Ask Ollama a Question
+
+**What you'll learn:**
+- How to create a workflow in n8n
+- How to connect to Ollama (local AI)
+- How to see AI responses
+
+**Steps:**
+
+1. **Open n8n:** `http://YOUR-SERVER-IP:8000`
+
+2. **Click the big "+" button** (Create New Workflow)
+
+3. **Click "Add first step"**
+   - A panel opens on the right
+
+4. **Search for "Manual Trigger"**
+   - Type "manual" in the search box
+   - Click "Manual Trigger" when it appears
+   - This lets you start the workflow with a button click
+
+5. **Click the "+" icon** next to your Manual Trigger node
+   - This adds the next step
+
+6. **Search for "HTTP Request"**
+   - Type "http" in the search box
+   - Click "HTTP Request"
+
+7. **Configure the HTTP Request:**
+   Click on the HTTP Request node and fill in:
+   
+   - **Method:** Select "POST" from dropdown
+   
+   - **URL:** Enter this exactly:
+     ```
+     http://ollama:11434/api/generate
+     ```
+   
+   - **Authentication:** Leave as "None"
+   
+   - **Send Body:** Toggle ON
+   
+   - **Body Content Type:** Select "JSON"
+   
+   - **Specify Body:** Select "Using JSON"
+   
+   - **JSON:** Paste this:
+     ```json
+     {
+       "model": "qwen2.5:7b-instruct-q4_K_M",
+       "prompt": "Hello! Please introduce yourself and explain what you can do.",
+       "stream": false
+     }
+     ```
+
+8. **Click "Execute Workflow"** button (top right)
+   - Wait 5-10 seconds for AI to respond
+
+9. **See the result!**
+   - Click on the HTTP Request node
+   - Look at the "Output" tab
+   - You'll see the AI's response in JSON format
+
+**Congratulations!** 🎉 You just created your first AI workflow!
+
+**What just happened:**
+- n8n sent a request to Ollama (your local AI)
+- Ollama processed your question
+- Ollama sent back an answer
+- You can now build on this to create complex automations!
+
+**Next steps:**
+- Try different prompts
+- Add more nodes (email, database, etc.)
+- Explore the 300+ workflow templates
+
+</details>
+
+---
+
+## ❓ Frequently Asked Questions
+
+<details>
+<summary><b>🖥️ Can I install this on Windows or Mac directly?</b></summary>
+
+**No, not directly.** The AI Kit requires Ubuntu Linux.
+
+**Your options:**
+
+**Option 1: Virtual Machine (Easiest for Windows/Mac)**
+1. Install [VirtualBox](https://www.virtualbox.org/) (free)
+2. Download [Ubuntu 24.04 LTS](https://ubuntu.com/download/server)
+3. Create VM with 8GB RAM, 4 CPU cores, 60GB disk
+4. Install Ubuntu in the VM
+5. Follow installation guide above
+6. Access services from your Windows/Mac browser
+
+**Option 2: Cloud VPS (No local hardware needed)**
+1. Rent Ubuntu server from providers like:
+   - DigitalOcean ($12/month for 4GB RAM)
+   - Linode/Akamai ($10/month for 4GB RAM)
+   - Hetzner ($5/month for 4GB RAM - Europe)
+2. Get SSH access details
+3. Follow installation guide above
+4. Access from anywhere
+
+**Option 3: Raspberry Pi (Cheap dedicated hardware)**
+- Raspberry Pi 4/5 with 8GB RAM ($80)
+- Install Ubuntu Server 24.04
+- Perfect for 24/7 operation
+- Low power consumption
+
+</details>
+
+<details>
+<summary><b>❌ I got an error during installation, what should I do?</b></summary>
+
+**Don't worry!** The system automatically cleans up on errors.
+
+**Steps to resolve:**
+
+1. **Read the error message carefully**
+   - It shows exactly which step failed
+   - Example: "Installation failed at: Docker Installation"
+
+2. **Check common issues:**
+   
+   **Error: "Port already in use"**
+   - Another program is using that port
+   - Check what: `sudo netstat -tuln | grep :8000`
+   - Stop that program or choose different port
+
+   **Error: "Out of memory" or "Cannot allocate memory"**
+   - Server doesn't have enough RAM
+   - Need minimum 4GB RAM
+   - Upgrade server or select fewer services
+
+   **Error: "Docker daemon not responding"**
+   - Docker installation failed
+   - Try: `sudo systemctl status docker`
+   - Restart: `sudo systemctl restart docker`
+
+   **Error: "Permission denied"**
+   - Not running with sudo
+   - Use: `sudo bash ./scripts/install_local.sh`
+
+3. **Try installation again:**
+   ```bash
+   cd ai-launchkit-local
+   sudo bash ./scripts/install_local.sh
+   ```
+   - Previous failed installation was rolled back automatically
+   - Safe to re-run
+
+4. **Still having issues?**
+   - Post in [GitHub Issues](https://github.com/hermannheinrich/ai-launchkit-local/issues)
+   - Include: Error message, Ubuntu version, server specs
+   - Community will help!
+
+</details>
+
+<details>
+<summary><b>📱 How do I access services from my phone, laptop, or tablet?</b></summary>
+
+**It's automatic! No configuration needed.**
+
+**Steps:**
+
+1. **Make sure your device is on the same WiFi/network** as the server
+
+2. **Find your server's IP** (shown during installation)
+   - Example: `192.168.1.100`
+
+3. **Open any browser** on your device
+   - Chrome, Safari, Firefox, Edge - all work!
+
+4. **Type in the address bar:**
+   ```
+   http://192.168.1.100:8000
+   ```
+   Replace `192.168.1.100` with YOUR server IP
+
+5. **Done!** Services work identically on all devices
+
+**Examples:**
+- **From laptop:** `http://192.168.1.100:8000` (n8n)
+- **From phone:** `http://192.168.1.100:8022` (Flowise)
+- **From tablet:** `http://192.168.1.100:8003` (Grafana)
+
+**Tip:** Bookmark these URLs on your devices!
+
+</details>
+
+<details>
+<summary><b>🗑️ How do I uninstall everything?</b></summary>
+
+**Safe and simple uninstallation with automatic backup:**
+
+```bash
+cd ai-launchkit-local
+sudo bash ./scripts/uninstall_local.sh
+```
+
+**What happens:**
+
+1. **Shows current status**
+   - Lists all running services
+   - Shows data volumes
+
+2. **Asks for confirmation**
+   - Type `yes` to proceed
+   - Anything else cancels
+
+3. **Offers backup** (Recommended!)
+   - Creates backup of workflows, databases, volumes
+   - Saves to: `~/ai-launchkit-backup-YYYYMMDD-HHMMSS/`
+   - Press ENTER to accept
+
+4. **Removes AI LaunchKit**
+   - Stops all containers
+   - Removes data (with your permission)
+   - Cleans up Docker images
+
+5. **Preserves important stuff:**
+   - ✅ Docker (in case you use it for other things)
+   - ✅ Portainer (Docker management tool)
+   - ✅ Your project folder (can reinstall anytime)
+
+**After uninstall:**
+- Server is back to clean state
+- Can reinstall anytime: `sudo bash ./scripts/install_local.sh`
+- Or restore from backup
+
+</details>
+
+<details>
+<summary><b>🔧 What if I want to change the services later?</b></summary>
+
+**You can easily add or remove services:**
+
+1. **Stop all services:**
+   ```bash
+   cd ai-launchkit-local
+   docker compose -p localai -f docker-compose.local.yml down
+   ```
+
+2. **Edit the .env file:**
+   ```bash
+   nano .env
+   ```
+   
+3. **Find the line starting with:** `COMPOSE_PROFILES=`
+
+4. **Add or remove service names** (comma-separated)
+   - Example: `COMPOSE_PROFILES="n8n,flowise,monitoring,cpu,comfyui"`
+   - Available: n8n, flowise, bolt, openui, monitoring, cpu, gpu-nvidia, gpu-amd, calcom, baserow, nocodb, vikunja, leantime, and more
+
+5. **Save and exit:**
+   - Press `Ctrl+X`
+   - Press `Y` (yes, save)
+   - Press `Enter`
+
+6. **Start services again:**
+   ```bash
+   docker compose -p localai -f docker-compose.local.yml up -d
+   ```
+
+7. **Wait 2-3 minutes** for new services to start
+
+</details>
+
+<details>
+<summary><b>⚡ How do I stop or restart services?</b></summary>
+
+**Stop all services:**
+```bash
+cd ai-launchkit-local
+docker compose -p localai -f docker-compose.local.yml down
+```
+
+**Start all services:**
+```bash
+cd ai-launchkit-local
+docker compose -p localai -f docker-compose.local.yml up -d
+```
+
+**Restart a specific service** (example: n8n):
+```bash
+docker compose -p localai -f docker-compose.local.yml restart n8n
+```
+
+**See what's running:**
+```bash
+docker ps
+```
+
+**Check service logs** (if something doesn't work):
+```bash
+docker compose -p localai -f docker-compose.local.yml logs n8n
+```
+Replace `n8n` with any service name
+
+</details>
+
+<details>
+<summary><b>💾 Where is my data stored?</b></summary>
+
+**All data is in Docker volumes:**
+
+**List all volumes:**
+```bash
+docker volume ls | grep localai_
+```
+
+**Your important data:**
+- `localai_n8n_storage` - All your workflows
+- `localai_langfuse_postgres_data` - All databases
+- `localai_ollama_storage` - Downloaded AI models
+
+**Backup data:**
+```bash
+# During uninstall: Select "Yes" for backup
+# Manual backup: Run the uninstall script and it creates automatic backup
+```
+
+**Where are backups:**
+- Location: `~/ai-launchkit-backup-YYYYMMDD-HHMMSS/`
+- Contains: workflows, databases, all volumes as .tar.gz files
+
+</details>
+
+<details>
+<summary><b>🆘 I'm stuck! Where can I get help?</b></summary>
+
+**Don't worry - help is available!**
+
+**1. Check the logs:**
+```bash
+cd ai-launchkit-local
+docker compose -p localai -f docker-compose.local.yml logs
+```
+
+**2. Check specific service:**
+```bash
+docker logs n8n
+docker logs flowise
+docker logs postgres
+```
+
+**3. Ask for help:**
+- **GitHub Issues:** [Report a problem](https://github.com/hermannheinrich/ai-launchkit-local/issues)
+  - Include: Error message, what you were doing, Ubuntu version
+  
+- **Original AI LaunchKit:** [Main project](https://github.com/freddy-schuetz/ai-launchkit)
+  
+- **Community Forum:** [oTTomator Think Tank](https://thinktank.ottomator.ai/c/local-ai/18)
+
+**4. Common commands for troubleshooting:**
+```bash
+# Check if Docker is running
+sudo systemctl status docker
+
+# Check system resources
+htop  # Press Q to exit
+
+# Check disk space
+df -h
+
+# Check memory
+free -h
+
+# Restart Docker
+sudo systemctl restart docker
+```
+
+</details>
+
+---
+
 ## 🌐 Service Port Schema
 
 All services are accessible via `http://SERVER_IP:PORT`:
