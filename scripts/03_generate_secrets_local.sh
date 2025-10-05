@@ -586,6 +586,18 @@ fi
 # Force update EMAIL_* variables (must be at the end)
 force_update_email_variables
 
+# Secure .env file permissions
+log_info "Securing .env file permissions..."
+chmod 600 "$OUTPUT_FILE"
+
+# Set ownership to original user if running with sudo
+if [ -n "$SUDO_USER" ]; then
+    chown "$SUDO_USER:$SUDO_USER" "$OUTPUT_FILE"
+    log_info "✅ .env file ownership set to: $SUDO_USER"
+fi
+
+log_success "✅ .env file secured (chmod 600) - only owner can read passwords"
+
 log_success "🚀 Local network secrets and configuration generated successfully!"
 
 exit 0

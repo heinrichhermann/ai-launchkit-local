@@ -1,3 +1,11 @@
+networks:
+  ailaunchkit:
+    name: localai_network
+    driver: bridge
+    labels:
+      ai-launchkit.network: "internal"
+      ai-launchkit.project: "localai"
+
 volumes:
   n8n_storage:
   ollama_storage:

@@ -178,7 +178,7 @@ if [ "$VOLUME_COUNT" -gt 0 ]; then
     echo ""
     log_warning "⚠️  Removing volumes will DELETE ALL DATA (workflows, databases, files)"
     
-    if [ "$backup_choice" =~ ^[Nn]$ ]; then
+    if [[ "$backup_choice" =~ ^[Nn]$ ]]; then
         log_error "⚠️  You chose NOT to create a backup!"
     else
         log_success "✅ Backup was created in $BACKUP_DIR"
