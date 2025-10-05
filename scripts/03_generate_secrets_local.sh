@@ -416,7 +416,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
         # Use generated value if available
         if [[ -n "${generated_values[$varName]}" ]]; then
             processed_line="${varName}=\"${generated_values[$varName]}\""
-        elif [[ -v VARS_TO_GENERATE["$varName"] && -z "${generated_values[$varName]}" ]]; then
+        elif [[ -n "${VARS_TO_GENERATE[$varName]:-}" ]] && [[ -z "${generated_values[$varName]}" ]]; then
             # Generate value if needed
             IFS=':' read -r type length <<< "${VARS_TO_GENERATE[$varName]}"
             newValue=""
@@ -447,7 +447,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
             for var in "${!found_vars[@]}"; do
                 if [[ "$varName" == "$var" ]]; then
                     found_vars["$var"]=1
-                    if [[ -v generated_values[$varName] ]]; then
+                    if [[ -n "${generated_values[$varName]:-}" ]]; then
                         processed_line="${varName}=\"${generated_values[$varName]}\""
                     fi
                     break
@@ -495,7 +495,7 @@ fi
 
 # Add custom variables not found in template
 for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "OPENAI_API_KEY" "ANTHROPIC_API_KEY" "GROQ_API_KEY" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME" "RAGAPP_USERNAME" "WHISPER_AUTH_USER" "TTS_AUTH_USER" "LIBRETRANSLATE_USERNAME" "LIGHTRAG_USERNAME" "PERPLEXICA_USERNAME" "ODOO_USERNAME" "BASEROW_USERNAME" "KOPIA_UI_USERNAME" "MAILPIT_USERNAME" "MAUTIC_ADMIN_EMAIL" "MAUTIC_DB_USER" "INVOICENINJA_ADMIN_EMAIL" "EMAIL_FROM" "EMAIL_SMTP" "EMAIL_SMTP_HOST" "EMAIL_SMTP_PORT" "EMAIL_SMTP_USER" "EMAIL_SMTP_PASSWORD" "EMAIL_SMTP_USE_TLS" "SERVER_IP"; do
-    if [[ ${found_vars["$var"]} -eq 0 && -v generated_values["$var"] ]]; then
+    if [[ ${found_vars["$var"]} -eq 0 ]] && [[ -n "${generated_values[$var]:-}" ]]; then
         if ! grep -q -E "^${var}=" "$TMP_ENV_FILE"; then
             echo "${var}=\"${generated_values[$var]}\"" >> "$TMP_ENV_FILE"
         fi
