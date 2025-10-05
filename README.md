@@ -35,7 +35,7 @@ This is a **port-based local network version** of the AI LaunchKit that runs com
    - Minimum: 4 GB RAM, 2 CPU cores, 30GB disk
    - Recommended: 16+ GB RAM, 8+ CPU cores, 120GB disk
 3. **Network**: Local network access (no internet domain needed)
-4. **Existing**: Portainer on port 9443 (will be preserved)
+4. **Docker Management**: Portainer will be installed automatically if not present
 
 ### One-Command Installation
 

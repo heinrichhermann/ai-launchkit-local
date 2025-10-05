@@ -146,9 +146,40 @@ log_info "  1. Edit the SERVER_IP variable in .env"
 log_info "  2. Restart services: docker compose -p localai -f docker-compose.local.yml restart"
 echo ""
 
+# Ensure Portainer is installed for Docker management
+log_info "========== Ensuring Portainer Installation =========="
+if ! docker ps -a | grep -q "portainer"; then
+    log_info "Installing Portainer for Docker management..."
+    
+    # Create Portainer volume
+    docker volume create portainer_data 2>/dev/null || true
+    
+    # Install Portainer
+    docker run -d \
+        -p 9443:9443 \
+        --name=portainer \
+        --restart=always \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v portainer_data:/data \
+        portainer/portainer-ce:latest
+    
+    log_success "✅ Portainer installed successfully!"
+    log_info "   Access Portainer at: https://localhost:9443"
+    log_info "   (Create admin account on first login)"
+elif ! docker ps | grep -q "portainer"; then
+    log_info "Starting existing Portainer..."
+    docker start portainer
+    log_success "✅ Portainer started at: https://localhost:9443"
+else
+    log_success "✅ Portainer already running at: https://localhost:9443"
+fi
+
 # Start background monitoring if available
 if docker ps | grep -q grafana; then
     log_info "📊 Monitoring dashboard available at: http://SERVER_IP:8003"
 fi
+
+echo ""
+log_info "🐳 Portainer Docker Management UI: https://localhost:9443"
 
 exit 0
