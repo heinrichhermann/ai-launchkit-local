@@ -320,59 +320,49 @@ Create smart scheduling that:
 
 ## 🌐 Network Access
 
-### Local Access (Default)
-```bash
-# Default configuration uses localhost
-SERVER_IP=127.0.0.1
+### Automatic LAN Configuration (Default)
 
-# Access services:
+**During installation, the wizard will:**
+1. ✅ **Auto-detect your server's LAN IP** (e.g., 192.168.1.100)
+2. ✅ **Configure SERVER_IP automatically** in .env
+3. ✅ **Set up firewall rules** for LAN access (ports 8000-8099)
+
+**After installation, services are immediately accessible from ANY device:**
+```
+http://192.168.1.100:8000  # n8n from laptop
+http://192.168.1.100:8022  # Flowise from phone
+http://192.168.1.100:8003  # Grafana from tablet
+http://192.168.1.100:8071  # Email interface from any device
+```
+
+**No manual configuration needed!** Just open the URL from any device on your network.
+
+### Localhost Only (Alternative)
+
+If you declined LAN access during installation, services use localhost:
+```bash
+# Access only from server
 http://127.0.0.1:8000  # n8n
 http://127.0.0.1:8022  # Flowise  
 http://127.0.0.1:8003  # Grafana
 ```
 
-### LAN Access (Network-wide)
+To enable LAN access later:
+1. Find your LAN IP: `ip addr show | grep 'inet ' | grep -v 127.0.0.1`
+2. Update .env: `sed -i 's/SERVER_IP=127.0.0.1/SERVER_IP=192.168.1.100/' .env`
+3. Restart: `docker compose -p localai -f docker-compose.local.yml restart`
+4. Add firewall rules: `sudo ufw allow from 192.168.0.0/16 to any port 8000:8099`
 
-To access from other devices on your network:
+### Firewall Status
 
-1. **Find your server's IP address:**
+Check your current firewall configuration:
 ```bash
-ip addr show | grep 'inet ' | grep -v 127.0.0.1
-# Example output: inet 192.168.1.100/24
-```
+# View firewall status
+sudo ufw status
 
-2. **Update SERVER_IP in .env:**
-```bash
-sed -i 's/SERVER_IP=127.0.0.1/SERVER_IP=192.168.1.100/' .env
-```
-
-3. **Restart services:**
-```bash
-docker compose -p localai -f docker-compose.local.yml restart
-```
-
-4. **Access from any device:**
-```
-http://192.168.1.100:8000  # n8n from phone/laptop
-http://192.168.1.100:8022  # Flowise from tablet  
-http://192.168.1.100:8071  # Email interface
-```
-
-### Firewall Configuration
-
-Allow access from your local network:
-
-```bash
-# For 192.168.x.x networks
+# If LAN access wasn't configured during installation, add it manually:
 sudo ufw allow from 192.168.0.0/16 to any port 8000:8099
-
-# For 10.x.x.x networks  
 sudo ufw allow from 10.0.0.0/8 to any port 8000:8099
-
-# For Jitsi video calls
-sudo ufw allow 10000/udp
-
-# Reload firewall
 sudo ufw reload
 ```
 

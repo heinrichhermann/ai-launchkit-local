@@ -28,6 +28,26 @@ ufw allow ssh
 ufw allow http
 ufw allow https
 ufw allow 10000/udp comment 'Jitsi WebRTC Media'
+
+# Configure LAN access for AI LaunchKit
+log_info "Configuring firewall for LAN access..."
+echo ""
+log_info "Allow access from local network (recommended for LAN installation)?"
+log_info "This enables access from:"
+log_info "  - 192.168.x.x networks (home/office)"
+log_info "  - 10.x.x.x networks (corporate)"
+echo ""
+read -p "Configure LAN access now? (Y/n): " fw_lan_config
+
+if [[ ! "$fw_lan_config" =~ ^[Nn]$ ]]; then
+    ufw allow from 192.168.0.0/16 to any port 8000:8099 comment 'AI LaunchKit LAN'
+    ufw allow from 10.0.0.0/8 to any port 8000:8099 comment 'AI LaunchKit LAN'
+    log_success "✅ Firewall configured for LAN access (ports 8000-8099)"
+else
+    log_warning "⚠️ LAN access not configured - you can add it later with:"
+    log_info "   sudo ufw allow from 192.168.0.0/16 to any port 8000:8099"
+fi
+
 ufw reload
 ufw status
 
@@ -47,4 +67,4 @@ apt install -y unattended-upgrades
 # Automatic confirmation for dpkg-reconfigure
 echo "y" | dpkg-reconfigure --priority=low unattended-upgrades
 
-exit 0 
+exit 0

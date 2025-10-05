@@ -370,8 +370,57 @@ fi
 # (User can configure manually after installation if needed)
 
 echo ""
-log_info "🌐 Local Network Configuration Summary"
+log_info "🌐 Network Configuration for LAN Access"
 log_info "======================================"
+
+# Auto-detect LAN IP address
+LAN_IP=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $7; exit}' || ip addr show | grep 'inet ' | grep -v '127.0.0.1' | head -1 | awk '{print $2}' | cut -d'/' -f1 || echo "")
+
+if [[ -n "$LAN_IP" && "$LAN_IP" != "127.0.0.1" ]]; then
+    echo ""
+    log_success "✅ Detected LAN IP address: $LAN_IP"
+    echo ""
+    log_info "This IP will be used for network access from all devices"
+    log_info "Services will be accessible at: http://$LAN_IP:PORT"
+    echo ""
+    read -p "Use this IP address for network access? (Y/n): " use_lan_ip
+    
+    if [[ ! "$use_lan_ip" =~ ^[Nn]$ ]]; then
+        DETECTED_SERVER_IP="$LAN_IP"
+        log_success "✅ Configured for LAN access: $DETECTED_SERVER_IP"
+    else
+        echo ""
+        read -p "Enter custom IP address (or press Enter for localhost only): " custom_ip
+        DETECTED_SERVER_IP="${custom_ip:-127.0.0.1}"
+        if [ "$DETECTED_SERVER_IP" = "127.0.0.1" ]; then
+            log_warning "⚠️ Using localhost - services only accessible from server"
+        else
+            log_info "Using custom IP: $DETECTED_SERVER_IP"
+        fi
+    fi
+else
+    log_warning "⚠️ Could not auto-detect LAN IP"
+    echo ""
+    read -p "Enter your server's LAN IP address (or press Enter for localhost): " manual_ip
+    DETECTED_SERVER_IP="${manual_ip:-127.0.0.1}"
+    if [ "$DETECTED_SERVER_IP" = "127.0.0.1" ]; then
+        log_warning "⚠️ Using localhost - services only accessible from server"
+    else
+        log_info "Using IP: $DETECTED_SERVER_IP"
+    fi
+fi
+
+# Update SERVER_IP in .env
+if [ -f "$ENV_FILE" ]; then
+    sed -i.bak "/^SERVER_IP=/d" "$ENV_FILE"
+    echo "SERVER_IP=$DETECTED_SERVER_IP" >> "$ENV_FILE"
+    log_success "✅ SERVER_IP configured: $DETECTED_SERVER_IP"
+fi
+
+echo ""
+log_info "🌐 Network Configuration Summary"
+log_info "======================================"
+log_info "Server IP: $DETECTED_SERVER_IP"
 log_info "Selected services: ${COMPOSE_PROFILES_VALUE:-none (core only)}"
 log_info "Access method: HTTP via IP and port"
 log_info "Port range: 8000-8099"
@@ -380,9 +429,10 @@ log_info "Authentication: Disabled for local network"
 
 echo ""
 log_info "Services will be accessible at:"
-log_info "- Main services: http://SERVER_IP:8000-8099"
-log_info "- Change SERVER_IP in .env to your server's LAN IP"
-log_info "- Example: 192.168.1.100, 10.0.0.100, etc."
+log_info "- n8n: http://$DETECTED_SERVER_IP:8000"
+log_info "- Flowise: http://$DETECTED_SERVER_IP:8022"
+log_info "- Grafana: http://$DETECTED_SERVER_IP:8003"
+log_info "- All services: http://$DETECTED_SERVER_IP:8000-8099"
 
 echo ""
 read -p "Continue with installation? (Y/n): " confirm_installation
