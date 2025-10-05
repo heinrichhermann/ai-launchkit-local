@@ -139,6 +139,28 @@ log_info "========== STEP 4: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/04_wizard_local.sh" || { log_error "Service Selection Wizard failed"; exit 1; }
 log_success "Service selection complete!"
 
+# Check if NVIDIA GPU profile was selected
+if grep -q "gpu-nvidia" .env 2>/dev/null; then
+    CURRENT_STEP="Installing NVIDIA Container Toolkit for GPU Support"
+    log_info "========== STEP 4a: $CURRENT_STEP =========="
+    
+    if bash "$SCRIPT_DIR/02a_install_nvidia_toolkit.sh"; then
+        log_success "NVIDIA Container Toolkit installed successfully!"
+    else
+        log_warning "⚠️ NVIDIA Container Toolkit installation failed"
+        log_info "Switching to CPU profile for Ollama..."
+        
+        # Fallback to CPU profile
+        sed -i.bak 's/gpu-nvidia/cpu/g' .env
+        
+        log_info "✅ Switched to CPU profile - installation will continue"
+        log_info "You can setup GPU support later by:"
+        log_info "  1. Installing nvidia-container-toolkit manually"
+        log_info "  2. Changing .env: gpu-nvidia instead of cpu"
+        log_info "  3. Restarting services"
+    fi
+fi
+
 CURRENT_STEP="Setting up Perplexica (if selected)"
 log_info "========== STEP 4a: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/04a_setup_perplexica.sh" || { log_error "Perplexica setup failed"; exit 1; }
