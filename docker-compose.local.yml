@@ -545,7 +545,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   # ============================================================================
-  # BUSINESS TOOLS (8040-8059)
+  # LEARNING TOOLS (8040-8050)
   # ============================================================================
 
   calcom:
@@ -606,134 +606,6 @@ services:
       retries: 5
       start_period: 300s
 
-  odoo:
-    image: odoo:18.0
-    container_name: odoo
-    profiles: ["odoo"]
-    restart: unless-stopped
-    ports:
-      - "8041:8069"
-    depends_on:
-      odoo-schema-init:
-        condition: service_completed_successfully
-      postgres:
-        condition: service_healthy
-    environment:
-      - HOST=postgres
-      - USER=odoo
-      - PASSWORD=${ODOO_DB_PASSWORD}
-    volumes:
-      - odoo_data:/var/lib/odoo
-      - ./shared:/data/shared:ro
-    command: odoo --proxy-mode
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8069/web/login"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  odoo-init:
-    image: postgres:latest
-    container_name: odoo-init
-    profiles: ["odoo"]
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-    command: >
-      sh -c "
-      psql -h postgres -U postgres -c \"CREATE USER odoo WITH PASSWORD '${ODOO_DB_PASSWORD}' CREATEDB\" || true &&
-      psql -h postgres -U postgres -c \"CREATE DATABASE odoo OWNER odoo\" || true &&
-      echo 'Odoo user and database ready'
-      "
-    restart: "no"
-
-  odoo-schema-init:
-    image: odoo:18.0
-    container_name: odoo-schema-init
-    profiles: ["odoo"]
-    depends_on:
-      odoo-init:
-        condition: service_completed_successfully
-      postgres:
-        condition: service_healthy
-    environment:
-      - HOST=postgres
-      - USER=odoo
-      - PASSWORD=${ODOO_DB_PASSWORD}
-    command: >
-      sh -c "
-      odoo --db_host postgres --db_user odoo --db_password ${ODOO_DB_PASSWORD} -d odoo -i base --stop-after-init || 
-      echo 'Database already initialized'
-      "
-    restart: "no"
-
-  kimai:
-    image: kimai/kimai2:apache
-    container_name: kimai
-    profiles: ["kimai"]
-    restart: unless-stopped
-    ports:
-      - "8042:8001"
-    volumes:
-      - kimai_data:/opt/kimai/var/data
-      - kimai_plugins:/opt/kimai/var/plugins
-      - ./shared:/data/shared
-    environment:
-      - ADMINMAIL=${KIMAI_ADMIN_EMAIL:-${USER_EMAIL}}
-      - ADMINPASS=${KIMAI_ADMIN_PASSWORD}
-      - DATABASE_URL=mysql://${KIMAI_DB_USER}:${KIMAI_DB_PASSWORD}@kimai_db:3306/${KIMAI_DB_NAME}?charset=utf8mb4&serverVersion=8.3.0
-      - TRUSTED_HOSTS=127.0.0.1,localhost
-      - APP_ENV=prod
-      - memory_limit=256M
-      - MAILER_URL=smtp://mailpit:1025
-      - MAILER_FROM=${KIMAI_MAIL_FROM:-kimai@localhost}
-      - memory_limit=512M
-      - post_max_size=50M
-      - upload_max_filesize=50M
-    depends_on:
-      kimai_db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8001 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  kimai_db:
-    image: mysql:8.3
-    container_name: kimai_db
-    profiles: ["kimai"]
-    restart: unless-stopped
-    volumes:
-      - kimai_mysql:/var/lib/mysql
-    environment:
-      - MYSQL_DATABASE=${KIMAI_DB_NAME:-kimai}
-      - MYSQL_USER=${KIMAI_DB_USER:-kimai}
-      - MYSQL_PASSWORD=${KIMAI_DB_PASSWORD}
-      - MYSQL_ROOT_PASSWORD=${KIMAI_DB_ROOT_PASSWORD}
-    command: --default-storage-engine=innodb --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${KIMAI_DB_ROOT_PASSWORD}"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-    volumes:
-    volumes:
-    volumes:
-    volumes:
-    volumes:
-    volumes:
-    volumes:
-    volumes:
-    volumes:
-    volumes:
-    volumes:
-    volumes:
-    volumes:
   baserow:
     image: baserow/baserow:1.35.0
     container_name: baserow
@@ -968,38 +840,9 @@ services:
       start_period: 60s
 
   # ============================================================================
-  # COMMUNICATION & COLLABORATION (8051-8059)
+  # UTILITIES (8060-8069)
   # ============================================================================
 
-    image: jitsi/web:stable-10008
-    container_name: jitsi-web
-    profiles: ["jitsi"]
-    restart: unless-stopped
-    ports:
-      - "8051:80"
-    volumes:
-      - ./jitsi-web:/config
-      - ./jitsi-transcripts:/usr/share/jitsi-meet/transcripts
-    environment:
-      - ENABLE_LETSENCRYPT=0
-      - ENABLE_HTTP_REDIRECT=0
-      - DISABLE_HTTPS=1
-      - PUBLIC_URL=http://127.0.0.1:8051
-      - XMPP_DOMAIN=${JITSI_XMPP_DOMAIN}
-      - XMPP_AUTH_DOMAIN=auth.${JITSI_XMPP_DOMAIN}
-      - XMPP_BOSH_URL_BASE=http://jitsi-prosody:5280
-      - XMPP_MUC_DOMAIN=muc.${JITSI_XMPP_DOMAIN}
-      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.${JITSI_XMPP_DOMAIN}
-      - JICOFO_AUTH_USER=jicofo
-      - JVB_WS_DOMAIN=127.0.0.1:8051
-      - JVB_WS_SERVER_ID=jvb1
-      - TZ=${TZ}
-    depends_on:
-      - jitsi-prosody
-
-    volumes:
-    volumes:
-    volumes:
   postiz:
     image: ghcr.io/gitroomhq/postiz-app:latest
     container_name: postiz
