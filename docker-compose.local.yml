@@ -860,8 +860,19 @@ services:
     ports:
       - "8060:5000"
     environment:
-      BACKEND_INTERNAL_URL: http://postiz:3000
+      # Database Configuration (using separate variables to avoid URL escaping issues)
+      DB_TYPE: "postgres"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "postgres"
+      DB_USER: "postgres"
+      DB_PASSWORD: "${POSTGRES_PASSWORD}"
+      DB_SCHEMA: "postiz"
+      # Alternative: Keep DATABASE_URL but will be constructed by Postiz if above vars present
       DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres?schema=postiz"
+      
+      # Application URLs
+      BACKEND_INTERNAL_URL: http://postiz:3000
       DISABLE_REGISTRATION: ${POSTIZ_DISABLE_REGISTRATION}
       FRONTEND_URL: http://127.0.0.1:8060
       IS_GENERAL: "true"
@@ -869,6 +880,8 @@ services:
       MAIN_URL: http://127.0.0.1:8060
       NEXT_PUBLIC_BACKEND_URL: http://127.0.0.1:8060/api
       NEXT_PUBLIC_UPLOAD_DIRECTORY: "/uploads"
+      
+      # Storage
       REDIS_URL: "redis://redis:6379"
       STORAGE_PROVIDER: "local"
       UPLOAD_DIRECTORY: "/uploads"
