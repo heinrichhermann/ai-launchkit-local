@@ -1948,6 +1948,6 @@ Based on [AI LaunchKit](https://github.com/freddy-schuetz/ai-launchkit) by Fried
 
 **Ready to launch your local AI stack?**
 
-[🐛 Report Issues](https://github.com/hermannheinrich/ai-launchkit-local/issues) • [💡 Feature Requests](https://github.com/hermannheinrich/ai-launchkit-local/issues/new?template=feature_request.md)
+[🐛 Report Issues](https://github.com/hermannheinrich/ai-launchkit-local/issues) • [💡 Feature Requests](https://github.com/hermannheinrich/ai-launchkit-local/issues/new)
 
 </div>
