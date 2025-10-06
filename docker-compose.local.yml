@@ -1,10 +1,10 @@
 networks:
-  ailaunchkit:
-    name: localai_network
+  ailearning:
+    name: ailearning_network
     driver: bridge
     labels:
-      ai-launchkit.network: "internal"
-      ai-launchkit.project: "localai"
+      ai-learning-kit.network: "internal"
+      ai-learning-kit.project: "ailearning"
 
 volumes:
   n8n_storage:
@@ -1580,7 +1580,7 @@ services:
 
   dashboard:
     image: nginx:alpine
-    container_name: ailaunchkit-dashboard
+    container_name: ailearning-dashboard
     restart: unless-stopped
     ports:
       - "80:80"

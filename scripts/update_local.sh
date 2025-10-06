@@ -31,9 +31,9 @@ cleanup_on_error() {
     
     echo ""
     log_info "To rollback if needed:"
-    log_info "  cd ~/ai/ai-launchkit-local"
+    log_info "  cd ~/ai/ai-learning-kit"
     log_info "  git checkout HEAD~1"
-    log_info "  docker compose -p localai -f docker-compose.local.yml up -d"
+    log_info "  docker compose -p ailearning -f docker-compose.local.yml up -d"
     
     exit $exit_code
 }
@@ -158,7 +158,7 @@ CURRENT_STEP="Updating Docker Images"
 log_info "========== Step 3: Updating Docker Images =========="
 log_info "Pulling latest versions (this may take a few minutes)..."
 
-docker compose -p localai -f docker-compose.local.yml pull --ignore-buildable || {
+docker compose -p ailearning -f docker-compose.local.yml pull --ignore-buildable || {
     log_warning "Some images failed to pull"
     log_info "Continuing with available images..."
 }
@@ -170,10 +170,10 @@ echo ""
 CURRENT_STEP="Restarting Services"
 log_info "========== Step 4: Restarting Services =========="
 log_info "Stopping current services..."
-docker compose -p localai -f docker-compose.local.yml down
+docker compose -p ailearning -f docker-compose.local.yml down
 
 log_info "Starting services with new versions..."
-docker compose -p localai -f docker-compose.local.yml up -d
+docker compose -p ailearning -f docker-compose.local.yml up -d
 
 log_success "✅ Services restarted"
 echo ""
@@ -209,7 +209,7 @@ if [ ${#FAILED_SERVICES[@]} -gt 0 ]; then
     log_warning "⚠️ Some services failed to start:"
     printf "  - %s\n" "${FAILED_SERVICES[@]}"
     echo ""
-    log_info "Check logs: docker compose -p localai -f docker-compose.local.yml logs"
+    log_info "Check logs: docker compose -p ailearning -f docker-compose.local.yml logs"
 else
     log_success "✅ All core services running"
 fi
@@ -242,7 +242,7 @@ echo "Check service status:"
 echo "  → docker ps"
 echo ""
 echo "View service logs:"
-echo "  → docker compose -p localai -f docker-compose.local.yml logs [service]"
+echo "  → docker compose -p ailearning -f docker-compose.local.yml logs [service]"
 echo ""
 echo "Access services:"
 echo "  → http://SERVER_IP/ (Dashboard)"
@@ -252,7 +252,7 @@ echo ""
 if [ -f "$BACKUP_DIR/.env.backup" ]; then
     echo "Restore backup if needed:"
     echo "  → cp $BACKUP_DIR/.env.backup .env"
-    echo "  → docker compose -p localai -f docker-compose.local.yml restart"
+    echo "  → docker compose -p ailearning -f docker-compose.local.yml restart"
     echo ""
 fi
 

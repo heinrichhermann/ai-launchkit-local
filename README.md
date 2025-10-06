@@ -15,9 +15,9 @@
 
 ---
 
-## 🎯 What is AI LaunchKit Local?
+## 🎯 What is AI Learning Kit Local?
 
-This is a **port-based local network version** of the AI LaunchKit that runs completely in Docker containers without requiring domain configuration, SSL certificates, or host system modifications. Perfect for local development, testing, and private networks.
+This is a **port-based local network version** of the AI Learning Kit that runs completely in Docker containers without requiring domain configuration, SSL certificates, or host system modifications. Perfect for local development, testing, and private networks.
 
 ### Key Differences from Original:
 - ✅ **No Domains Required** - Access via IP:PORT (e.g., 192.168.1.100:8000)
@@ -41,7 +41,7 @@ This is a **port-based local network version** of the AI LaunchKit that runs com
 
 ```bash
 # Clone and install in one command
-git clone https://github.com/hermannheinrich/ai-launchkit-local && cd ai-launchkit-local && sudo bash ./scripts/install_local.sh
+git clone https://github.com/hermannheinrich/ai-learning-kit && cd ai-learning-kit && sudo bash ./scripts/install_local.sh
 ```
 
 **Installation time:** 10-15 minutes (plus optional n8n workflows import)
@@ -146,7 +146,7 @@ If you're sitting at the server:
 
 **Copy and paste this into your terminal:**
 ```bash
-git clone https://github.com/hermannheinrich/ai-launchkit-local && cd ai-launchkit-local && sudo bash ./scripts/install_local.sh
+git clone https://github.com/hermannheinrich/ai-learning-kit && cd ai-learning-kit && sudo bash ./scripts/install_local.sh
 ```
 
 **Press Enter**, then type your password when asked.
@@ -156,11 +156,11 @@ git clone https://github.com/hermannheinrich/ai-launchkit-local && cd ai-launchk
 
 Breaking down the command:
 
-**Part 1:** `git clone https://github.com/hermannheinrich/ai-launchkit-local`
+**Part 1:** `git clone https://github.com/hermannheinrich/ai-learning-kit`
 - Downloads the AI Learning Kit to your server
-- Creates folder: `ai-launchkit-local`
+- Creates folder: `ai-learning-kit`
 
-**Part 2:** `cd ai-launchkit-local`
+**Part 2:** `cd ai-learning-kit`
 - Changes into that folder
 - All scripts are now accessible
 
@@ -322,7 +322,7 @@ You'll now see:
 
 [... more steps ...]
 
-🎉 AI LaunchKit Local Network Installation Complete!
+🎉 AI Learning Kit Local Network Installation Complete!
 ```
 
 **Wait for all steps to complete** (10-15 minutes)
@@ -513,14 +513,14 @@ Your services are accessible at:
 
 3. **Try installation again:**
    ```bash
-   cd ai-launchkit-local
+   cd ai-learning-kit
    sudo bash ./scripts/install_local.sh
    ```
    - Previous failed installation was rolled back automatically
    - Safe to re-run
 
 4. **Still having issues?**
-   - Post in [GitHub Issues](https://github.com/hermannheinrich/ai-launchkit-local/issues)
+   - Post in [GitHub Issues](https://github.com/hermannheinrich/ai-learning-kit/issues)
    - Include: Error message, Ubuntu version, server specs
    - Community will help!
 
@@ -565,7 +565,7 @@ Your services are accessible at:
 **Safe and simple uninstallation with automatic backup:**
 
 ```bash
-cd ai-launchkit-local
+cd ai-learning-kit
 sudo bash ./scripts/uninstall_local.sh
 ```
 
@@ -584,7 +584,7 @@ sudo bash ./scripts/uninstall_local.sh
    - Saves to: `~/ai-launchkit-backup-YYYYMMDD-HHMMSS/`
    - Press ENTER to accept
 
-4. **Removes AI LaunchKit**
+4. **Removes AI Learning Kit**
    - Stops all containers
    - Removes data (with your permission)
    - Cleans up Docker images
@@ -608,8 +608,8 @@ sudo bash ./scripts/uninstall_local.sh
 
 1. **Stop all services:**
    ```bash
-   cd ai-launchkit-local
-   docker compose -p localai -f docker-compose.local.yml down
+   cd ai-learning-kit
+   docker compose -p ailearning -f docker-compose.local.yml down
    ```
 
 2. **Edit the .env file:**
@@ -630,7 +630,7 @@ sudo bash ./scripts/uninstall_local.sh
 
 6. **Start services again:**
    ```bash
-   docker compose -p localai -f docker-compose.local.yml up -d
+   docker compose -p ailearning -f docker-compose.local.yml up -d
    ```
 
 7. **Wait 2-3 minutes** for new services to start
@@ -642,19 +642,19 @@ sudo bash ./scripts/uninstall_local.sh
 
 **Stop all services:**
 ```bash
-cd ai-launchkit-local
-docker compose -p localai -f docker-compose.local.yml down
+cd ai-learning-kit
+docker compose -p ailearning -f docker-compose.local.yml down
 ```
 
 **Start all services:**
 ```bash
-cd ai-launchkit-local
-docker compose -p localai -f docker-compose.local.yml up -d
+cd ai-learning-kit
+docker compose -p ailearning -f docker-compose.local.yml up -d
 ```
 
 **Restart a specific service** (example: n8n):
 ```bash
-docker compose -p localai -f docker-compose.local.yml restart n8n
+docker compose -p ailearning -f docker-compose.local.yml restart n8n
 ```
 
 **See what's running:**
@@ -664,7 +664,7 @@ docker ps
 
 **Check service logs** (if something doesn't work):
 ```bash
-docker compose -p localai -f docker-compose.local.yml logs n8n
+docker compose -p ailearning -f docker-compose.local.yml logs n8n
 ```
 Replace `n8n` with any service name
 
@@ -677,13 +677,13 @@ Replace `n8n` with any service name
 
 **List all volumes:**
 ```bash
-docker volume ls | grep localai_
+docker volume ls | grep ailearning_
 ```
 
 **Your important data:**
-- `localai_n8n_storage` - All your workflows
-- `localai_langfuse_postgres_data` - All databases
-- `localai_ollama_storage` - Downloaded AI models
+- `ailearning_n8n_storage` - All your workflows
+- `ailearning_langfuse_postgres_data` - All databases
+- `ailearning_ollama_storage` - Downloaded AI models
 
 **Backup data:**
 ```bash
@@ -704,8 +704,8 @@ docker volume ls | grep localai_
 
 **1. Check the logs:**
 ```bash
-cd ai-launchkit-local
-docker compose -p localai -f docker-compose.local.yml logs
+cd ai-learning-kit
+docker compose -p ailearning -f docker-compose.local.yml logs
 ```
 
 **2. Check specific service:**
@@ -716,10 +716,10 @@ docker logs postgres
 ```
 
 **3. Ask for help:**
-- **GitHub Issues:** [Report a problem](https://github.com/hermannheinrich/ai-launchkit-local/issues)
+- **GitHub Issues:** [Report a problem](https://github.com/hermannheinrich/ai-learning-kit/issues)
   - Include: Error message, what you were doing, Ubuntu version
   
-- **Original AI LaunchKit:** [Main project](https://github.com/freddy-schuetz/ai-launchkit)
+- **Original AI Learning Kit:** [Main project](https://github.com/freddy-schuetz/ai-launchkit)
   
 - **Community Forum:** [oTTomator Think Tank](https://thinktank.ottomator.ai/c/local-ai/18)
 
@@ -843,7 +843,7 @@ All services are accessible via `http://SERVER_IP:PORT`:
 
 ## 🎓 Learning Use Cases
 
-This AI LaunchKit is designed for **hands-on learning and experimentation**. Here are practical learning scenarios for each service category:
+This AI Learning Kit is designed for **hands-on learning and experimentation**. Here are practical learning scenarios for each service category:
 
 ### 🤖 AI Core Services
 
@@ -1034,7 +1034,7 @@ http://127.0.0.1:8003  # Grafana
 To enable LAN access later:
 1. Find your LAN IP: `ip addr show | grep 'inet ' | grep -v 127.0.0.1`
 2. Update .env: `sed -i 's/SERVER_IP=127.0.0.1/SERVER_IP=192.168.1.100/' .env`
-3. Restart: `docker compose -p localai -f docker-compose.local.yml restart`
+3. Restart: `docker compose -p ailearning -f docker-compose.local.yml restart`
 4. Add firewall rules: `sudo ufw allow from 192.168.0.0/16 to any port 8000:8099`
 
 ### Firewall Status
@@ -1120,8 +1120,8 @@ No manual configuration needed.
 
 1. **Stop all services:**
    ```bash
-   cd ~/ai/ai-launchkit-local
-   docker compose -p localai -f docker-compose.local.yml down
+   cd ~/ai/ai-learning-kit
+   docker compose -p ailearning -f docker-compose.local.yml down
    ```
    - This stops all containers safely
    - Your data is preserved in volumes
@@ -1159,7 +1159,7 @@ No manual configuration needed.
 
 6. **Start services with new configuration:**
    ```bash
-   docker compose -p localai -f docker-compose.local.yml up -d
+   docker compose -p ailearning -f docker-compose.local.yml up -d
    ```
    - Starts services with your new selection
    - Downloads new service images if needed
@@ -1199,8 +1199,8 @@ No manual configuration needed.
 
 2. **Stop all services:**
    ```bash
-   cd ~/ai/ai-launchkit-local
-   docker compose -p localai -f docker-compose.local.yml down
+   cd ~/ai/ai-learning-kit
+   docker compose -p ailearning -f docker-compose.local.yml down
    ```
 
 3. **Edit .env file:**
@@ -1224,7 +1224,7 @@ No manual configuration needed.
 
 7. **Restart all services:**
    ```bash
-   docker compose -p localai -f docker-compose.local.yml up -d
+   docker compose -p ailearning -f docker-compose.local.yml up -d
    ```
 
 8. **Test access:**
@@ -1246,7 +1246,7 @@ No manual configuration needed.
 
 1. **Open .env file:**
    ```bash
-   cd ~/ai/ai-launchkit-local
+   cd ~/ai/ai-learning-kit
    nano .env
    ```
 
@@ -1273,7 +1273,7 @@ No manual configuration needed.
 
 5. **Restart affected services:**
    ```bash
-   docker compose -p localai -f docker-compose.local.yml restart n8n flowise bolt
+   docker compose -p ailearning -f docker-compose.local.yml restart n8n flowise bolt
    ```
    - Only restarts services that use API keys
    - Faster than restarting everything
@@ -1324,7 +1324,7 @@ No manual configuration needed.
 
 6. **Restart n8n:**
    ```bash
-   docker compose -p localai -f docker-compose.local.yml restart n8n-worker
+   docker compose -p ailearning -f docker-compose.local.yml restart n8n-worker
    ```
 
 7. **Verify workers:**
@@ -1338,9 +1338,9 @@ No manual configuration needed.
 
 ---
 
-## 🗑️ Uninstalling AI LaunchKit
+## 🗑️ Uninstalling AI Learning Kit
 
-If you need to remove AI LaunchKit from your system:
+If you need to remove AI Learning Kit from your system:
 
 ### Safe Uninstall with Backup
 
@@ -1350,10 +1350,10 @@ sudo bash ./scripts/uninstall_local.sh
 ```
 
 The uninstall script will:
-1. ✅ Show current AI LaunchKit status
+1. ✅ Show current AI Learning Kit status
 2. ✅ Ask for confirmation before proceeding
 3. ✅ Offer to create backup (workflows, databases, volumes)
-4. ✅ Remove only AI LaunchKit containers and volumes
+4. ✅ Remove only AI Learning Kit containers and volumes
 5. ✅ Preserve Portainer (or install it if missing)
 6. ✅ Optionally keep or remove .env configuration
 
@@ -1363,10 +1363,10 @@ If you prefer manual removal:
 
 ```bash
 # Stop all services
-docker compose -p localai -f docker-compose.local.yml down
+docker compose -p ailearning -f docker-compose.local.yml down
 
 # Remove with volumes (⚠️ DATA LOSS!)
-docker compose -p localai -f docker-compose.local.yml down -v
+docker compose -p ailearning -f docker-compose.local.yml down -v
 
 # Remove images (optional)
 docker image prune -a -f --filter "label=com.docker.compose.project=localai"
@@ -1374,15 +1374,15 @@ docker image prune -a -f --filter "label=com.docker.compose.project=localai"
 
 ### What Gets Removed
 
-- ❌ All AI LaunchKit containers (n8n, Flowise, Ollama, etc.)
+- ❌ All AI Learning Kit containers (n8n, Flowise, Ollama, etc.)
 - ❌ All data volumes (workflows, databases, uploaded files)
-- ❌ AI LaunchKit Docker networks
-- ❌ Unused AI LaunchKit Docker images
+- ❌ AI Learning Kit Docker networks
+- ❌ Unused AI Learning Kit Docker images
 
 ### What Gets Preserved
 
 - ✅ Portainer (Docker Management UI)
-- ✅ Other Docker containers not part of AI LaunchKit
+- ✅ Other Docker containers not part of AI Learning Kit
 - ✅ Project directory and scripts (can reinstall anytime)
 - ✅ Your .env configuration (optionally backed up)
 
@@ -1393,16 +1393,16 @@ docker image prune -a -f --filter "label=com.docker.compose.project=localai"
 ### Service Management
 ```bash
 # Start all services
-docker compose -p localai -f docker-compose.local.yml up -d
+docker compose -p ailearning -f docker-compose.local.yml up -d
 
 # Stop all services  
-docker compose -p localai -f docker-compose.local.yml down
+docker compose -p ailearning -f docker-compose.local.yml down
 
 # Restart specific service
-docker compose -p localai -f docker-compose.local.yml restart n8n
+docker compose -p ailearning -f docker-compose.local.yml restart n8n
 
 # View service logs
-docker compose -p localai -f docker-compose.local.yml logs n8n
+docker compose -p ailearning -f docker-compose.local.yml logs n8n
 
 # Check running services
 docker ps
@@ -1428,7 +1428,7 @@ netstat -tuln | grep 80
 **Automatic Update (Recommended):**
 ```bash
 # Run the update script
-cd ai-launchkit-local
+cd ai-learning-kit
 sudo bash ./scripts/update_local.sh
 ```
 
@@ -1442,23 +1442,23 @@ The update script will:
 
 **Manual Update:**
 ```bash
-cd ai-launchkit-local
+cd ai-learning-kit
 
 # Update repository
 git pull origin main
 
 # Update Docker images
-docker compose -p localai -f docker-compose.local.yml pull
+docker compose -p ailearning -f docker-compose.local.yml pull
 
 # Restart services
-docker compose -p localai -f docker-compose.local.yml up -d
+docker compose -p ailearning -f docker-compose.local.yml up -d
 
 # Clean up old images
 docker image prune -f
 ```
 
 **What Gets Updated:**
-- ✅ AI LaunchKit scripts and configurations
+- ✅ AI Learning Kit scripts and configurations
 - ✅ Docker images for all services
 - ✅ Landing page and templates
 - ✅ Documentation
@@ -1614,7 +1614,7 @@ df -h
 
 **View service logs:**
 ```bash
-docker compose -p localai -f docker-compose.local.yml logs [service_name]
+docker compose -p ailearning -f docker-compose.local.yml logs [service_name]
 ```
 
 ### Network Access Issues
@@ -1653,10 +1653,10 @@ docker logs postgres
 ```bash
 # Reduce n8n workers
 echo "N8N_WORKER_COUNT=1" >> .env
-docker compose -p localai -f docker-compose.local.yml restart
+docker compose -p ailearning -f docker-compose.local.yml restart
 
 # Disable resource-heavy services temporarily
-docker compose -p localai -f docker-compose.local.yml stop comfyui langfuse-web
+docker compose -p ailearning -f docker-compose.local.yml stop comfyui langfuse-web
 ```
 
 **Slow response times:**
@@ -1677,7 +1677,7 @@ docker logs n8n --tail 50
 docker exec n8n nc -zv postgres 5432
 
 # Restart n8n
-docker compose -p localai -f docker-compose.local.yml restart n8n
+docker compose -p ailearning -f docker-compose.local.yml restart n8n
 ```
 
 **Common causes:**
@@ -1777,7 +1777,7 @@ Services have telemetry disabled by default for privacy and performance.
 
 ## 🔄 Migration from Domain-based Installation
 
-If you have an existing domain-based AI LaunchKit installation:
+If you have an existing domain-based AI Learning Kit installation:
 
 ### Backup Data
 ```bash
@@ -1788,7 +1788,7 @@ docker exec n8n n8n export:workflow --backup --output=/backup/workflows.json
 docker exec postgres pg_dumpall -U postgres > backup.sql
 
 # Backup volumes
-docker run --rm -v localai_n8n_storage:/data -v $(pwd):/backup alpine \
+docker run --rm -v ailearning_n8n_storage:/data -v $(pwd):/backup alpine \
   tar czf /backup/n8n_backup.tar.gz /data
 ```
 
@@ -1804,7 +1804,7 @@ docker run --rm -v localai_n8n_storage:/data -v $(pwd):/backup alpine \
 ## 🆘 Support
 
 ### Documentation
-- **Original Project:** [AI LaunchKit](https://github.com/freddy-schuetz/ai-launchkit)
+- **Original Project:** [AI Learning Kit](https://github.com/freddy-schuetz/ai-launchkit)
 - **Local Version:** This README
 - **Service URLs:** Generated `LOCAL_ACCESS_URLS.txt`
 
@@ -1815,8 +1815,8 @@ docker run --rm -v localai_n8n_storage:/data -v $(pwd):/backup alpine \
 4. **Port Conflicts:** `netstat -tuln | grep 80`
 
 ### Reporting Issues
-- **GitHub:** [Report local network issues](https://github.com/hermannheinrich/ai-launchkit-local/issues)
-- **Original:** [AI LaunchKit issues](https://github.com/freddy-schuetz/ai-launchkit/issues)
+- **GitHub:** [Report local network issues](https://github.com/hermannheinrich/ai-learning-kit/issues)
+- **Original:** [AI Learning Kit issues](https://github.com/freddy-schuetz/ai-launchkit/issues)
 
 ### Community
 - **Forum:** [oTTomator Think Tank](https://thinktank.ottomator.ai/c/local-ai/18)
@@ -1827,7 +1827,7 @@ docker run --rm -v localai_n8n_storage:/data -v $(pwd):/backup alpine \
 ## 📁 File Structure
 
 ```
-ai-launchkit-local/
+ai-learning-kit/
 ├── docker-compose.local.yml        # Port-based service definitions
 ├── .env.local.example              # Local network configuration template  
 ├── start_services_local.py         # Service orchestration script
@@ -1886,7 +1886,7 @@ Body: {
 const response = await fetch('http://192.168.1.100:8000/webhook/my-webhook', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ message: 'Hello AI LaunchKit!' })
+  body: JSON.stringify({ message: 'Hello AI Learning Kit!' })
 });
 ```
 
@@ -1910,7 +1910,7 @@ COMPOSE_PROFILES="speech,ocr,libretranslate,stirling-pdf,comfyui"
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-Based on [AI LaunchKit](https://github.com/freddy-schuetz/ai-launchkit) by Friedemann Schuetz.
+Based on [AI Learning Kit](https://github.com/freddy-schuetz/ai-launchkit) by Friedemann Schuetz.
 
 ---
 
@@ -1918,6 +1918,6 @@ Based on [AI LaunchKit](https://github.com/freddy-schuetz/ai-launchkit) by Fried
 
 **Ready to launch your local AI stack?**
 
-[🐛 Report local issues](https://github.com/hermannheinrich/ai-launchkit-local/issues) • [📚 View original project](https://github.com/freddy-schuetz/ai-launchkit)
+[🐛 Report local issues](https://github.com/hermannheinrich/ai-learning-kit/issues) • [📚 View original project](https://github.com/freddy-schuetz/ai-launchkit)
 
 </div>
