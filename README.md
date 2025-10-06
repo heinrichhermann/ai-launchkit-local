@@ -1053,59 +1053,289 @@ sudo ufw reload
 
 ---
 
-## ⚙️ Configuration
+## ℹ️ How Configuration Works (Reference)
 
-### Environment File
+⚠️ **IMPORTANT:** Everything is configured automatically during installation!
+**You do NOT need to do anything here** - this section is just for reference.
 
-The local network configuration uses `.env.local.example` as template:
+<details>
+<summary><b>📖 Click to see what the installation wizard configures automatically (Informational Only)</b></summary>
 
-```bash
-# Copy template to active configuration
-cp .env.local.example .env
+The installation wizard automatically handles all configuration:
 
-# Edit configuration
-nano .env
-```
+### What Gets Configured Automatically:
 
-### Key Configuration Variables
+**1. Environment File (.env)**
+- ✅ Created from `.env.local.example` template
+- ✅ All passwords generated automatically (32+ characters)
+- ✅ All settings configured by wizard
+- ✅ You never need to edit .env manually during installation
 
-```bash
-# Network Configuration
-SERVER_IP=127.0.0.1          # Change to your LAN IP
-N8N_WORKER_COUNT=1           # Number of n8n workers
+**2. Network Configuration**
+- ✅ SERVER_IP auto-detected (e.g., 192.168.1.100)
+- ✅ Wizard asks you to confirm the detected IP
+- ✅ Automatically written to .env
+- ✅ All services configured to use this IP
 
-# Service Selection
-COMPOSE_PROFILES="n8n,flowise,monitoring"
+**3. Service Selection**
+- ✅ Interactive checkbox menu in wizard
+- ✅ Use arrow keys to navigate
+- ✅ Spacebar to select/deselect
+- ✅ Automatically written to COMPOSE_PROFILES in .env
 
-# Mail Configuration (Local Network)
-MAIL_MODE=mailpit
-SMTP_HOST=mailpit
-SMTP_PORT=1025
-EMAIL_FROM=noreply@localhost
+**4. Ollama Hardware Selection**
+- ✅ Choose CPU, NVIDIA GPU, or AMD GPU in wizard
+- ✅ NVIDIA Container Toolkit installed automatically if GPU selected
+- ✅ Automatically configured in .env
 
-# Optional AI API Keys
-OPENAI_API_KEY=              # For enhanced AI features
-ANTHROPIC_API_KEY=           # For Claude models
-GROQ_API_KEY=               # For fast inference
-```
+**5. Mail Configuration**
+- ✅ Mailpit configured automatically
+- ✅ All services configured to use Mailpit
+- ✅ No external mail server needed
 
-### Service Selection
+**6. Optional API Keys**
+- ✅ Wizard asks if you want to add OpenAI, Anthropic, Groq keys
+- ✅ Press Enter to skip (can add later)
+- ✅ Automatically written to .env if provided
 
-Choose which services to install by editing `COMPOSE_PROFILES`:
+**After installation completes, everything is ready to use!**
+No manual configuration needed.
 
-```bash
-# Minimal installation
-COMPOSE_PROFILES="n8n,flowise"
+</details>
 
-# Full AI stack
-COMPOSE_PROFILES="n8n,flowise,open-webui,cpu,comfyui,monitoring"
+---
 
-# Learning suite
-COMPOSE_PROFILES="n8n,calcom,baserow,nocodb,vikunja,leantime,vaultwarden"
+## 🔧 Changing Configuration After Installation (Optional)
 
-# Complete installation (all services)
-COMPOSE_PROFILES="n8n,flowise,monitoring,bolt,openui,comfyui,cpu,calcom,baserow,nocodb,vikunja,leantime,vaultwarden,langfuse,qdrant,weaviate,neo4j,lightrag,speech,ocr,libretranslate"
-```
+**Only use this section if you want to make changes after installation.**
+
+<details>
+<summary><b>📝 How to add or remove services</b></summary>
+
+### When to use this:
+- You want to try additional services (e.g., add ComfyUI, bolt.diy)
+- You want to remove services you're not using
+- You want to enable GPU after starting with CPU
+
+### Step-by-Step:
+
+1. **Stop all services:**
+   ```bash
+   cd ~/ai/ai-launchkit-local
+   docker compose -p localai -f docker-compose.local.yml down
+   ```
+   - This stops all containers safely
+   - Your data is preserved in volumes
+
+2. **Open .env file:**
+   ```bash
+   nano .env
+   ```
+   - nano is a simple text editor
+   - Press arrow keys to navigate
+
+3. **Find the COMPOSE_PROFILES line:**
+   ```bash
+   COMPOSE_PROFILES="n8n,flowise,monitoring"
+   ```
+   - It's near the bottom of the file
+   - Lists all active services
+
+4. **Edit the services:**
+   - Add services: `COMPOSE_PROFILES="n8n,flowise,monitoring,cpu,comfyui"`
+   - Remove services: Delete the service name
+   - Separate with commas (no spaces!)
+
+   **Available services:**
+   - AI: n8n, flowise, bolt, openui, comfyui, cpu, gpu-nvidia, open-webui
+   - RAG: qdrant, weaviate, neo4j, lightrag, ragapp
+   - Learning: calcom, baserow, nocodb, vikunja, leantime
+   - Tools: vaultwarden, kopia, postiz, monitoring
+   - Specialized: speech, ocr, libretranslate, stirling-pdf, searxng, perplexica
+
+5. **Save and exit:**
+   - Press `Ctrl+X`
+   - Press `Y` (yes, save changes)
+   - Press `Enter`
+
+6. **Start services with new configuration:**
+   ```bash
+   docker compose -p localai -f docker-compose.local.yml up -d
+   ```
+   - Starts services with your new selection
+   - Downloads new service images if needed
+   - Takes 2-5 minutes
+
+7. **Verify services are running:**
+   ```bash
+   docker ps
+   ```
+   - Lists all running containers
+   - Check for your new services
+
+8. **Access new services:**
+   - Open browser: `http://SERVER-IP/`
+   - Click on newly added services
+   - May need to wait 1-2 minutes for initialization
+
+</details>
+
+<details>
+<summary><b>🌐 How to change server IP address</b></summary>
+
+### When to use this:
+- Your server got a new IP address
+- You want to access from different network
+- You initially skipped LAN configuration
+
+### Step-by-Step:
+
+1. **Find your server's current IP:**
+   ```bash
+   ip addr show | grep 'inet ' | grep -v 127.0.0.1
+   ```
+   - Shows all network interfaces
+   - Look for your LAN IP (e.g., 192.168.1.100)
+   - Example output: `inet 192.168.1.100/24`
+
+2. **Stop all services:**
+   ```bash
+   cd ~/ai/ai-launchkit-local
+   docker compose -p localai -f docker-compose.local.yml down
+   ```
+
+3. **Edit .env file:**
+   ```bash
+   nano .env
+   ```
+
+4. **Find SERVER_IP line:**
+   ```bash
+   SERVER_IP=192.168.1.100
+   ```
+   - Usually near the bottom of the file
+
+5. **Change to new IP:**
+   ```bash
+   SERVER_IP=192.168.1.200  # Your new IP
+   ```
+
+6. **Save and exit:**
+   - Press `Ctrl+X`, then `Y`, then `Enter`
+
+7. **Restart all services:**
+   ```bash
+   docker compose -p localai -f docker-compose.local.yml up -d
+   ```
+
+8. **Test access:**
+   - Open browser: `http://NEW-IP:8000`
+   - Services should load with new IP
+   - Update bookmarks on your devices
+
+</details>
+
+<details>
+<summary><b>🔑 How to add AI API keys</b></summary>
+
+### When to use this:
+- You skipped API keys during installation
+- You got new API keys
+- You want to use cloud AI services (OpenAI, Anthropic, Groq)
+
+### Step-by-Step:
+
+1. **Open .env file:**
+   ```bash
+   cd ~/ai/ai-launchkit-local
+   nano .env
+   ```
+
+2. **Find the API key section:**
+   ```bash
+   # Optional AI API Keys
+   OPENAI_API_KEY=
+   ANTHROPIC_API_KEY=
+   GROQ_API_KEY=
+   ```
+
+3. **Add your keys:**
+   ```bash
+   OPENAI_API_KEY=sk-your-key-here
+   ANTHROPIC_API_KEY=sk-ant-your-key-here
+   GROQ_API_KEY=gsk-your-key-here
+   ```
+   - Remove the trailing `=` and add your key
+   - No quotes needed
+   - Get keys from: OpenAI.com, Anthropic.com, Groq.com
+
+4. **Save and exit:**
+   - Press `Ctrl+X`, then `Y`, then `Enter`
+
+5. **Restart affected services:**
+   ```bash
+   docker compose -p localai -f docker-compose.local.yml restart n8n flowise bolt
+   ```
+   - Only restarts services that use API keys
+   - Faster than restarting everything
+
+6. **Test API keys:**
+   - Open n8n: `http://SERVER-IP:8000`
+   - Create workflow with OpenAI node
+   - API keys should work now
+
+</details>
+
+<details>
+<summary><b>⚙️ How to change n8n worker count</b></summary>
+
+### When to use this:
+- System has more CPU cores
+- Want to process workflows faster in parallel
+- Currently have performance issues
+
+### Step-by-Step:
+
+1. **Check current CPU cores:**
+   ```bash
+   nproc
+   ```
+   - Shows number of CPU cores
+   - Example output: `8`
+
+2. **Edit .env file:**
+   ```bash
+   nano .env
+   ```
+
+3. **Find N8N_WORKER_COUNT:**
+   ```bash
+   N8N_WORKER_COUNT=1
+   ```
+
+4. **Change number:**
+   ```bash
+   N8N_WORKER_COUNT=4  # Use 4 workers
+   ```
+   - Recommendation: Use 50% of CPU cores
+   - Don't exceed number of cores
+
+5. **Save and exit:**
+   - Press `Ctrl+X`, then `Y`, then `Enter`
+
+6. **Restart n8n:**
+   ```bash
+   docker compose -p localai -f docker-compose.local.yml restart n8n-worker
+   ```
+
+7. **Verify workers:**
+   ```bash
+   docker ps | grep n8n-worker
+   ```
+   - Should show multiple n8n-worker containers
+   - One per worker count
+
+</details>
 
 ---
 
