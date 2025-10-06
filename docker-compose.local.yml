@@ -1425,7 +1425,7 @@ services:
     profiles: ["crawl4ai"]
     restart: unless-stopped
     ports:
-      - "8093:8000"
+      - "8093:11235"
     shm_size: 1g
     env_file:
       - .env
