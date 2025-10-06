@@ -1195,16 +1195,49 @@ netstat -tuln | grep 80
 ```
 
 ### Updates
+
+**Automatic Update (Recommended):**
 ```bash
-# Pull latest images
+# Run the update script
+cd ai-launchkit-local
+sudo bash ./scripts/update_local.sh
+```
+
+The update script will:
+1. ✅ Create automatic backup of your configuration
+2. ✅ Pull latest changes from GitHub
+3. ✅ Update all Docker images
+4. ✅ Restart services with new versions
+5. ✅ Perform health checks
+6. ✅ Provide rollback instructions if needed
+
+**Manual Update:**
+```bash
+cd ai-launchkit-local
+
+# Update repository
+git pull origin main
+
+# Update Docker images
 docker compose -p localai -f docker-compose.local.yml pull
 
-# Restart with updates
+# Restart services
 docker compose -p localai -f docker-compose.local.yml up -d
 
 # Clean up old images
 docker image prune -f
 ```
+
+**What Gets Updated:**
+- ✅ AI LaunchKit scripts and configurations
+- ✅ Docker images for all services
+- ✅ Landing page and templates
+- ✅ Documentation
+
+**What Gets Preserved:**
+- ✅ Your .env configuration (automatically backed up and restored)
+- ✅ All data in Docker volumes
+- ✅ Service selections and settings
 
 ---
 
