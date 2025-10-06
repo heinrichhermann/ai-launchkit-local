@@ -79,7 +79,7 @@ source .env
 
 # Stop any existing containers first
 log_info "Stopping existing containers..."
-docker compose -p ailearning -f docker-compose.local.yml down 2>/dev/null || true
+docker compose -p localai -f docker-compose.local.yml down 2>/dev/null || true
 
 # Handle Supabase if selected
 if [[ "$COMPOSE_PROFILES" == *"supabase"* ]]; then
@@ -111,10 +111,10 @@ if [[ "$COMPOSE_PROFILES" == *"supabase"* ]]; then
     
     log_info "Starting Supabase services on port 8100..."
     # Start Supabase with port override
-    docker compose -p ailearning -f supabase/docker/docker-compose.yml up -d
+    docker compose -p localai -f supabase/docker/docker-compose.yml up -d
     
     # Override Kong port mapping
-    docker compose -p ailearning -f supabase/docker/docker-compose.yml stop kong
+    docker compose -p localai -f supabase/docker/docker-compose.yml stop kong
     # We'll add port mapping through a separate override
 fi
 
@@ -147,7 +147,7 @@ if [[ "$COMPOSE_PROFILES" == *"dify"* ]]; then
     fi
     
     log_info "Starting Dify services on port 8101..."
-    docker compose -p ailearning -f dify/docker/docker-compose.yaml up -d
+    docker compose -p localai -f dify/docker/docker-compose.yaml up -d
 fi
 
 # Build services that need local compilation
@@ -185,12 +185,12 @@ log_info "Launching local network services..."
 
 # Start main services using local docker-compose
 log_info "Building and starting AI LaunchKit services..."
-docker compose -p ailearning -f docker-compose.local.yml build --pull 2>/dev/null || {
+docker compose -p localai -f docker-compose.local.yml build --pull 2>/dev/null || {
     log_warning "Build step failed, continuing with existing images..."
 }
 
 log_info "Starting all selected services..."
-docker compose -p ailearning -f docker-compose.local.yml up -d
+docker compose -p localai -f docker-compose.local.yml up -d
 
 # Wait for core services to start
 log_info "Waiting for core services to initialize..."
@@ -241,7 +241,7 @@ if [ ${#FAILED_SERVICES[@]} -gt 0 ]; then
     log_warning "⚠️ Some services failed to start:"
     printf "  - %s\n" "${FAILED_SERVICES[@]}"
     echo ""
-    log_info "Check service logs with: docker compose -p ailearning -f docker-compose.local.yml logs [service_name]"
+    log_info "Check service logs with: docker compose -p localai -f docker-compose.local.yml logs [service_name]"
     echo ""
     log_info "Common issues:"
     log_info "- Service may need more time to initialize"
@@ -254,7 +254,7 @@ fi
 # Additional service-specific startup tasks
 if [[ "$COMPOSE_PROFILES" == *"tts-chatterbox"* ]]; then
     log_info "Starting Chatterbox TTS services..."
-    docker compose -p ailearning -f docker-compose.local.yml --profile tts-chatterbox up -d || {
+    docker compose -p localai -f docker-compose.local.yml --profile tts-chatterbox up -d || {
         log_warning "Chatterbox TTS startup failed - API will work but no UI"
     }
 fi

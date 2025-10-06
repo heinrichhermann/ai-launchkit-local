@@ -244,11 +244,11 @@ def prepare_dify_env():
     print("Dify .env prepared for local network deployment.")
 
 def stop_existing_containers():
-    """Stop and remove existing containers for the unified project 'ailearning'."""
-    print("Stopping and removing existing containers for project 'ailearning'...")
+    """Stop and remove existing containers for the unified project 'localai'."""
+    print("Stopping and removing existing containers for project 'localai'...")
     
     # Stop with all possible compose files
-    base_cmd = ["docker", "compose", "-p", "ailearning"]
+    base_cmd = ["docker", "compose", "-p", "localai"]
     
     # Main docker-compose file
     cmd = base_cmd + ["-f", "docker-compose.local.yml"]
@@ -282,7 +282,7 @@ def start_supabase():
     
     # Start database first
     run_command([
-        "docker", "compose", "-p", "ailearning", "-f", "supabase/docker/docker-compose.yml", 
+        "docker", "compose", "-p", "localai", "-f", "supabase/docker/docker-compose.yml", 
         "up", "-d", "db"
     ])
     
@@ -291,7 +291,7 @@ def start_supabase():
     
     # Start all services
     run_command([
-        "docker", "compose", "-p", "ailearning", "-f", "supabase/docker/docker-compose.yml", 
+        "docker", "compose", "-p", "localai", "-f", "supabase/docker/docker-compose.yml", 
         "up", "-d"
     ])
     
@@ -300,7 +300,7 @@ def start_supabase():
     try:
         # Stop Kong to reconfigure it
         run_command([
-            "docker", "compose", "-p", "ailearning", "-f", "supabase/docker/docker-compose.yml", 
+            "docker", "compose", "-p", "localai", "-f", "supabase/docker/docker-compose.yml", 
             "stop", "kong"
         ])
         
@@ -320,7 +320,7 @@ services:
             
         # Start Kong with override
         run_command([
-            "docker", "compose", "-p", "ailearning", 
+            "docker", "compose", "-p", "localai", 
             "-f", "supabase/docker/docker-compose.yml",
             "-f", "supabase-local-override.yml",
             "up", "-d", "kong"
@@ -343,7 +343,7 @@ def start_dify():
     # Start database first
     print("Starting Dify database...")
     run_command([
-        "docker", "compose", "-p", "ailearning", "-f", "dify/docker/docker-compose.yaml", 
+        "docker", "compose", "-p", "localai", "-f", "dify/docker/docker-compose.yaml", 
         "up", "-d", "db"
     ])
     
@@ -354,7 +354,7 @@ def start_dify():
     # Create dify_plugin database if needed
     try:
         subprocess.run([
-            "docker", "exec", "ailearning-db-1", "psql", "-U", "postgres", 
+            "docker", "exec", "localai-db-1", "psql", "-U", "postgres", 
             "-c", "CREATE DATABASE dify_plugin;"
         ], capture_output=True, check=False)
         print("dify_plugin database created.")
@@ -364,7 +364,7 @@ def start_dify():
     # Start all Dify services
     print("Starting remaining Dify services...")
     run_command([
-        "docker", "compose", "-p", "ailearning", "-f", "dify/docker/docker-compose.yaml", 
+        "docker", "compose", "-p", "localai", "-f", "dify/docker/docker-compose.yaml", 
         "up", "-d"
     ])
     
@@ -377,14 +377,14 @@ def start_local_ai():
     # Build services first
     print("Building services and checking for updates...")
     try:
-        build_cmd = ["docker", "compose", "-p", "ailearning", "-f", "docker-compose.local.yml", "build", "--pull"]
+        build_cmd = ["docker", "compose", "-p", "localai", "-f", "docker-compose.local.yml", "build", "--pull"]
         run_command(build_cmd)
     except subprocess.CalledProcessError:
         print("Warning: Build step failed, continuing with existing images...")
 
     # Start services
     print("Starting all selected services...")
-    up_cmd = ["docker", "compose", "-p", "ailearning", "-f", "docker-compose.local.yml", "up", "-d"]
+    up_cmd = ["docker", "compose", "-p", "localai", "-f", "docker-compose.local.yml", "up", "-d"]
     run_command(up_cmd)
     
     print("✅ AI LaunchKit services started for local network")

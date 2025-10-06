@@ -20,9 +20,9 @@ cleanup_on_error() {
     log_warning "🔄 Rolling back changes..."
     
     # Stop any started Docker containers
-    if docker ps -a --filter "label=com.docker.compose.project=ailearning" -q 2>/dev/null | grep -q .; then
+    if docker ps -a --filter "label=com.docker.compose.project=localai" -q 2>/dev/null | grep -q .; then
         log_info "Stopping AI LaunchKit services..."
-        docker compose -p ailearning -f docker-compose.local.yml down 2>/dev/null || true
+        docker compose -p localai -f docker-compose.local.yml down 2>/dev/null || true
         log_success "✅ Services stopped"
     fi
     
@@ -39,8 +39,8 @@ cleanup_on_error() {
     log_info "3. Re-run: sudo bash ./scripts/install_local.sh"
     echo ""
     log_info "For help:"
-    log_info "  - GitHub Issues: https://github.com/hermannheinrich/ai-learning-kit/issues"
-    log_info "  - Check Docker logs: docker compose -p ailearning -f docker-compose.local.yml logs"
+    log_info "  - GitHub Issues: https://github.com/hermannheinrich/ai-launchkit-local/issues"
+    log_info "  - Check Docker logs: docker compose -p localai -f docker-compose.local.yml logs"
     
     exit $exit_code
 }
@@ -229,7 +229,7 @@ log_info "See the final report above for all service URLs and ports"
 echo ""
 log_info "To change the SERVER_IP for network access:"
 log_info "  1. Edit the SERVER_IP variable in .env"
-log_info "  2. Restart services: docker compose -p ailearning -f docker-compose.local.yml restart"
+log_info "  2. Restart services: docker compose -p localai -f docker-compose.local.yml restart"
 echo ""
 
 # Ensure Portainer is installed for Docker management

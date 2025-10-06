@@ -37,13 +37,13 @@ fi
 log_info "📊 Current AI LaunchKit Status"
 echo "=========================================="
 echo "Running containers:"
-docker ps --filter "label=com.docker.compose.project=ailearning" --format "  - {{.Names}} ({{.Status}})"
+docker ps --filter "label=com.docker.compose.project=localai" --format "  - {{.Names}} ({{.Status}})"
 echo ""
 echo "Stopped containers:"
-docker ps -a --filter "label=com.docker.compose.project=ailearning" --filter "status=exited" --format "  - {{.Names}}"
+docker ps -a --filter "label=com.docker.compose.project=localai" --filter "status=exited" --format "  - {{.Names}}"
 echo ""
 echo "Volumes:"
-docker volume ls --filter "name=ailearning_" --format "  - {{.Name}}"
+docker volume ls --filter "name=localai_" --format "  - {{.Name}}"
 echo ""
 
 # Warning message
@@ -105,7 +105,7 @@ if [[ ! "$backup_choice" =~ ^[Nn]$ ]]; then
     
     # Backup critical volumes
     log_info "Backing up Docker volumes (this may take a few minutes)..."
-    for volume in $(docker volume ls -q | grep "^ailearning_"); do
+    for volume in $(docker volume ls -q | grep "^localai_"); do
         volume_name=$(basename "$volume")
         log_info "  - Backing up $volume_name..."
         docker run --rm \
@@ -145,9 +145,9 @@ echo "=========================================="
 cd "$PROJECT_ROOT"
 
 log_info "Stopping all services (this may take a minute)..."
-docker compose -p ailearning -f docker-compose.local.yml down 2>/dev/null || {
+docker compose -p localai -f docker-compose.local.yml down 2>/dev/null || {
     log_warning "Could not stop services gracefully, forcing stop..."
-    docker ps --filter "label=com.docker.compose.project=ailearning" -q | xargs -r docker stop
+    docker ps --filter "label=com.docker.compose.project=localai" -q | xargs -r docker stop
 }
 
 log_success "✅ All services stopped"
@@ -156,11 +156,11 @@ echo ""
 # Remove containers
 log_info "🗑️  Removing AI LaunchKit Containers"
 echo "=========================================="
-CONTAINER_COUNT=$(docker ps -a --filter "label=com.docker.compose.project=ailearning" -q | wc -l)
+CONTAINER_COUNT=$(docker ps -a --filter "label=com.docker.compose.project=localai" -q | wc -l)
 
 if [ "$CONTAINER_COUNT" -gt 0 ]; then
     log_info "Removing $CONTAINER_COUNT containers..."
-    docker ps -a --filter "label=com.docker.compose.project=ailearning" -q | xargs -r docker rm -f
+    docker ps -a --filter "label=com.docker.compose.project=localai" -q | xargs -r docker rm -f
     log_success "✅ Containers removed"
 else
     log_info "No containers to remove"
@@ -170,11 +170,11 @@ echo ""
 # Remove volumes with confirmation
 log_info "💾 AI LaunchKit Data Volumes"
 echo "=========================================="
-VOLUME_COUNT=$(docker volume ls -q | grep "^ailearning_" | wc -l)
+VOLUME_COUNT=$(docker volume ls -q | grep "^localai_" | wc -l)
 
 if [ "$VOLUME_COUNT" -gt 0 ]; then
     echo "Found $VOLUME_COUNT data volumes:"
-    docker volume ls --filter "name=ailearning_" --format "  - {{.Name}}"
+    docker volume ls --filter "name=localai_" --format "  - {{.Name}}"
     echo ""
     log_warning "⚠️  Removing volumes will DELETE ALL DATA (workflows, databases, files)"
     
@@ -189,12 +189,12 @@ if [ "$VOLUME_COUNT" -gt 0 ]; then
     
     if [ "$volume_confirm" = "yes" ]; then
         log_info "Removing volumes..."
-        docker volume ls -q | grep "^ailearning_" | xargs -r docker volume rm
+        docker volume ls -q | grep "^localai_" | xargs -r docker volume rm
         log_success "✅ Volumes removed"
     else
         log_info "Volumes preserved. You can remove them later with:"
-        log_info "  docker volume ls | grep ailearning_"
-        log_info "  docker volume rm ailearning_<volume_name>"
+        log_info "  docker volume ls | grep localai_"
+        log_info "  docker volume rm localai_<volume_name>"
     fi
 else
     log_info "No volumes to remove"
@@ -222,7 +222,7 @@ read -p "Remove unused AI LaunchKit images? (Y/n): " image_confirm
 
 if [[ ! "$image_confirm" =~ ^[Nn]$ ]]; then
     log_info "Removing unused images..."
-    docker image prune -a -f --filter "label=com.docker.compose.project=ailearning" 2>/dev/null || true
+    docker image prune -a -f --filter "label=com.docker.compose.project=localai" 2>/dev/null || true
     log_success "✅ Unused images removed"
 else
     log_info "Images preserved"
@@ -323,9 +323,9 @@ echo ""
 
 if [ "$volume_confirm" != "yes" ]; then
     echo "Manual Volume Cleanup (if needed):"
-    echo "  → List volumes: docker volume ls | grep ailearning_"
-    echo "  → Remove volume: docker volume rm ailearning_<volume_name>"
-    echo "  → Remove all: docker volume ls -q | grep 'ailearning_' | xargs docker volume rm"
+    echo "  → List volumes: docker volume ls | grep localai_"
+    echo "  → Remove volume: docker volume rm localai_<volume_name>"
+    echo "  → Remove all: docker volume ls -q | grep 'localai_' | xargs docker volume rm"
     echo ""
 fi
 
@@ -333,7 +333,7 @@ if [ -f "$BACKUP_DIR/.env.backup" ]; then
     echo "Restore from Backup:"
     echo "  → Backup location: $BACKUP_DIR"
     echo "  → View backups: ls -lh $BACKUP_DIR"
-    echo "  → Restore volume: docker run --rm -v ailearning_<name>:/dest -v $BACKUP_DIR:/backup alpine tar xzf /backup/<name>.tar.gz -C /dest"
+    echo "  → Restore volume: docker run --rm -v localai_<name>:/dest -v $BACKUP_DIR:/backup alpine tar xzf /backup/<name>.tar.gz -C /dest"
     echo ""
 fi
 
