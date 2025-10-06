@@ -49,7 +49,7 @@ echo "=========================================="
 echo "Server IP Address: $SERVER_IP"
 echo "Docker Project: localai"
 echo "Docker Compose File: docker-compose.local.yml"
-echo "Port Range: 8000-8099 (+ UDP 10000 for Jitsi)"
+echo "Port Range: 8000-8099"
 echo "Access Method: HTTP (no SSL required)"
 echo "Authentication: Disabled for local network"
 echo ""
@@ -414,8 +414,8 @@ if [[ "$COMPOSE_PROFILES" == *"n8n"* ]]; then
     echo ""
 fi
 
-# Service-specific information removed for business tools (Odoo, Kimai, Invoice Ninja, Twenty CRM, EspoCRM, Mautic, Jitsi)
-# These services have been removed from the AI Learning Kit
+# Service-specific information removed for business tools (Odoo, Kimai, Invoice Ninja, Twenty CRM, EspoCRM, Mautic)
+# These services have been removed from the AI Learning Kit - focus on AI/Learning tools only
 
 # Final Success Message
 echo ""

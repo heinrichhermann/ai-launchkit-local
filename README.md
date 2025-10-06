@@ -40,10 +40,8 @@ This is a **port-based local network version** of the AI LaunchKit that runs com
 ### One-Command Installation
 
 ```bash
-# Clone and install
-git clone https://github.com/hermannheinrich/ai-launchkit-local
-cd ai-launchkit-local
-sudo bash ./scripts/install_local.sh
+# Clone and install in one command
+git clone https://github.com/hermannheinrich/ai-launchkit-local && cd ai-launchkit-local && sudo bash ./scripts/install_local.sh
 ```
 
 **Installation time:** 10-15 minutes (plus optional n8n workflows import)
@@ -555,6 +553,7 @@ Your services are accessible at:
 - **From laptop:** `http://192.168.1.100:8000` (n8n)
 - **From phone:** `http://192.168.1.100:8022` (Flowise)
 - **From tablet:** `http://192.168.1.100:8003` (Grafana)
+- **From any device:** `http://192.168.1.100/` (Dashboard)
 
 **Tip:** Bookmark these URLs on your devices!
 
@@ -1491,11 +1490,6 @@ docker image prune -f
 - **Purpose:** Captures all outgoing emails from services
 - **No Auth:** Open access for local network
 
-### Jitsi Meet Video Conferencing
-- **Access:** http://SERVER_IP:8051
-- **Rooms:** http://SERVER_IP:8051/your-room-name
-- **⚠️ Requirements:** UDP port 10000 must be open
-- **Test Audio/Video:** Create room with 2+ participants
 
 ### Database Access
 - **PostgreSQL:** SERVER_IP:8001
@@ -1551,9 +1545,9 @@ curl http://192.168.1.100:8022  # Flowise
 curl http://192.168.1.100:8003  # Grafana
 
 # From browser on phone/laptop/tablet
-http://192.168.1.100:8000  # n8n interface
-http://192.168.1.100:8071  # Email interface
-http://192.168.1.100:8051/meeting  # Jitsi meeting
+http://192.168.1.100/         # Service Dashboard
+http://192.168.1.100:8000     # n8n interface
+http://192.168.1.100:8071     # Email interface
 ```
 
 ### API Integration
