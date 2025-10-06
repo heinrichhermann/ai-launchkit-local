@@ -88,6 +88,10 @@ x-n8n: &service-n8n
     QUEUE_BULL_REDIS_PORT: ${REDIS_PORT:-6379}
     QUEUE_HEALTH_CHECK_ACTIVE: true
     WEBHOOK_URL: http://127.0.0.1:8000/
+    # Deprecation Fixes (to eliminate warnings)
+    OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS: "true"
+    N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+    N8N_GIT_NODE_DISABLE_BARE_REPOS: "true"
 
 x-ollama: &service-ollama
   image: ollama/ollama:latest
