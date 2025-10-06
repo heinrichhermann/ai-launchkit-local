@@ -1598,7 +1598,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./templates/landing-page.html:/usr/share/nginx/html/index.html:ro
+      - ./website:/usr/share/nginx/html:ro
     environment:
       - NGINX_HOST=_
       - NGINX_PORT=80

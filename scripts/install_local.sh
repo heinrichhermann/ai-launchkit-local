@@ -195,6 +195,14 @@ if ! docker info > /dev/null 2>&1; then
 fi
 log_success "✅ Docker daemon is healthy"
 
+CURRENT_STEP="Generating Landing Page with Server IP"
+log_info "========== STEP 5a: $CURRENT_STEP =========="
+if [ -f "$SCRIPT_DIR/generate_landing_page.sh" ]; then
+    bash "$SCRIPT_DIR/generate_landing_page.sh" || { log_warning "Landing page generation failed (non-critical)"; }
+else
+    log_warning "Landing page generator not found (non-critical)"
+fi
+
 CURRENT_STEP="Running Services (Local Network Mode)"
 log_info "========== STEP 5: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/05_run_services_local.sh" || { log_error "Running Services failed"; exit 1; }
