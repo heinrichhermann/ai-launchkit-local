@@ -1429,6 +1429,13 @@ services:
     shm_size: 1g
     env_file:
       - .env
+    environment:
+      # Ollama Configuration (uses local LLM instead of cloud APIs)
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M
+      - CRAWL4AI_LLM_PROVIDER=ollama
+      # Disable OpenAI (force Ollama usage)
+      - OPENAI_API_KEY=
     deploy:
       resources:
         limits:
