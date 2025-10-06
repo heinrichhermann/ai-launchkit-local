@@ -1,8 +1,5 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
   - name: Local AI Community
     url: https://thinktank.ottomator.ai/c/local-ai/18
     about: Please ask questions and start conversations about the Local AI Package here in the oTTomator Think Tank!
-  - name: 💡 Feature Request
-    url: https://github.com/hermannheinrich/ai-launchkit-local/issues/new?template=feature_request.md
-    about: Suggest a new feature or improvement for the Local AI Package
