@@ -1430,12 +1430,14 @@ services:
     env_file:
       - .env
     environment:
-      # Ollama Configuration (uses local LLM instead of cloud APIs)
-      - OLLAMA_BASE_URL=http://ollama:11434
-      - OLLAMA_MODEL=qwen2.5:7b-instruct-q4_K_M
-      - CRAWL4AI_LLM_PROVIDER=ollama
-      # Disable OpenAI (force Ollama usage)
+      # Ollama Configuration (uses local LLM via LiteLLM)
+      - LLM_PROVIDER=ollama/qwen2.5:7b-instruct-q4_K_M
+      - OLLAMA_API_BASE=http://ollama:11434
+      # Disable cloud API providers
       - OPENAI_API_KEY=
+      - ANTHROPIC_API_KEY=
+      - GROQ_API_KEY=
+      - DEEPSEEK_API_KEY=
     deploy:
       resources:
         limits:
