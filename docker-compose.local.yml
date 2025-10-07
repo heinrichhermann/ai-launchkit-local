@@ -880,6 +880,8 @@ services:
     restart: always
     ports:
       - "8060:5000"
+    env_file:
+      - .env
     environment:
       # Database Configuration (using separate variables to avoid URL escaping issues)
       DB_TYPE: "postgres"
@@ -892,14 +894,14 @@ services:
       # Alternative: Keep DATABASE_URL but will be constructed by Postiz if above vars present
       DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres?schema=postiz"
       
-      # Application URLs
+      # Application URLs - Use SERVER_IP for network access
       BACKEND_INTERNAL_URL: http://postiz:3000
       DISABLE_REGISTRATION: ${POSTIZ_DISABLE_REGISTRATION}
-      FRONTEND_URL: http://127.0.0.1:8060
+      FRONTEND_URL: http://${SERVER_IP}:8060
       IS_GENERAL: "true"
       JWT_SECRET: ${JWT_SECRET}
-      MAIN_URL: http://127.0.0.1:8060
-      NEXT_PUBLIC_BACKEND_URL: http://127.0.0.1:8060/api
+      MAIN_URL: http://${SERVER_IP}:8060
+      NEXT_PUBLIC_BACKEND_URL: http://${SERVER_IP}:8060/api
       NEXT_PUBLIC_UPLOAD_DIRECTORY: "/uploads"
       
       # Storage
