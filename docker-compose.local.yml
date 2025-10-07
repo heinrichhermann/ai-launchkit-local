@@ -630,7 +630,7 @@ services:
     ports:
       - "8047:80"
     environment:
-      - BASEROW_PUBLIC_URL=http://127.0.0.1:8047
+      - BASEROW_PUBLIC_URL=http://${SERVER_IP}:8047
       - SECRET_KEY=${BASEROW_SECRET_KEY}
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/baserow
       - REDIS_URL=redis://redis:6379
