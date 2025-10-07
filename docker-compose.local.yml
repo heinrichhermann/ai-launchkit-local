@@ -819,6 +819,8 @@ services:
     restart: unless-stopped
     ports:
       - "8050:8080"
+    env_file:
+      - .env
     environment:
       # Database Configuration
       - LEAN_DB_HOST=mysql_leantime
@@ -826,8 +828,8 @@ services:
       - LEAN_DB_PASSWORD=${LEANTIME_DB_PASSWORD}
       - LEAN_DB_DATABASE=leantime
       - LEAN_DB_PORT=3306
-      # Application Configuration
-      - LEAN_APP_URL=http://127.0.0.1:8050
+      # Application Configuration - Use SERVER_IP for network access
+      - LEAN_APP_URL=http://${SERVER_IP}:8050
       - LEAN_SITENAME=Leantime
       - LEAN_SESSION_PASSWORD=${LEANTIME_SESSION_PASSWORD}
       - LEAN_SESSION_EXPIRATION=28800  # 8 hours
