@@ -741,6 +741,8 @@ services:
     restart: unless-stopped
     ports:
       - "8049:3456"
+    env_file:
+      - .env
     environment:
       # Database Configuration (uses existing PostgreSQL)
       - VIKUNJA_DATABASE_TYPE=postgres
@@ -748,8 +750,8 @@ services:
       - VIKUNJA_DATABASE_USER=${POSTGRES_USER}
       - VIKUNJA_DATABASE_PASSWORD=${POSTGRES_PASSWORD}
       - VIKUNJA_DATABASE_DATABASE=vikunja
-      # Service Configuration
-      - VIKUNJA_SERVICE_PUBLICURL=http://127.0.0.1:8049
+      # Service Configuration - Use SERVER_IP for network access
+      - VIKUNJA_SERVICE_PUBLICURL=http://${SERVER_IP}:8049
       - VIKUNJA_SERVICE_JWTSECRET=${VIKUNJA_JWT_SECRET}
       - VIKUNJA_SERVICE_ENABLEREGISTRATION=true
       - VIKUNJA_SERVICE_ENABLETASKATTACHMENTS=true
