@@ -369,6 +369,61 @@ fi
 # NO Google Calendar setup needed for local network
 # (User can configure manually after installation if needed)
 
+# Admin Credentials Configuration for services that need it
+NEEDS_ADMIN_CREDENTIALS=false
+
+if [[ "$COMPOSE_PROFILES_VALUE" == *"langfuse"* ]]; then
+    NEEDS_ADMIN_CREDENTIALS=true
+fi
+
+if [ "$NEEDS_ADMIN_CREDENTIALS" = true ]; then
+    echo ""
+    log_info "🔐 Admin Credentials Configuration"
+    log_info "===================================="
+    log_info "The following services require admin credentials:"
+    [[ "$COMPOSE_PROFILES_VALUE" == *"langfuse"* ]] && echo "  - Langfuse (LLM Observability) - Port 8096"
+    echo ""
+    log_info "Configure admin account for these services"
+    echo ""
+    
+    # Email with validation
+    while true; do
+        read -p "Admin Email: " ADMIN_EMAIL
+        if [[ "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            break
+        else
+            log_error "Invalid email format. Please try again."
+        fi
+    done
+    
+    # Password with confirmation
+    while true; do
+        read -sp "Admin Password: " ADMIN_PASSWORD
+        echo ""
+        read -sp "Confirm Password: " ADMIN_PASSWORD_CONFIRM
+        echo ""
+        
+        if [ "$ADMIN_PASSWORD" = "$ADMIN_PASSWORD_CONFIRM" ]; then
+            if [ ${#ADMIN_PASSWORD} -lt 8 ]; then
+                log_error "Password must be at least 8 characters. Try again."
+            else
+                log_success "✅ Passwords match"
+                break
+            fi
+        else
+            log_error "❌ Passwords don't match. Try again."
+        fi
+    done
+    
+    # Write to .env
+    sed -i.bak "/^ADMIN_EMAIL=/d" "$ENV_FILE"
+    sed -i.bak "/^ADMIN_PASSWORD=/d" "$ENV_FILE"
+    echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> "$ENV_FILE"
+    echo "ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$ENV_FILE"
+    
+    log_success "Admin credentials configured for selected services"
+fi
+
 echo ""
 log_info "🌐 Network Configuration for LAN Access"
 log_info "======================================"
