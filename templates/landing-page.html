@@ -80,6 +80,35 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
 
+        .api-category {
+            background: #f9f9f9;
+            border: 1px dashed #d0d0d0;
+        }
+
+        .api-category summary {
+            list-style: none;
+        }
+
+        .api-category summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .api-category[open] .category-title::after {
+            content: ' ▼';
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+
+        .api-category:not([open]) .category-title::after {
+            content: ' ▶';
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+
+        .api-services {
+            margin-top: 10px;
+        }
+
         .category-header {
             display: flex;
             align-items: center;
@@ -251,10 +280,6 @@
                     <span class="service-name">Open WebUI <span class="port-badge">:8020</span></span>
                     <span class="service-description">ChatGPT-like Interface</span>
                 </a>
-                <a href="http://SERVER_IP:8021" class="service-link" target="_blank">
-                    <span class="service-name">Ollama API <span class="port-badge">:8021</span></span>
-                    <span class="service-description">Local LLM Runtime</span>
-                </a>
                 <a href="http://SERVER_IP:8023" class="service-link" target="_blank">
                     <span class="service-name">bolt.diy <span class="port-badge">:8023</span></span>
                     <span class="service-description">AI Web Development</span>
@@ -275,10 +300,6 @@
                     <span class="category-icon">🗄️</span>
                     <h2 class="category-title">RAG & Vectors</h2>
                 </div>
-                <a href="http://SERVER_IP:8026" class="service-link" target="_blank">
-                    <span class="service-name">Qdrant <span class="port-badge">:8026</span></span>
-                    <span class="service-description">Vector Database for Semantic Search</span>
-                </a>
                 <a href="http://SERVER_IP:8027" class="service-link" target="_blank">
                     <span class="service-name">Weaviate <span class="port-badge">:8027</span></span>
                     <span class="service-description">Vector DB with AI Modules</span>
@@ -335,25 +356,9 @@
                     <span class="category-icon">🎙️</span>
                     <h2 class="category-title">Voice & Documents</h2>
                 </div>
-                <a href="http://SERVER_IP:8080" class="service-link" target="_blank">
-                    <span class="service-name">Whisper STT <span class="port-badge">:8080</span></span>
-                    <span class="service-description">Speech-to-Text Transcription</span>
-                </a>
-                <a href="http://SERVER_IP:8081" class="service-link" target="_blank">
-                    <span class="service-name">OpenedAI TTS <span class="port-badge">:8081</span></span>
-                    <span class="service-description">Text-to-Speech Synthesis</span>
-                </a>
                 <a href="http://SERVER_IP:8083" class="service-link" target="_blank">
                     <span class="service-name">Scriberr <span class="port-badge">:8083</span></span>
                     <span class="service-description">AI Audio Transcription with Diarization</span>
-                </a>
-                <a href="http://SERVER_IP:8084" class="service-link" target="_blank">
-                    <span class="service-name">Tesseract OCR <span class="port-badge">:8084</span></span>
-                    <span class="service-description">Fast Text Recognition</span>
-                </a>
-                <a href="http://SERVER_IP:8085" class="service-link" target="_blank">
-                    <span class="service-name">EasyOCR <span class="port-badge">:8085</span></span>
-                    <span class="service-description">Quality Text Recognition</span>
                 </a>
                 <a href="http://SERVER_IP:8086" class="service-link" target="_blank">
                     <span class="service-name">Stirling-PDF <span class="port-badge">:8086</span></span>
@@ -431,11 +436,73 @@
                     <span class="service-name">LibreTranslate <span class="port-badge">:8082</span></span>
                     <span class="service-description">Translation Service</span>
                 </a>
-                <a href="http://SERVER_IP:8094" class="service-link" target="_blank">
-                    <span class="service-name">Gotenberg <span class="port-badge">:8094</span></span>
-                    <span class="service-description">Document Conversion API</span>
-                </a>
             </div>
+
+            <!-- Developer APIs (Collapsible) -->
+            <details class="category api-category">
+                <summary class="category-header" style="cursor: pointer; user-select: none;">
+                    <span class="category-icon">🔌</span>
+                    <h2 class="category-title">Developer APIs <span style="font-size: 0.7em; opacity: 0.6;">(Click to expand)</span></h2>
+                </summary>
+                <div class="api-services">
+                    <a href="http://SERVER_IP:8021/api/tags" class="service-link" target="_blank">
+                        <span class="service-name">Ollama API <span class="port-badge">:8021</span></span>
+                        <span class="service-description">Local LLM REST API</span>
+                    </a>
+                    <a href="http://SERVER_IP:8026" class="service-link" target="_blank">
+                        <span class="service-name">Qdrant API <span class="port-badge">:8026</span></span>
+                        <span class="service-description">Vector Search REST API</span>
+                    </a>
+                    <a href="http://SERVER_IP:8094" class="service-link" target="_blank">
+                        <span class="service-name">Gotenberg <span class="port-badge">:8094</span></span>
+                        <span class="service-description">Document Conversion API</span>
+                    </a>
+                    <a href="http://SERVER_IP:8001" class="service-link" target="_blank">
+                        <span class="service-name">PostgreSQL <span class="port-badge">:8001</span></span>
+                        <span class="service-description">Database Connection</span>
+                    </a>
+                    <a href="http://SERVER_IP:8002" class="service-link" target="_blank">
+                        <span class="service-name">Redis/Valkey <span class="port-badge">:8002</span></span>
+                        <span class="service-description">Cache Database</span>
+                    </a>
+                    <a href="http://SERVER_IP:8080/docs" class="service-link" target="_blank">
+                        <span class="service-name">Whisper API <span class="port-badge">:8080</span></span>
+                        <span class="service-description">Speech-to-Text API</span>
+                    </a>
+                    <a href="http://SERVER_IP:8081" class="service-link" target="_blank">
+                        <span class="service-name">OpenedAI TTS <span class="port-badge">:8081</span></span>
+                        <span class="service-description">Text-to-Speech API</span>
+                    </a>
+                    <a href="http://SERVER_IP:8084" class="service-link" target="_blank">
+                        <span class="service-name">Tesseract OCR <span class="port-badge">:8084</span></span>
+                        <span class="service-description">OCR API</span>
+                    </a>
+                    <a href="http://SERVER_IP:8085" class="service-link" target="_blank">
+                        <span class="service-name">EasyOCR <span class="port-badge">:8085</span></span>
+                        <span class="service-description">OCR API</span>
+                    </a>
+                    <a href="http://SERVER_IP:8087" class="service-link" target="_blank">
+                        <span class="service-name">Chatterbox TTS <span class="port-badge">:8087</span></span>
+                        <span class="service-description">Advanced TTS API</span>
+                    </a>
+                    <a href="http://SERVER_IP:8095" class="service-link" target="_blank">
+                        <span class="service-name">Python Runner <span class="port-badge">:8095</span></span>
+                        <span class="service-description">Custom Python Scripts</span>
+                    </a>
+                    <a href="http://SERVER_IP:8097" class="service-link" target="_blank">
+                        <span class="service-name">ClickHouse <span class="port-badge">:8097</span></span>
+                        <span class="service-description">Analytics Database</span>
+                    </a>
+                    <a href="http://SERVER_IP:8098" class="service-link" target="_blank">
+                        <span class="service-name">MinIO API <span class="port-badge">:8098</span></span>
+                        <span class="service-description">Object Storage</span>
+                    </a>
+                    <a href="http://SERVER_IP:8099" class="service-link" target="_blank">
+                        <span class="service-name">MinIO Console <span class="port-badge">:8099</span></span>
+                        <span class="service-description">Storage Management UI</span>
+                    </a>
+                </div>
+            </details>
         </div>
 
         <!-- Get in Touch Section -->
