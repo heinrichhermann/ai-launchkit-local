@@ -632,14 +632,20 @@ services:
     env_file:
       - .env
     environment:
-      - BASEROW_PUBLIC_URL=http://${SERVER_IP}:8047
+      # Fixed URL - use localhost for internal access or set to your server's IP
+      # For network access, change to: http://192.168.178.151:8047
+      - BASEROW_PUBLIC_URL=http://localhost:8047
       - SECRET_KEY=${BASEROW_SECRET_KEY}
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/baserow
       - REDIS_URL=redis://redis:6379
       - DISABLE_VOLUME_CHECK=yes
+      # CRITICAL: Disable template sync to reduce startup time and memory usage
+      - BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION=false
       # Memory optimization for AI LaunchKit
       - BASEROW_RUN_MINIMAL=yes
       - BASEROW_AMOUNT_OF_WORKERS=1
+      # Caddy configuration for internal reverse proxy
+      - BASEROW_CADDY_ADDRESSES=:80
       # Email configuration (uses existing AI LaunchKit settings)
       - FROM_EMAIL=${EMAIL_FROM}
       - EMAIL_SMTP=mailpit
@@ -662,7 +668,8 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:80/api/_health/ || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 120s
 
   baserow-init:
     image: postgres:latest

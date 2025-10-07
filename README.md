@@ -786,13 +786,13 @@ All services are accessible via `http://SERVER_IP:PORT`:
 | 8031 | Letta | Agent Server |
 
 ### Learning Tools (8040-8050)
-| Port | Service | Description |
-|------|---------|-------------|
-| 8040 | Cal.com | Scheduling Platform |
-| 8047 | Baserow | Airtable Alternative |
-| 8048 | NocoDB | Smart Spreadsheet |
-| 8049 | Vikunja | Task Management |
-| 8050 | Leantime | Project Management |
+| Port | Service | Description | Setup Guide |
+|------|---------|-------------|-------------|
+| 8040 | Cal.com | Scheduling Platform | - |
+| 8047 | Baserow | Airtable Alternative | [→ Setup Guide](docs/BASEROW_SETUP.md) |
+| 8048 | NocoDB | Smart Spreadsheet | - |
+| 8049 | Vikunja | Task Management | - |
+| 8050 | Leantime | Project Management | - |
 
 ### Utilities (8060-8079)
 | Port | Service | Description |
