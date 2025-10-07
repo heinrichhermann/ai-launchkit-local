@@ -225,7 +225,9 @@ services:
     ports:
       - "8003:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=${ADMIN_EMAIL:-admin}
+      - GF_SECURITY_ADMIN_EMAIL=${ADMIN_EMAIL:-admin@localhost}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-${GRAFANA_ADMIN_PASSWORD:-admin}}
       - GF_PROVISIONING_PATH=/etc/grafana/provisioning
       - GF_SERVER_ROOT_URL=http://127.0.0.1:8003
       - GF_SERVER_SERVE_FROM_SUB_PATH=false

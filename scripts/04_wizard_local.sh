@@ -372,7 +372,7 @@ fi
 # Admin Credentials Configuration for services that need it
 NEEDS_ADMIN_CREDENTIALS=false
 
-if [[ "$COMPOSE_PROFILES_VALUE" == *"langfuse"* ]]; then
+if [[ "$COMPOSE_PROFILES_VALUE" == *"langfuse"* ]] || [[ "$COMPOSE_PROFILES_VALUE" == *"monitoring"* ]]; then
     NEEDS_ADMIN_CREDENTIALS=true
 fi
 
@@ -380,10 +380,11 @@ if [ "$NEEDS_ADMIN_CREDENTIALS" = true ]; then
     echo ""
     log_info "🔐 Admin Credentials Configuration"
     log_info "===================================="
-    log_info "The following services require admin credentials:"
+    log_info "The following services will use these admin credentials:"
     [[ "$COMPOSE_PROFILES_VALUE" == *"langfuse"* ]] && echo "  - Langfuse (LLM Observability) - Port 8096"
+    [[ "$COMPOSE_PROFILES_VALUE" == *"monitoring"* ]] && echo "  - Grafana (Monitoring Dashboard) - Port 8003"
     echo ""
-    log_info "Configure admin account for these services"
+    log_info "Configure unified admin account for these services"
     echo ""
     
     # Email with validation and confirmation
