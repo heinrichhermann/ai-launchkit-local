@@ -829,15 +829,12 @@ All services are accessible via `http://SERVER_IP:PORT`:
 | 8095 | Python Runner | Custom Python Scripts |
 
 ### AI Observability Stack (8096-8099)
-| Port | Service | Description |
-|------|---------|-------------|
-| 8096 | Langfuse | LLM Performance Tracking |
-
-**Setup Guide:** [Complete Langfuse + Ollama Integration →](docs/LANGFUSE_OLLAMA_INTEGRATION.md)
-
-| 8097 | ClickHouse | Analytics Database |
-| 8098 | MinIO | Object Storage |
-| 8099 | MinIO Console | Storage Management |
+| Port | Service | Description | Setup Guide |
+|------|---------|-------------|-------------|
+| 8096 | Langfuse | LLM Performance Tracking | [→ Integration Guide](docs/LANGFUSE_OLLAMA_INTEGRATION.md) |
+| 8097 | ClickHouse | Analytics Database | - |
+| 8098 | MinIO | Object Storage | - |
+| 8099 | MinIO Console | Storage Management | - |
 
 ### External Repository Services
 | Port | Service | Description |
