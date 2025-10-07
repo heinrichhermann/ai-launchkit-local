@@ -386,13 +386,25 @@ if [ "$NEEDS_ADMIN_CREDENTIALS" = true ]; then
     log_info "Configure admin account for these services"
     echo ""
     
-    # Email with validation
+    # Email with validation and confirmation
     while true; do
         read -p "Admin Email: " ADMIN_EMAIL
-        if [[ "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        
+        # Validate format
+        if [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            log_error "Invalid email format. Please try again."
+            continue
+        fi
+        
+        # Confirm email
+        echo ""
+        log_info "Email: $ADMIN_EMAIL"
+        read -p "Is this correct? (Y/n): " confirm_email
+        if [[ ! "$confirm_email" =~ ^[Nn]$ ]]; then
             break
         else
-            log_error "Invalid email format. Please try again."
+            echo ""
+            log_info "Let's try again..."
         fi
     done
     
