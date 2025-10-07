@@ -577,17 +577,19 @@ services:
     restart: unless-stopped
     ports:
       - "8040:3000"
+    env_file:
+      - .env
     environment:
       # Database
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/calcom
       - DATABASE_DIRECT_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/calcom
       
-      # URLs
-      - NEXT_PUBLIC_WEBAPP_URL=http://127.0.0.1:8040
-      - NEXT_PUBLIC_API_V2_URL=http://127.0.0.1:8040/api/v2
-      - NEXT_PUBLIC_WEBSITE_URL=http://127.0.0.1:8040
-      - NEXTAUTH_URL=http://127.0.0.1:8040
-      - CAL_URL=http://127.0.0.1:8040
+      # URLs - Use SERVER_IP for network access (overrides build args)
+      - NEXT_PUBLIC_WEBAPP_URL=http://${SERVER_IP}:8040
+      - NEXT_PUBLIC_API_V2_URL=http://${SERVER_IP}:8040/api/v2
+      - NEXT_PUBLIC_WEBSITE_URL=http://${SERVER_IP}:8040
+      - NEXTAUTH_URL=http://${SERVER_IP}:8040
+      - CAL_URL=http://${SERVER_IP}:8040
       
       # Security
       - NEXTAUTH_SECRET=${CALCOM_NEXTAUTH_SECRET}
