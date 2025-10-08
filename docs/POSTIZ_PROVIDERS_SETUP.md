@@ -199,6 +199,82 @@ Some providers don't use OAuth - they work immediately:
 
 ---
 
+#### Solution 5: redirectmeto.com (Experimental - External Proxy)
+
+**Best for:** Users who want to avoid SSH setup but still use OAuth from network devices
+
+**Overview:** Free public service that redirects OAuth callbacks to private IPs
+
+**⚠️ Important Limitations:**
+- Only works during OAuth flow (when provider redirects)
+- Cannot be tested directly in browser (will fail)
+- External service dependency (not under your control)
+- May not work with all providers
+
+**How it works:**
+1. You configure provider with: `https://redirectmeto.com/http://YOUR-IP:8060/...`
+2. OAuth provider redirects to redirectmeto.com
+3. redirectmeto.com forwards to your private IP
+4. Postiz receives OAuth callback
+
+**Steps:**
+
+1. **Configure provider with redirect URI:**
+   ```
+   https://redirectmeto.com/http://192.168.178.151:8060/integrations/social/discord
+   ```
+   
+   **Pattern:**
+   ```
+   https://redirectmeto.com/http://YOUR-SERVER-IP:8060/integrations/social/{provider}
+   ```
+
+2. **Add credentials to .env** (as normal)
+
+3. **Restart Postiz** (down+up)
+
+4. **Connect in Postiz UI from any network device:**
+   - Open `http://192.168.178.151:8060`
+   - Settings → Channels → Add Channel
+   - Select provider
+   - OAuth flow will use redirectmeto.com
+
+5. **Provider connected!** Use from all devices
+
+**⚠️ Testing Note:**
+If you paste `https://redirectmeto.com/http://192.168.178.151:8060` directly in browser, it will fail. This is expected - it only works when OAuth provider redirects to it during authentication flow.
+
+**Example URLs for different providers:**
+```bash
+# Discord
+https://redirectmeto.com/http://192.168.178.151:8060/integrations/social/discord
+
+# LinkedIn
+https://redirectmeto.com/http://192.168.178.151:8060/integrations/social/linkedin
+
+# YouTube
+https://redirectmeto.com/http://192.168.178.151:8060/integrations/social/youtube
+
+# Reddit
+https://redirectmeto.com/http://192.168.178.151:8060/integrations/social/reddit
+```
+
+**Benefits:**
+- ✅ No SSH setup needed
+- ✅ Works from any network device
+- ✅ Free service (no registration)
+- ✅ Simple URL pattern
+
+**Drawbacks:**
+- ⚠️ Depends on external service
+- ⚠️ May not work with all providers
+- ⚠️ Cannot test redirect directly
+- ⚠️ Some providers may block redirectmeto.com domain
+
+**Recommendation:** Try SSH Port Forward first (more reliable). Use redirectmeto.com if SSH is not an option.
+
+---
+
 ### 📋 OAuth Solutions Comparison
 
 | Solution | Difficulty | Security | Speed | Best For |
@@ -207,6 +283,7 @@ Some providers don't use OAuth - they work immediately:
 | **localhost from Server** | Easy | High | Fast | Server with browser |
 | **Non-OAuth Providers** | Very Easy | High | Instant | Quick testing |
 | **Cloudflare Tunnel** | Advanced | High | Medium | Professional setup |
+| **redirectmeto.com** | Easy | Medium | Fast | When SSH not available |
 
 ### 🎯 Recommended Workflow
 
