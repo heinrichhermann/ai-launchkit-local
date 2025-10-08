@@ -634,9 +634,8 @@ services:
     env_file:
       - .env
     environment:
-      # Fixed URL - use localhost for internal access or set to your server's IP
-      # For network access, change to: http://192.168.178.151:8047
-      - BASEROW_PUBLIC_URL=http://localhost:8047
+      # Use SERVER_IP for network access (required per Baserow docs)
+      - BASEROW_PUBLIC_URL=http://${SERVER_IP}:8047
       - SECRET_KEY=${BASEROW_SECRET_KEY}
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/baserow
       - REDIS_URL=redis://redis:6379
