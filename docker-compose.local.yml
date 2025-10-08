@@ -894,14 +894,17 @@ services:
       DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres?schema=postiz"
       
       # Application URLs - Use SERVER_IP for network access
-      BACKEND_INTERNAL_URL: http://postiz:3000
-      DISABLE_REGISTRATION: ${POSTIZ_DISABLE_REGISTRATION}
-      FRONTEND_URL: http://${SERVER_IP}:8060
+      BACKEND_INTERNAL_URL: "http://localhost:3000"
+      DISABLE_REGISTRATION: ${POSTIZ_DISABLE_REGISTRATION:-false}
+      FRONTEND_URL: "http://${SERVER_IP}:8060"
       IS_GENERAL: "true"
       JWT_SECRET: ${JWT_SECRET}
-      MAIN_URL: http://${SERVER_IP}:8060
-      NEXT_PUBLIC_BACKEND_URL: http://${SERVER_IP}:8060/api
+      MAIN_URL: "http://${SERVER_IP}:8060"
+      NEXT_PUBLIC_BACKEND_URL: "http://${SERVER_IP}:8060/api"
       NEXT_PUBLIC_UPLOAD_DIRECTORY: "/uploads"
+      
+      # CRITICAL: Required for HTTP without HTTPS (per Postiz docs)
+      NOT_SECURED: "true"
       
       # Storage
       REDIS_URL: "redis://redis:6379"
