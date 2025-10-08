@@ -1179,6 +1179,17 @@ services:
     volumes:
       - scriberr_data:/app/data
       - ./shared/audio:/app/data/uploads
+    user: root
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - |
+        # Install Node.js for yt-dlp (YouTube requirement per Issue #224)
+        if ! command -v node &> /dev/null; then
+          apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
+        fi
+        # Start Scriberr as normal
+        exec docker-entrypoint.sh /app/scriberr
     environment:
       # Server Configuration
       - HOST=0.0.0.0
