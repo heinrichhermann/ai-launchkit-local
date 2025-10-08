@@ -27,6 +27,198 @@ Postiz supports 16 social media providers. Each requires creating an app/bot in 
 | **X (Twitter)** | [X Developer Portal](https://developer.x.com/en/portal/dashboard) | API_KEY, API_SECRET | `${FRONTEND_URL}/integrations/social/x` |
 | **YouTube** | [Google Cloud Console](https://console.cloud.google.com/) | CLIENT_ID, CLIENT_SECRET | `${FRONTEND_URL}/integrations/social/youtube` |
 
+## 🌐 OAuth with Local Network - Special Considerations
+
+### ⚠️ The OAuth Problem with Private IPs
+
+OAuth providers (Discord, LinkedIn, YouTube, etc.) **cannot redirect to private network IPs** like `192.168.178.151` or `10.0.x.x`.
+
+**Why?** OAuth redirect URIs must be:
+- ✅ Publicly accessible URLs: `https://postiz.example.com`
+- ✅ localhost: `http://localhost:8060`
+- ❌ Private IPs: `http://192.168.178.151:8060` ← **Does NOT work**
+
+**This means:** You cannot use `http://192.168.178.151:8060/integrations/social/discord` as redirect URI in provider portals.
+
+### ✅ Solutions for Local Network OAuth
+
+#### Solution 1: SSH Port Forward (🌟 RECOMMENDED - Easy & Secure)
+
+**Best for:** Accessing Postiz from your laptop/desktop while server is headless
+
+**How it works:** SSH tunnel forwards Postiz port to your local machine
+
+**Setup (from your Mac/Linux laptop):**
+```bash
+# Connect with port forward
+ssh -L 8060:localhost:8060 heinrich@192.168.178.151
+
+# Keep this terminal open!
+```
+
+**Setup (from Windows laptop):**
+1. Open PuTTY
+2. Session: Enter `192.168.178.151`
+3. Connection → SSH → Tunnels:
+   - Source port: `8060`
+   - Destination: `localhost:8060`
+   - Click "Add"
+4. Click "Open"
+5. Login with your credentials
+
+**Then in your laptop browser:**
+```
+http://localhost:8060
+```
+
+**Configure providers with:**
+```
+Redirect URI: http://localhost:8060/integrations/social/discord
+```
+
+**After OAuth setup:**
+- Close SSH connection
+- Access normally via: `http://192.168.178.151:8060`
+- Provider stays connected!
+
+**Benefits:**
+- ✅ Works from your comfortable laptop/desktop
+- ✅ No additional software needed
+- ✅ Secure (SSH encrypted)
+- ✅ One-time setup per provider
+
+---
+
+#### Solution 2: localhost OAuth from Server
+
+**Best for:** If you have desktop environment on server or can use VNC/RDP
+
+**Steps:**
+
+1. **Install browser on server:**
+   ```bash
+   sudo apt install firefox  # or chromium-browser
+   ```
+
+2. **Configure providers with:**
+   ```
+   Redirect URI: http://localhost:8060/integrations/social/discord
+   ```
+
+3. **Connect via browser on server:**
+   - Open Firefox on server
+   - Navigate to `http://localhost:8060`
+   - Add channel → Follow OAuth flow
+   - Provider connected!
+
+4. **Access from network:**
+   - After setup, close server browser
+   - Access from any device: `http://192.168.178.151:8060`
+   - Provider stays connected
+
+**Benefits:**
+- ✅ Simple and direct
+- ✅ No SSH needed
+- ✅ Works with localhost redirect URIs
+
+---
+
+#### Solution 3: Providers WITHOUT OAuth (🌟 NO SETUP NEEDED)
+
+**Best for:** Quick testing without OAuth complexity
+
+Some providers don't use OAuth - they work immediately:
+
+**Telegram:**
+- **Portal:** Open Telegram, search `@BotFather`
+- **Setup:** Send `/newbot`, get Bot Token
+- **In Postiz:** Add Channel → Telegram → Enter Bot Token
+- **No OAuth!** Works immediately from any device
+
+**Bluesky:**
+- **Portal:** https://bsky.app/settings/app-passwords
+- **Setup:** Create app password
+- **In Postiz:** Add Channel → Bluesky → Enter @handle + password
+- **No OAuth!** Works immediately from any device
+
+**Recommendation:** Start with Telegram or Bluesky to test Postiz before configuring OAuth providers!
+
+---
+
+#### Solution 4: Cloudflare Tunnel (Advanced - Temporary Public Access)
+
+**Best for:** Advanced users who want proper OAuth setup
+
+**Overview:** Create temporary public URL for Postiz, configure all providers, then close tunnel
+
+**Steps:**
+
+1. **Install cloudflared:**
+   ```bash
+   wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+   sudo dpkg -i cloudflared-linux-amd64.deb
+   ```
+
+2. **Login to Cloudflare:**
+   ```bash
+   cloudflared tunnel login
+   ```
+   - Opens browser for authentication
+   - Creates cert file
+
+3. **Create tunnel:**
+   ```bash
+   cloudflared tunnel create postiz-oauth
+   cloudflared tunnel route dns postiz-oauth postiz-temp.your-domain.com
+   ```
+
+4. **Run tunnel:**
+   ```bash
+   cloudflared tunnel --url http://localhost:8060 run postiz-oauth
+   ```
+
+5. **Configure providers with:**
+   ```
+   Redirect URI: https://postiz-temp.your-domain.com/integrations/social/discord
+   ```
+
+6. **Connect all providers through public URL**
+
+7. **Close tunnel:**
+   ```bash
+   # Stop cloudflared (Ctrl+C)
+   cloudflared tunnel delete postiz-oauth
+   ```
+
+8. **Providers stay connected!** Access via: `http://192.168.178.151:8060`
+
+**Benefits:**
+- ✅ Proper HTTPS OAuth
+- ✅ Works with all providers
+- ✅ Temporary - only during setup
+
+---
+
+### 📋 OAuth Solutions Comparison
+
+| Solution | Difficulty | Security | Speed | Best For |
+|----------|-----------|----------|-------|----------|
+| **SSH Port Forward** | Easy | High | Fast | Remote laptop setup |
+| **localhost from Server** | Easy | High | Fast | Server with browser |
+| **Non-OAuth Providers** | Very Easy | High | Instant | Quick testing |
+| **Cloudflare Tunnel** | Advanced | High | Medium | Professional setup |
+
+### 🎯 Recommended Workflow
+
+**For most users:**
+1. Start with **Telegram** or **Bluesky** (no OAuth)
+2. Test Postiz posting functionality
+3. Then use **SSH Port Forward** for Discord/LinkedIn/YouTube
+4. One-time OAuth setup from your laptop
+5. Enjoy from all network devices!
+
+---
+
 ## 🔧 Configuration Steps
 
 ### Step 1: Create App in Provider Portal
@@ -39,12 +231,23 @@ Copy the CLIENT_ID, CLIENT_SECRET (and any additional tokens) from the provider'
 
 ### Step 3: Configure OAuth Redirect URL
 
-For your AI LaunchKit installation, the redirect URL pattern is:
+⚠️ **IMPORTANT:** Private IPs don't work with OAuth! Use one of these options:
+
+**Option A: SSH Port Forward (Recommended)**
 ```
-http://192.168.178.151:8060/integrations/social/{provider}
+http://localhost:8060/integrations/social/{provider}
+```
+Connect via SSH tunnel (see [OAuth Solutions](#-solutions-for-local-network-oauth) above)
+
+**Option B: Non-OAuth Providers**
+- Skip OAuth - use Telegram or Bluesky instead (see above)
+
+**Option C: Cloudflare Tunnel (Advanced)**
+```
+https://your-tunnel-url.com/integrations/social/{provider}
 ```
 
-Replace `{provider}` with the provider name from the table.
+Replace `{provider}` with: discord, linkedin, youtube, reddit, etc.
 
 ### Step 4: Add to .env File
 
@@ -93,7 +296,7 @@ echo "✅ Postiz restarted with new provider credentials"
 3. Upload app icon (1024x1024px max) - Required!
 4. Go to **OAuth2** section
 5. Copy **Client ID** and **Client Secret**
-6. Add redirect URL: `http://192.168.178.151:8060/integrations/social/discord`
+6. Add redirect URL: `http://localhost:8060/integrations/social/discord` (use SSH port forward)
 7. Go to **Bot** section
 8. Click "Reset Token" and copy the Bot Token
 9. Enable required bot permissions
@@ -122,7 +325,7 @@ DISCORD_BOT_TOKEN_ID="your_bot_token"
 2. Fill in app details
 3. Go to **Auth** tab
 4. Copy **Client ID** and **Client Secret**
-5. Add redirect URL: `http://192.168.178.151:8060/integrations/social/linkedin`
+5. Add redirect URL: `http://localhost:8060/integrations/social/linkedin` (use SSH port forward)
 6. Go to **Products** tab
 7. Request access to "Share on LinkedIn" and "Sign In with LinkedIn"
 
@@ -145,7 +348,7 @@ LINKEDIN_CLIENT_SECRET="your_client_secret"
 2. Enable **YouTube Data API v3**
 3. Go to **Credentials** → Create **OAuth 2.0 Client ID**
 4. Application type: **Web application**
-5. Add redirect URI: `http://192.168.178.151:8060/integrations/social/youtube`
+5. Add redirect URI: `http://localhost:8060/integrations/social/youtube` (use SSH port forward)
 6. Copy **Client ID** and **Client Secret**
 
 **Environment Variables:**
