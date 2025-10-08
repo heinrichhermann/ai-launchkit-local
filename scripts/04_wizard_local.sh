@@ -147,6 +147,7 @@ fi
 # Process selected services
 selected_profiles=()
 ollama_selected=0
+scriberr_selected=0
 ollama_profile=""
 
 if [ -n "$CHOICES" ]; then
@@ -156,6 +157,8 @@ if [ -n "$CHOICES" ]; then
     for choice in "${temp_choices[@]}"; do
         if [ "$choice" == "ollama" ]; then
             ollama_selected=1
+        elif [ "$choice" == "scriberr" ]; then
+            scriberr_selected=1
         else
             selected_profiles+=("$choice")
         fi
@@ -202,6 +205,19 @@ if [ $ollama_selected -eq 1 ]; then
     else
         log_info "Ollama hardware profile selection cancelled."
         ollama_selected=0
+    fi
+fi
+
+# Handle Scriberr hardware selection (intelligently based on Ollama choice)
+if [ $scriberr_selected -eq 1 ]; then
+    if [ "$ollama_profile" == "gpu-nvidia" ]; then
+        # User chose GPU for Ollama, enable GPU Scriberr automatically
+        # Do NOT add "scriberr" to avoid conflict with "gpu-nvidia"
+        log_info "Scriberr will use GPU acceleration (gpu-nvidia profile)"
+    else
+        # User chose CPU or AMD GPU, use CPU Scriberr
+        selected_profiles+=("scriberr")
+        log_info "Scriberr will use CPU (scriberr profile)"
     fi
 fi
 
