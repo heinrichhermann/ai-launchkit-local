@@ -809,12 +809,12 @@ All services are accessible via `http://SERVER_IP:PORT`:
 **Note:** Mailpit captures ALL emails for learning purposes. No external email delivery.
 
 ### Specialized Services (8080-8099)
-| Port | Service | Description |
-|------|---------|-------------|
-| 8080 | Whisper | Speech-to-Text |
-| 8081 | OpenedAI-Speech | Text-to-Speech |
-| 8082 | LibreTranslate | Translation Service |
-| 8083 | Scriberr | Audio Transcription |
+| Port | Service | Description | Setup Guide |
+|------|---------|-------------|-------------|
+| 8080 | Whisper | Speech-to-Text | - |
+| 8081 | OpenedAI-Speech | Text-to-Speech | - |
+| 8082 | LibreTranslate | Translation Service | - |
+| 8083 | Scriberr | Audio Transcription | [→ Troubleshooting](docs/SCRIBERR_TROUBLESHOOTING.md) |
 | 8084 | Tesseract OCR | Text Recognition (Fast) |
 | 8085 | EasyOCR | Text Recognition (Quality) |
 | 8086 | Stirling-PDF | PDF Tools Suite |
