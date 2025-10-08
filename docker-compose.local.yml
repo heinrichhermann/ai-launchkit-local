@@ -1172,7 +1172,6 @@ services:
 
   scriberr-gpu:
     image: ghcr.io/rishikanthc/scriberr:latest
-    container_name: scriberr
     profiles: ["gpu-nvidia"]
     restart: unless-stopped
     ports:
