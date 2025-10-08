@@ -1136,7 +1136,7 @@ services:
   scriberr:
     image: ghcr.io/rishikanthc/scriberr:latest
     container_name: scriberr
-    profiles: ["scriberr","cpu"]
+    profiles: ["scriberr"]
     restart: unless-stopped
     ports:
       - "8083:8080"
