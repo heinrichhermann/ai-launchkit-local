@@ -1171,7 +1171,7 @@ services:
       start_period: 60s
 
   scriberr-gpu:
-    image: ghcr.io/rishikanthc/scriberr:latest
+    image: ghcr.io/rishikanthc/scriberr:v1.0.4-cuda
     profiles: ["gpu-nvidia"]
     restart: unless-stopped
     ports:
@@ -1199,6 +1199,9 @@ services:
       # Performance Settings
       - WHISPER_THREADS=${SCRIBERR_THREADS:-4}
       - BATCH_SIZE=${SCRIBERR_BATCH_SIZE:-16}
+      # NVIDIA GPU Configuration (required for CUDA image)
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     deploy:
       resources:
         reservations:
