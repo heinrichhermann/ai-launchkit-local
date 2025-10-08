@@ -217,7 +217,31 @@ gen_hex() {
 gen_base64() {
     local length="$1"
     local bytes=$(( (length * 3 + 3) / 4 ))
-    openssl rand -base64 "$bytes" | head -c "$length"
+    local result
+    
+    # Try openssl base64
+    result=$(openssl rand -base64 "$bytes" 2>/dev/null | tr -d '\n' | head -c "$length")
+    
+    # Fallback: openssl hex
+    if [[ -z "$result" || ${#result} -lt "$length" ]]; then
+        log_warning "openssl base64 failed, trying hex method..."
+        local hex_bytes=$(( length / 2 + 1 ))
+        result=$(openssl rand -hex "$hex_bytes" 2>/dev/null | head -c "$length")
+    fi
+    
+    # Fallback: /dev/urandom
+    if [[ -z "$result" || ${#result} -lt "$length" ]]; then
+        log_warning "openssl hex failed, trying /dev/urandom..."
+        result=$(head -c "$bytes" /dev/urandom 2>/dev/null | base64 | tr -d '\n' | head -c "$length")
+    fi
+    
+    # Validate result
+    if [[ -z "$result" || ${#result} -lt 32 ]]; then
+        log_error "Failed to generate base64 secret of length $length" >&2
+        return 1
+    fi
+    
+    echo "$result"
 }
 
 # Function to update or add a variable to the .env file
@@ -441,6 +465,12 @@ while IFS= read -r line || [[ -n "$line" ]]; do
                 processed_line="${varName}=\"${newValue}\""
                 generated_values["$varName"]="$newValue"
             else
+                # CRITICAL: Do not write empty values for secrets
+                if [[ -n "${VARS_TO_GENERATE[$varName]:-}" ]]; then
+                    log_error "Failed to generate value for $varName (type: $type, length: $length)" >&2
+                    log_error "Installation cannot continue with empty security credentials" >&2
+                    exit 1
+                fi
                 processed_line="${varName}=\"\""
             fi
         else
