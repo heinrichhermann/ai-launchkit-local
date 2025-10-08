@@ -1184,9 +1184,15 @@ services:
     command:
       - "-c"
       - |
-        # Install Node.js for yt-dlp (YouTube requirement per Issue #224)
+        # Install Node.js + yt-dlp for YouTube transcription (Issue #224)
         if ! command -v node &> /dev/null; then
           apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
+        fi
+        # Install/upgrade yt-dlp globally (not just in venv)
+        if ! command -v yt-dlp &> /dev/null; then
+          pip install --no-cache-dir yt-dlp
+        else
+          pip install --no-cache-dir --upgrade yt-dlp
         fi
         # Start Scriberr as normal
         exec docker-entrypoint.sh /app/scriberr
