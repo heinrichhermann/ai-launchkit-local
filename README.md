@@ -795,11 +795,11 @@ All services are accessible via `http://SERVER_IP:PORT`:
 | 8050 | Leantime | Project Management | - |
 
 ### Utilities (8060-8079)
-| Port | Service | Description |
-|------|---------|-------------|
-| 8060 | Postiz | Social Media Manager |
-| 8061 | Vaultwarden | Password Manager |
-| 8062 | Kopia | Backup System |
+| Port | Service | Description | Setup Guide |
+|------|---------|-------------|-------------|
+| 8060 | Postiz | Social Media Manager | [→ Providers Setup](docs/POSTIZ_PROVIDERS_SETUP.md) |
+| 8061 | Vaultwarden | Password Manager | - |
+| 8062 | Kopia | Backup System | - |
 
 ### Mail Services (8071 only - Learning/Testing)
 | Port | Service | Description |
