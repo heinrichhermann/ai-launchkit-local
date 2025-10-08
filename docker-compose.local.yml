@@ -327,7 +327,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: all
               capabilities: [gpu]
 
   ollama-gpu-amd:
@@ -1136,7 +1136,7 @@ services:
   scriberr:
     image: ghcr.io/rishikanthc/scriberr:latest
     container_name: scriberr
-    profiles: ["scriberr"]
+    profiles: ["scriberr","cpu"]
     restart: unless-stopped
     ports:
       - "8083:8080"
@@ -1163,6 +1163,50 @@ services:
       # Performance Settings
       - WHISPER_THREADS=${SCRIBERR_THREADS:-4}
       - BATCH_SIZE=${SCRIBERR_BATCH_SIZE:-16}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || wget -q --spider http://localhost:8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  scriberr-gpu:
+    image: ghcr.io/rishikanthc/scriberr:latest
+    container_name: scriberr
+    profiles: ["gpu-nvidia"]
+    restart: unless-stopped
+    ports:
+      - "8083:8080"
+    volumes:
+      - scriberr_data:/app/data
+      - ./shared/audio:/app/data/uploads
+    environment:
+      # Server Configuration
+      - HOST=0.0.0.0
+      - PORT=8080
+      # Storage Paths
+      - DATABASE_PATH=/app/data/scriberr.db
+      - UPLOAD_DIR=/app/data/uploads
+      - WHISPERX_ENV=/app/data/whisperx-env
+      # Optional API Keys for summaries
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # Whisper Model Configuration
+      - WHISPER_MODEL=${SCRIBERR_WHISPER_MODEL:-base}
+      # Speaker Diarization
+      - ENABLE_SPEAKER_DIARIZATION=${SCRIBERR_SPEAKER_DIARIZATION:-true}
+      - MIN_SPEAKERS=${SCRIBERR_MIN_SPEAKERS:-2}
+      - MAX_SPEAKERS=${SCRIBERR_MAX_SPEAKERS:-4}
+      # Performance Settings
+      - WHISPER_THREADS=${SCRIBERR_THREADS:-4}
+      - BATCH_SIZE=${SCRIBERR_BATCH_SIZE:-16}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || wget -q --spider http://localhost:8080 || exit 1"]
       interval: 30s
