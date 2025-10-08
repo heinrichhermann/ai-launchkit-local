@@ -1202,6 +1202,8 @@ services:
       # NVIDIA GPU Configuration (required for CUDA image)
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      # cuDNN Library Path Fix (helps Python find cuDNN libraries)
+      - LD_LIBRARY_PATH=/app/whisperx-env/WhisperX/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
     deploy:
       resources:
         reservations:
