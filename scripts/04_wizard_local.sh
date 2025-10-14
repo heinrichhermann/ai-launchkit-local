@@ -58,7 +58,7 @@ base_services_data=(
     "kopia" "Kopia (Fast Secure Backup) - Port 8062"
     "langfuse" "Langfuse Suite (AI Observability) - Port 8096"
     "qdrant" "Qdrant (Vector Database) - Port 8026"
-    "weaviate" "Weaviate (Vector Database) - Port 8027"
+    "weaviate" "Weaviate (Vector Database) + Console UI - Ports 8027, 8100"
     "lightrag" "LightRAG (Graph-based RAG) - Port 8029"
     "neo4j" "Neo4j (Graph Database) - Port 8028"
     "letta" "Letta (Agent Server & SDK) - Port 8031"

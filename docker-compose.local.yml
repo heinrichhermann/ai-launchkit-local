@@ -1345,6 +1345,26 @@ services:
     environment:
       - VITE_API_URL=http://127.0.0.1:8087
 
+  weaviate-console:
+    image: semitechnologies/weaviate-console:latest
+    container_name: weaviate-console
+    profiles: ["weaviate"]
+    restart: unless-stopped
+    ports:
+      - "8100:80"
+    environment:
+      - WEAVIATE_URL=http://weaviate:8080
+      - PUBLIC_WEAVIATE_URL=http://${SERVER_IP}:8027
+    depends_on:
+      weaviate:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   searxng:
     container_name: searxng
     image: docker.io/searxng/searxng:latest

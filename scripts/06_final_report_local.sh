@@ -111,7 +111,9 @@ fi
 
 if [[ "$COMPOSE_PROFILES" == *"weaviate"* ]]; then
     echo "Weaviate Vector Database: $(is_service_running "weaviate")"
-    test_port 8027 "Weaviate"
+    test_port 8027 "Weaviate API"
+    echo "Weaviate Console UI: $(is_service_running "weaviate-console")"
+    test_port 8100 "Weaviate Console"
 fi
 
 if [[ "$COMPOSE_PROFILES" == *"neo4j"* ]]; then
@@ -462,6 +464,11 @@ $([ "$COMPOSE_PROFILES" == *"ollama"* ] && echo "Ollama API: http://$SERVER_IP:8
 $([ "$COMPOSE_PROFILES" == *"flowise"* ] && echo "Flowise: http://$SERVER_IP:8022")
 $([ "$COMPOSE_PROFILES" == *"bolt"* ] && echo "bolt.diy: http://$SERVER_IP:8023")
 $([ "$COMPOSE_PROFILES" == *"comfyui"* ] && echo "ComfyUI: http://$SERVER_IP:8024")
+
+# Vector Databases:
+$([ "$COMPOSE_PROFILES" == *"weaviate"* ] && echo "Weaviate API: http://$SERVER_IP:8027")
+$([ "$COMPOSE_PROFILES" == *"weaviate"* ] && echo "Weaviate Console: http://$SERVER_IP:8100")
+$([ "$COMPOSE_PROFILES" == *"qdrant"* ] && echo "Qdrant: http://$SERVER_IP:8026")
 
 # Learning Tools:
 $([ "$COMPOSE_PROFILES" == *"calcom"* ] && echo "Cal.com: http://$SERVER_IP:8040")
