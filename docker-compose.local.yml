@@ -1350,11 +1350,13 @@ services:
     container_name: weaviate-console
     profiles: ["weaviate"]
     restart: unless-stopped
+    networks:
+      - ailaunchkit
     ports:
       - "8100:80"
     environment:
       - WEAVIATE_URL=http://weaviate:8080
-      - PUBLIC_WEAVIATE_URL=http://${SERVER_IP}:8027
+      - REACT_APP_WEAVIATE_URL=http://${SERVER_IP}:8027
     depends_on:
       weaviate:
         condition: service_healthy
