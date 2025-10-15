@@ -1164,7 +1164,7 @@ services:
       - WHISPER_THREADS=${SCRIBERR_THREADS:-4}
       - BATCH_SIZE=${SCRIBERR_BATCH_SIZE:-16}
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || wget -q --spider http://localhost:8080 || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -1186,7 +1186,7 @@ services:
       - |
         # Install Node.js + yt-dlp for YouTube transcription (Issue #224)
         if ! command -v node &> /dev/null; then
-          apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
+          apt-get update && apt-get install -y nodejs npm curl && rm -rf /var/lib/apt/lists/*
         fi
         # Install/upgrade yt-dlp globally (not just in venv)
         if ! command -v yt-dlp &> /dev/null; then
@@ -1229,7 +1229,7 @@ services:
               count: all
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || wget -q --spider http://localhost:8080 || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
