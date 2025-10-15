@@ -75,6 +75,7 @@ base_services_data=(
     "speech" "Speech Stack (Whisper ASR + TTS) - Ports 8080, 8081"
     "tts-chatterbox" "TTS Chatterbox (Advanced TTS) - Ports 8087, 8088"
     "scriberr" "Scriberr (AI Audio Transcription) - Port 8083"
+    "vibe" "Vibe (Advanced Transcription API with Ollama) - Port 8101"
     "ocr" "OCR Bundle (Tesseract + EasyOCR) - Ports 8084, 8085"
     "libretranslate" "LibreTranslate (Self-hosted Translation) - Port 8082"
 )

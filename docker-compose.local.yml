@@ -1687,6 +1687,32 @@ services:
       start_period: 1s
 
   # ============================================================================
+  # VIBE TRANSCRIPTION (Port 8101)
+  # ============================================================================
+
+  vibe:
+    build:
+      context: ./docker/vibe
+      dockerfile: Dockerfile
+    container_name: vibe
+    profiles: ["vibe"]
+    restart: unless-stopped
+    ports:
+      - "8101:3022"
+    volumes:
+      - ./shared/audio:/app/uploads
+      - ./shared:/app/data
+    environment:
+      - VIBE_HOST=0.0.0.0
+      - VIBE_PORT=3022
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3022/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================================================
   # SERVICE DASHBOARD (Port 80 - Main Landing Page)
   # ============================================================================
 
