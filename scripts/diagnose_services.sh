@@ -1,130 +1,132 @@
 #!/bin/bash
 
-# AI LaunchKit Service Diagnostics Script
-# Collects logs and status information for troubleshooting
+# AI LaunchKit Service Health Check
+# Tests all services displayed on the landing page
 
 set -e
 
 cd "$(dirname "$0")/.."
 
-OUTPUT_FILE="diagnostic_report_$(date +%Y%m%d_%H%M%S).txt"
+# Get SERVER_IP from .env
+SERVER_IP=$(grep "^SERVER_IP=" .env 2>/dev/null | cut -d'=' -f2 | tr -d '"' || echo "127.0.0.1")
 
-echo "🔍 AI LaunchKit Service Diagnostics" > "$OUTPUT_FILE"
-echo "Generated: $(date)" >> "$OUTPUT_FILE"
-echo "========================================" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
+echo "🔍 AI LaunchKit Service Health Check"
+echo "Server: $SERVER_IP"
+echo "=========================================="
+echo ""
 
-# 1. System Information
-echo "## SYSTEM INFO" >> "$OUTPUT_FILE"
-echo "-----------------------------------" >> "$OUTPUT_FILE"
-echo "Hostname: $(hostname)" >> "$OUTPUT_FILE"
-echo "OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)" >> "$OUTPUT_FILE"
-echo "Docker Version: $(docker --version)" >> "$OUTPUT_FILE"
-echo "Docker Compose: $(docker compose version)" >> "$OUTPUT_FILE"
-echo "Memory: $(free -h | grep Mem | awk '{print $2" total, "$3" used, "$7" available"}')" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-# 2. Container Status
-echo "## CONTAINER STATUS" >> "$OUTPUT_FILE"
-echo "-----------------------------------" >> "$OUTPUT_FILE"
-docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" >> "$OUTPUT_FILE" 2>&1
-echo "" >> "$OUTPUT_FILE"
-
-# 3. Failed/Restarting Containers
-echo "## PROBLEMATIC CONTAINERS" >> "$OUTPUT_FILE"
-echo "-----------------------------------" >> "$OUTPUT_FILE"
-FAILED_CONTAINERS=$(docker ps -a --filter "status=exited" --filter "status=restarting" --format "{{.Names}}")
-if [ -z "$FAILED_CONTAINERS" ]; then
-    echo "No failed containers found" >> "$OUTPUT_FILE"
-else
-    echo "$FAILED_CONTAINERS" >> "$OUTPUT_FILE"
-fi
-echo "" >> "$OUTPUT_FILE"
-
-# 4. Environment Variables (ANONYMIZED - no secrets)
-echo "## .ENV CONFIGURATION (Secrets Hidden)" >> "$OUTPUT_FILE"
-echo "-----------------------------------" >> "$OUTPUT_FILE"
-echo "SERVER_IP: $(grep "^SERVER_IP=" .env | cut -d'=' -f2)" >> "$OUTPUT_FILE"
-echo "COMPOSE_PROFILES: $(grep "^COMPOSE_PROFILES=" .env | cut -d'=' -f2)" >> "$OUTPUT_FILE"
-echo "N8N_WORKER_COUNT: $(grep "^N8N_WORKER_COUNT=" .env | cut -d'=' -f2)" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-# Check for quotes in critical variables
-echo "## CRITICAL: Checking for quotes in .env" >> "$OUTPUT_FILE"
-echo "-----------------------------------" >> "$OUTPUT_FILE"
-HAS_QUOTES=$(grep -E '^(POSTGRES_PASSWORD|N8N_ENCRYPTION_KEY|CALCOM_|WEAVIATE_API_KEY)="' .env 2>/dev/null | wc -l)
-if [ "$HAS_QUOTES" -gt 0 ]; then
-    echo "⚠️ WARNING: Found $HAS_QUOTES variables with quotes!" >> "$OUTPUT_FILE"
-    echo "Run: bash scripts/repair_env_quotes.sh" >> "$OUTPUT_FILE"
-else
-    echo "✅ No quote issues found" >> "$OUTPUT_FILE"
-fi
-echo "" >> "$OUTPUT_FILE"
-
-# 5. Individual Service Logs
-echo "## SERVICE LOGS (Last 30 lines each)" >> "$OUTPUT_FILE"
-echo "========================================" >> "$OUTPUT_FILE"
-
-# Check each important service
-for SERVICE in "postgres" "redis" "n8n" "calcom" "flowise" "weaviate" "ollama"; do
-    if docker ps -a --format "{{.Names}}" | grep -q "^${SERVICE}$"; then
-        echo "" >> "$OUTPUT_FILE"
-        echo "### $SERVICE" >> "$OUTPUT_FILE"
-        echo "-----------------------------------" >> "$OUTPUT_FILE"
-        echo "Status: $(docker inspect --format='{{.State.Status}}' $SERVICE 2>/dev/null || echo 'Not found')" >> "$OUTPUT_FILE"
-        echo "Health: $(docker inspect --format='{{.State.Health.Status}}' $SERVICE 2>/dev/null || echo 'No healthcheck')" >> "$OUTPUT_FILE"
-        echo "" >> "$OUTPUT_FILE"
-        echo "Last 30 log lines:" >> "$OUTPUT_FILE"
-        docker logs $SERVICE --tail 30 >> "$OUTPUT_FILE" 2>&1 || echo "Failed to get logs" >> "$OUTPUT_FILE"
-        echo "" >> "$OUTPUT_FILE"
+# Test function
+test_service() {
+    local name="$1"
+    local url="$2"
+    local timeout="${3:-5}"
+    
+    if curl -sf --max-time "$timeout" --connect-timeout 3 "$url" > /dev/null 2>&1; then
+        echo "✅ $name: ONLINE ($url)"
+        return 0
+    else
+        echo "❌ $name: ERROR/TIMEOUT ($url)"
+        return 1
     fi
-done
+}
 
-# 6. Database Status
-echo "## DATABASE DIAGNOSTICS" >> "$OUTPUT_FILE"
-echo "-----------------------------------" >> "$OUTPUT_FILE"
-echo "Postgres databases:" >> "$OUTPUT_FILE"
-docker exec postgres psql -U postgres -c "\l" 2>&1 | grep -E "(Name|calcom|nocodb|baserow|langfuse|formbricks|metabase|vikunja)" >> "$OUTPUT_FILE" || echo "Failed to list databases" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
+SUCCESS=0
+FAILED=0
 
-# 7. Network Connectivity
-echo "## NETWORK CONNECTIVITY" >> "$OUTPUT_FILE"
-echo "-----------------------------------" >> "$OUTPUT_FILE"
-echo "Docker networks:" >> "$OUTPUT_FILE"
-docker network ls | grep localai >> "$OUTPUT_FILE" || echo "No localai network found" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-# 8. Disk Space
-echo "## DISK USAGE" >> "$OUTPUT_FILE"
-echo "-----------------------------------" >> "$OUTPUT_FILE"
-df -h | grep -E "(Filesystem|/$|docker)" >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-echo "Docker volumes size:" >> "$OUTPUT_FILE"
-docker system df -v | head -20 >> "$OUTPUT_FILE"
-echo "" >> "$OUTPUT_FILE"
-
-# 9. Recent Docker Events
-echo "## RECENT DOCKER EVENTS (Last 50)" >> "$OUTPUT_FILE"
-echo "-----------------------------------" >> "$OUTPUT_FILE"
-docker events --since 10m --until 0s >> "$OUTPUT_FILE" 2>&1 &
-sleep 2
-pkill -P $$ docker 2>/dev/null || true
-echo "" >> "$OUTPUT_FILE"
-
-echo "========================================" >> "$OUTPUT_FILE"
-echo "Diagnostic report complete" >> "$OUTPUT_FILE"
-echo "========================================" >> "$OUTPUT_FILE"
+echo "## AI CORE SERVICES"
+echo "-----------------------------------"
+test_service "n8n Workflows" "http://$SERVER_IP:8000" && ((SUCCESS++)) || ((FAILED++))
+test_service "Flowise AI Agents" "http://$SERVER_IP:8022" && ((SUCCESS++)) || ((FAILED++))
+test_service "Open WebUI" "http://$SERVER_IP:8020" && ((SUCCESS++)) || ((FAILED++))
+test_service "bolt.diy" "http://$SERVER_IP:8023" && ((SUCCESS++)) || ((FAILED++))
+test_service "ComfyUI" "http://$SERVER_IP:8024" && ((SUCCESS++)) || ((FAILED++))
+test_service "OpenUI" "http://$SERVER_IP:8025" && ((SUCCESS++)) || ((FAILED++))
 
 echo ""
-echo "✅ Diagnostic report saved to: $OUTPUT_FILE"
+echo "## RAG & VECTOR APPS"
+echo "-----------------------------------"
+test_service "Neo4j" "http://$SERVER_IP:8028" && ((SUCCESS++)) || ((FAILED++))
+test_service "LightRAG" "http://$SERVER_IP:8029" && ((SUCCESS++)) || ((FAILED++))
+test_service "RAGApp" "http://$SERVER_IP:8030" && ((SUCCESS++)) || ((FAILED++))
+test_service "Letta" "http://$SERVER_IP:8031" && ((SUCCESS++)) || ((FAILED++))
+
 echo ""
-echo "📋 To share this with support:"
-echo "   cat $OUTPUT_FILE"
+echo "## LEARNING TOOLS"
+echo "-----------------------------------"
+test_service "Cal.com" "http://$SERVER_IP:8040" && ((SUCCESS++)) || ((FAILED++))
+test_service "Baserow" "http://$SERVER_IP:8047" && ((SUCCESS++)) || ((FAILED++))
+test_service "NocoDB" "http://$SERVER_IP:8048" && ((SUCCESS++)) || ((FAILED++))
+test_service "Vikunja" "http://$SERVER_IP:8049" && ((SUCCESS++)) || ((FAILED++))
+test_service "Leantime" "http://$SERVER_IP:8050" && ((SUCCESS++)) || ((FAILED++))
+
 echo ""
-echo "🔧 Common fixes:"
-echo "   - Quotes in .env: bash scripts/repair_env_quotes.sh"
-echo "   - Restart all: docker compose -p localai -f docker-compose.local.yml restart"
-echo "   - Fresh start: docker compose -p localai -f docker-compose.local.yml down && docker compose -p localai -f docker-compose.local.yml up -d"
+echo "## VOICE & DOCUMENTS"
+echo "-----------------------------------"
+test_service "Scriberr" "http://$SERVER_IP:8083" && ((SUCCESS++)) || ((FAILED++))
+test_service "Stirling-PDF" "http://$SERVER_IP:8086" && ((SUCCESS++)) || ((FAILED++))
+
+echo ""
+echo "## SEARCH & DISCOVERY"
+echo "-----------------------------------"
+test_service "SearXNG" "http://$SERVER_IP:8089" && ((SUCCESS++)) || ((FAILED++))
+test_service "Perplexica" "http://$SERVER_IP:8090" && ((SUCCESS++)) || ((FAILED++))
+test_service "Crawl4AI" "http://$SERVER_IP:8093" && ((SUCCESS++)) || ((FAILED++))
+
+echo ""
+echo "## MONITORING"
+echo "-----------------------------------"
+test_service "Grafana" "http://$SERVER_IP:8003" && ((SUCCESS++)) || ((FAILED++))
+test_service "Prometheus" "http://$SERVER_IP:8004/metrics" && ((SUCCESS++)) || ((FAILED++))
+test_service "Portainer" "http://$SERVER_IP:8007" && ((SUCCESS++)) || ((FAILED++))
+test_service "Langfuse" "http://$SERVER_IP:8096" && ((SUCCESS++)) || ((FAILED++))
+
+echo ""
+echo "## UTILITIES"
+echo "-----------------------------------"
+test_service "Mailpit" "http://$SERVER_IP:8071" && ((SUCCESS++)) || ((FAILED++))
+test_service "Postiz" "http://$SERVER_IP:8060" && ((SUCCESS++)) || ((FAILED++))
+test_service "Vaultwarden" "http://$SERVER_IP:8061" && ((SUCCESS++)) || ((FAILED++))
+test_service "Kopia" "http://$SERVER_IP:8062" && ((SUCCESS++)) || ((FAILED++))
+test_service "LibreTranslate" "http://$SERVER_IP:8082" && ((SUCCESS++)) || ((FAILED++))
+
+echo ""
+echo "## DEVELOPER APIs"
+echo "-----------------------------------"
+test_service "Ollama API" "http://$SERVER_IP:8021/api/tags" && ((SUCCESS++)) || ((FAILED++))
+test_service "Weaviate API" "http://$SERVER_IP:8027/v1/schema" && ((SUCCESS++)) || ((FAILED++))
+test_service "Qdrant API" "http://$SERVER_IP:8026" && ((SUCCESS++)) || ((FAILED++))
+test_service "Whisper API" "http://$SERVER_IP:8080/docs" && ((SUCCESS++)) || ((FAILED++))
+test_service "OpenedAI TTS" "http://$SERVER_IP:8081" && ((SUCCESS++)) || ((FAILED++))
+test_service "Chatterbox TTS" "http://$SERVER_IP:8087/health" && ((SUCCESS++)) || ((FAILED++))
+test_service "Gotenberg" "http://$SERVER_IP:8094/health" && ((SUCCESS++)) || ((FAILED++))
+test_service "Tesseract OCR" "http://$SERVER_IP:8084/status" && ((SUCCESS++)) || ((FAILED++))
+test_service "EasyOCR" "http://$SERVER_IP:8085/health" && ((SUCCESS++)) || ((FAILED++))
+test_service "PostgreSQL" "http://$SERVER_IP:8001" 2 && ((SUCCESS++)) || ((FAILED++))
+test_service "Redis" "http://$SERVER_IP:8002" 2 && ((SUCCESS++)) || ((FAILED++))
+test_service "ClickHouse" "http://$SERVER_IP:8097/ping" && ((SUCCESS++)) || ((FAILED++))
+test_service "MinIO API" "http://$SERVER_IP:8098/minio/health/live" && ((SUCCESS++)) || ((FAILED++))
+test_service "MinIO Console" "http://$SERVER_IP:8099" && ((SUCCESS++)) || ((FAILED++))
+
+echo ""
+echo "=========================================="
+echo "📊 SUMMARY"
+echo "=========================================="
+echo "✅ Online: $SUCCESS"
+echo "❌ Failed/Timeout: $FAILED"
+TOTAL=$((SUCCESS + FAILED))
+PERCENT=$((SUCCESS * 100 / TOTAL))
+echo "📈 Success Rate: $PERCENT%"
 echo ""
 
-exit 0
+if [ $FAILED -eq 0 ]; then
+    echo "🎉 ALL SERVICES OPERATIONAL!"
+    exit 0
+else
+    echo "⚠️  Some services need attention"
+    echo ""
+    echo "💡 Common fixes:"
+    echo "   - Check .env quotes: grep '=\"' .env"
+    echo "   - Restart failed: docker compose -p localai -f docker-compose.local.yml restart SERVICE_NAME"
+    echo "   - View logs: docker logs SERVICE_NAME"
+    exit 1
+fi
