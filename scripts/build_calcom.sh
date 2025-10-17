@@ -62,12 +62,14 @@ fi
 # --- Patch NODE_OPTIONS for memory-intensive builds ---
 echo "Patching Dockerfile for increased Node.js heap size..."
 
-# Add NODE_OPTIONS after FROM node: line to increase heap memory
-if ! grep -q "ENV NODE_OPTIONS" Dockerfile; then
-    sed -i '/^FROM node:/a ENV NODE_OPTIONS="--max-old-space-size=4096"' Dockerfile
-    echo "  -> Added NODE_OPTIONS=--max-old-space-size=4096 (4GB heap)"
+# Cal.com Dockerfile already has NODE_OPTIONS with ${MAX_OLD_SPACE_SIZE} variable
+# We need to set a default value for this variable
+if grep -q "MAX_OLD_SPACE_SIZE}" Dockerfile && ! grep -q "MAX_OLD_SPACE_SIZE:-" Dockerfile; then
+    # Add default value to existing variable
+    sed -i 's/MAX_OLD_SPACE_SIZE}/MAX_OLD_SPACE_SIZE:-4096}/g' Dockerfile
+    echo "  -> Set MAX_OLD_SPACE_SIZE default to 4096MB (4GB heap)"
 else
-    echo "  -> NODE_OPTIONS already present."
+    echo "  -> MAX_OLD_SPACE_SIZE already configured or not found."
 fi
 
 # --- End of Patch-Blocks ---
