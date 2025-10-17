@@ -259,7 +259,7 @@ _update_or_add_env_var() {
     fi
 
     if [[ -n "$var_value" ]]; then
-        echo "${var_name}='$var_value'" >> "$tmp_env_file"
+        echo "${var_name}=$var_value" >> "$tmp_env_file"
     fi
     mv "$tmp_env_file" "$OUTPUT_FILE"
 }
@@ -440,7 +440,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
         # Use generated value if available
         if [[ -n "${generated_values[$varName]}" ]]; then
-            processed_line="${varName}=\"${generated_values[$varName]}\""
+            processed_line="${varName}=${generated_values[$varName]}"
         elif [[ -n "${VARS_TO_GENERATE[$varName]:-}" ]] && [[ -z "${generated_values[$varName]}" ]]; then
             # Generate value if needed
             IFS=':' read -r type length <<< "${VARS_TO_GENERATE[$varName]}"
@@ -462,7 +462,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
             esac
 
             if [[ -n "$newValue" ]]; then
-                processed_line="${varName}=\"${newValue}\""
+                processed_line="${varName}=${newValue}"
                 generated_values["$varName"]="$newValue"
             else
                 # CRITICAL: Do not write empty values for secrets
@@ -471,7 +471,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
                     log_error "Installation cannot continue with empty security credentials" >&2
                     exit 1
                 fi
-                processed_line="${varName}=\"\""
+                processed_line="${varName}="
             fi
         else
             # Mark custom variables as found
@@ -479,7 +479,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
                 if [[ "$varName" == "$var" ]]; then
                     found_vars["$var"]=1
                     if [[ -n "${generated_values[$varName]:-}" ]]; then
-                        processed_line="${varName}=\"${generated_values[$varName]}\""
+                        processed_line="${varName}=${generated_values[$varName]}"
                     fi
                     break
                 fi
