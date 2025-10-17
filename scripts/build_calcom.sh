@@ -59,6 +59,17 @@ if grep -q "RUN yarn --cwd apps/web workspace @calcom/web run build" Dockerfile;
 else
     echo "  -> Web build command already fixed or different."
 fi
+# --- Patch NODE_OPTIONS for memory-intensive builds ---
+echo "Patching Dockerfile for increased Node.js heap size..."
+
+# Add NODE_OPTIONS after FROM node: line to increase heap memory
+if ! grep -q "ENV NODE_OPTIONS" Dockerfile; then
+    sed -i '/^FROM node:/a ENV NODE_OPTIONS="--max-old-space-size=4096"' Dockerfile
+    echo "  -> Added NODE_OPTIONS=--max-old-space-size=4096 (4GB heap)"
+else
+    echo "  -> NODE_OPTIONS already present."
+fi
+
 # --- End of Patch-Blocks ---
 
 
