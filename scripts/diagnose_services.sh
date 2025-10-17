@@ -3,8 +3,6 @@
 # AI LaunchKit Service Health Check
 # Tests all services displayed on the landing page
 
-set -e
-
 cd "$(dirname "$0")/.."
 
 # Get SERVER_IP from .env
