@@ -564,50 +564,45 @@ services:
   # ============================================================================
 
   calcom:
-    build:
-      context: ./calcom-docker
-      dockerfile: Dockerfile
-      args:
-        - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/calcom
-        - NEXT_PUBLIC_WEBAPP_URL=http://127.0.0.1:8040
-        - NEXT_PUBLIC_API_V2_URL=http://127.0.0.1:8040/api/v2
-        - NEXT_PUBLIC_WEBSITE_URL=http://127.0.0.1:8040
+    image: calcom/cal.com:latest
     container_name: calcom
     profiles: ["calcom"]
     restart: unless-stopped
     ports:
       - "8040:3000"
-    env_file:
-      - .env
     environment:
-      # Database
+      # Database Configuration
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/calcom
       - DATABASE_DIRECT_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/calcom
       
-      # URLs - Use SERVER_IP for network access (overrides build args)
+      # Application URLs - Use SERVER_IP for network access
       - NEXT_PUBLIC_WEBAPP_URL=http://${SERVER_IP}:8040
       - NEXT_PUBLIC_API_V2_URL=http://${SERVER_IP}:8040/api/v2
       - NEXT_PUBLIC_WEBSITE_URL=http://${SERVER_IP}:8040
       - NEXTAUTH_URL=http://${SERVER_IP}:8040
       - CAL_URL=http://${SERVER_IP}:8040
       
-      # Security
+      # Security Secrets
       - NEXTAUTH_SECRET=${CALCOM_NEXTAUTH_SECRET}
       - CALENDSO_ENCRYPTION_KEY=${CALCOM_ENCRYPTION_KEY}
       
-      # Email (using mailpit)
-      - EMAIL_FROM=${EMAIL_FROM}
+      # Email Integration (Mailpit)
+      - EMAIL_FROM=${EMAIL_FROM:-noreply@localhost}
       - EMAIL_SERVER_HOST=mailpit
       - EMAIL_SERVER_PORT=1025
-      - EMAIL_SERVER_USER=${SMTP_USER:-}
-      - EMAIL_SERVER_PASSWORD=${SMTP_PASSWORD:-}
+      - EMAIL_SERVER_USER=
+      - EMAIL_SERVER_PASSWORD=
       - NODE_TLS_REJECT_UNAUTHORIZED=0
       - SEND_FEEDBACK_EMAIL=false
       
-      # Features
+      # Google Calendar Integration (Optional)
+      - GOOGLE_API_CREDENTIALS=${GOOGLE_API_CREDENTIALS:-}
+      
+      # Features & Performance
       - NEXT_PUBLIC_DISABLE_SIGNUP=false
       - TELEMETRY_DISABLED=1
       - NODE_ENV=production
+      - CALCOM_LICENSE_KEY=${CALCOM_LICENSE_KEY:-}
     volumes:
       - calcom_data:/app/data
       - ./shared:/data/shared
@@ -621,7 +616,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 300s
+      start_period: 60s
 
   baserow:
     image: baserow/baserow:1.35.0
