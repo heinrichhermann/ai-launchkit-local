@@ -418,7 +418,7 @@ services:
       retries: 5
 
   comfyui-gpu:
-    image: yanwk/comfyui-boot:latest-cuda
+    image: yanwk/comfyui-boot:cu128-megapak
     container_name: comfyui
     profiles: ["comfyui-gpu"]
     restart: unless-stopped

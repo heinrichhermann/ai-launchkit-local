@@ -23,13 +23,13 @@ comfyui:
 ComfyUI wurde auf ein **Profile-basiertes System** umgestellt (analog zu Ollama), das immer die neuesten Images verwendet:
 
 ```yaml
-# NEU - Profile-basiert mit :latest Tags
+# NEU - Profile-basiert mit neuesten Tags
 comfyui-cpu:
-  image: yanwk/comfyui-boot:latest  # ✅ Immer neueste CPU-Version
+  image: yanwk/comfyui-boot:latest  # ✅ Neueste CPU-Version
   profiles: ["comfyui-cpu"]
 
 comfyui-gpu:
-  image: yanwk/comfyui-boot:latest-cuda  # ✅ Immer neueste CUDA-Version
+  image: yanwk/comfyui-boot:cu128-megapak  # ✅ CUDA 12.8 mit allen Features
   profiles: ["comfyui-gpu"]
 ```
 
