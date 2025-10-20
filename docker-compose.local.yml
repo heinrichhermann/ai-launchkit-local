@@ -400,10 +400,10 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  comfyui:
-    image: yanwk/comfyui-boot:cu124-slim
+  comfyui-cpu:
+    image: yanwk/comfyui-boot:latest
     container_name: comfyui
-    profiles: ["comfyui"]
+    profiles: ["comfyui-cpu"]
     restart: unless-stopped
     ports:
       - "8024:8188"
@@ -411,6 +411,30 @@ services:
       - CLI_ARGS=--listen 0.0.0.0 --cpu
     volumes:
       - comfyui_data:/home/runner
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:8188"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  comfyui-gpu:
+    image: yanwk/comfyui-boot:latest-cuda
+    container_name: comfyui
+    profiles: ["comfyui-gpu"]
+    restart: unless-stopped
+    ports:
+      - "8024:8188"
+    environment:
+      - CLI_ARGS=--listen 0.0.0.0
+    volumes:
+      - comfyui_data:/home/runner
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:8188"]
       interval: 10s
@@ -957,7 +981,7 @@ services:
       - vaultwarden_data:/data
       - ./shared:/data/shared
     environment:
-      - DOMAIN=http://127.0.0.1:8061
+      - DOMAIN=http://${SERVER_IP}:8061
       - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
       - SMTP_HOST=mailpit
       - SMTP_FROM=${EMAIL_FROM:-vault@localhost}
@@ -1338,7 +1362,7 @@ services:
     depends_on:
       - chatterbox-tts
     environment:
-      - VITE_API_URL=http://127.0.0.1:8087
+      - VITE_API_URL=http://${SERVER_IP}:8087
 
   searxng:
     container_name: searxng
@@ -1350,7 +1374,7 @@ services:
     volumes:
       - ./searxng:/etc/searxng:rw
     environment:
-      - SEARXNG_BASE_URL=http://127.0.0.1:8089/
+      - SEARXNG_BASE_URL=http://${SERVER_IP}:8089/
       - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
       - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}
     cap_add:
