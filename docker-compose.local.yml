@@ -588,25 +588,37 @@ services:
   # ============================================================================
 
   open-notebook:
+    # Open Source NotebookLM Alternative
+    # - Multi-modal research assistant (PDFs, videos, audio, web pages)
+    # - Advanced podcast generation (1-4 speakers with custom profiles)
+    # - Support for 16+ AI providers (OpenAI, Anthropic, Ollama, Groq, etc.)
+    # - Full REST API for automation
+    # - Private and self-hosted - no cloud dependencies
+    # Documentation: docs/OPEN_NOTEBOOK_SETUP.md
     image: lfnovo/open_notebook:v1-latest-single
     container_name: open-notebook
     profiles: ["open-notebook"]
     restart: unless-stopped
     ports:
-      - "8100:8502"
-      - "8101:5055"
+      - "8100:8502"  # Web UI
+      - "8101:5055"  # REST API (see /docs for Swagger UI)
     volumes:
-      - ./open-notebook/data:/app/data
-      - ./open-notebook/surreal:/mydata
-      - ./shared:/data/shared
+      - ./open-notebook/data:/app/data          # Uploaded files, embeddings
+      - ./open-notebook/surreal:/mydata         # SurrealDB database
+      - ./shared:/data/shared                   # Shared with other services
     environment:
-      # AI Provider Integration (uses existing API keys)
+      # AI Provider Integration (uses existing API keys from .env)
+      # At least one API key required for AI features
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
-      # Optional: Ollama Integration for local models
+      
+      # Optional: Ollama Integration for local/offline models
+      # Works automatically if Ollama is running (cpu/gpu-nvidia/gpu-amd profiles)
       - OLLAMA_API_BASE_URL=http://ollama:11434
-      # SurrealDB Configuration
+      
+      # SurrealDB Embedded Database Configuration
+      # Uses file-based storage (no separate DB container needed)
       - SURREAL_URL=file:///mydata
       - SURREAL_USER=root
       - SURREAL_PASSWORD=${OPEN_NOTEBOOK_DB_PASSWORD:-insecure}
