@@ -619,12 +619,13 @@ services:
       - OLLAMA_API_BASE_URL=http://ollama:11434
       
       # SurrealDB Embedded Database Configuration
-      # Uses file-based storage (no separate DB container needed)
-      - SURREAL_URL=file:///mydata
+      # Uses WebSocket protocol for local embedded database
+      - SURREAL_URL=ws://localhost:8000
       - SURREAL_USER=root
       - SURREAL_PASSWORD=${OPEN_NOTEBOOK_DB_PASSWORD:-insecure}
       - SURREAL_NS=notebook
       - SURREAL_DB=notebook
+      - SURREAL_PATH=/mydata
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
