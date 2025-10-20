@@ -46,7 +46,6 @@ echo "-----------------------------------"
 test_service "Neo4j" "http://$SERVER_IP:8028" && ((SUCCESS++)) || ((FAILED++))
 test_service "LightRAG" "http://$SERVER_IP:8029" && ((SUCCESS++)) || ((FAILED++))
 test_service "RAGApp" "http://$SERVER_IP:8030" && ((SUCCESS++)) || ((FAILED++))
-test_service "Letta" "http://$SERVER_IP:8031" && ((SUCCESS++)) || ((FAILED++))
 
 echo ""
 echo "## LEARNING TOOLS"
@@ -84,23 +83,20 @@ echo "-----------------------------------"
 test_service "Mailpit" "http://$SERVER_IP:8071" && ((SUCCESS++)) || ((FAILED++))
 test_service "Postiz" "http://$SERVER_IP:8060" && ((SUCCESS++)) || ((FAILED++))
 test_service "Vaultwarden" "http://$SERVER_IP:8061" && ((SUCCESS++)) || ((FAILED++))
-test_service "Kopia" "http://$SERVER_IP:8062" && ((SUCCESS++)) || ((FAILED++))
 test_service "LibreTranslate" "http://$SERVER_IP:8082" && ((SUCCESS++)) || ((FAILED++))
 
 echo ""
 echo "## DEVELOPER APIs"
 echo "-----------------------------------"
 test_service "Ollama API" "http://$SERVER_IP:8021/api/tags" && ((SUCCESS++)) || ((FAILED++))
-test_service "Weaviate API" "http://$SERVER_IP:8027/v1/schema" && ((SUCCESS++)) || ((FAILED++))
+test_service "Weaviate API" "http://$SERVER_IP:8027/v1/.well-known/ready" && ((SUCCESS++)) || ((FAILED++))
 test_service "Qdrant API" "http://$SERVER_IP:8026" && ((SUCCESS++)) || ((FAILED++))
 test_service "Whisper API" "http://$SERVER_IP:8080/docs" && ((SUCCESS++)) || ((FAILED++))
 test_service "OpenedAI TTS" "http://$SERVER_IP:8081" && ((SUCCESS++)) || ((FAILED++))
 test_service "Chatterbox TTS" "http://$SERVER_IP:8087/health" && ((SUCCESS++)) || ((FAILED++))
 test_service "Gotenberg" "http://$SERVER_IP:8094/health" && ((SUCCESS++)) || ((FAILED++))
 test_service "Tesseract OCR" "http://$SERVER_IP:8084/status" && ((SUCCESS++)) || ((FAILED++))
-test_service "EasyOCR" "http://$SERVER_IP:8085/health" && ((SUCCESS++)) || ((FAILED++))
-test_service "PostgreSQL" "http://$SERVER_IP:8001" 2 && ((SUCCESS++)) || ((FAILED++))
-test_service "Redis" "http://$SERVER_IP:8002" 2 && ((SUCCESS++)) || ((FAILED++))
+test_service "EasyOCR" "http://$SERVER_IP:8085" && ((SUCCESS++)) || ((FAILED++))
 test_service "ClickHouse" "http://$SERVER_IP:8097/ping" && ((SUCCESS++)) || ((FAILED++))
 test_service "MinIO API" "http://$SERVER_IP:8098/minio/health/live" && ((SUCCESS++)) || ((FAILED++))
 test_service "MinIO Console" "http://$SERVER_IP:8099" && ((SUCCESS++)) || ((FAILED++))
