@@ -68,17 +68,26 @@ OLLAMA_API_BASE_URL=http://ollama:11434
 
 ## 📡 Zugriff
 
-### Web Interface (UI + API)
+### Frontend UI
 ```
 http://SERVER_IP:8100
 ```
 
-**Wichtig:** Open Notebook nutzt eine Single-Container-Architektur:
-- **Frontend**: http://SERVER_IP:8100
-- **API**: http://SERVER_IP:8100/api/*
-- **API Docs**: http://SERVER_IP:8100/docs
+### REST API
+```
+http://SERVER_IP:8101
+```
 
-Beide (UI und API) laufen auf **demselben Port** (8100).
+### API Dokumentation
+```
+http://SERVER_IP:8101/docs
+```
+
+**Architektur:** Open Notebook nutzt ein Single-Container-Setup mit zwei exponierten Ports:
+- Port **8100**: Frontend UI (Next.js)
+- Port **8101**: Backend API (FastAPI)
+
+Beide Services laufen im selben Container, aber auf separaten Ports für saubere Trennung.
 
 ## 🎯 Erste Schritte
 
