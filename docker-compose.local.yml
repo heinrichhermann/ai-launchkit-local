@@ -592,7 +592,7 @@ services:
     # - Multi-modal research assistant (PDFs, videos, audio, web pages)
     # - Advanced podcast generation (1-4 speakers with custom profiles)
     # - Support for 16+ AI providers (OpenAI, Anthropic, Ollama, Groq, etc.)
-    # - Full REST API for automation
+    # - Full REST API for automation (available at /api on same port)
     # - Private and self-hosted - no cloud dependencies
     # Documentation: docs/OPEN_NOTEBOOK_SETUP.md
     image: lfnovo/open_notebook:v1-latest-single
@@ -600,8 +600,7 @@ services:
     profiles: ["open-notebook"]
     restart: unless-stopped
     ports:
-      - "8100:8502"  # Web UI
-      - "8101:5055"  # REST API (see /docs for Swagger UI)
+      - "8100:8502"  # Web UI + API (single container serves both)
     volumes:
       - ./open-notebook/data:/app/data          # Uploaded files, embeddings
       - ./open-notebook/surreal:/mydata         # SurrealDB database
