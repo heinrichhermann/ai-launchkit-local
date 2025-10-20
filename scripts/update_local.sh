@@ -338,6 +338,15 @@ if [[ "$COMPOSE_PROFILES" == *"letta"* ]]; then
     fi
 fi
 
+# Check research & notebooks
+if [[ "$COMPOSE_PROFILES" == *"open-notebook"* ]]; then
+    if docker ps | grep -q "open-notebook"; then
+        log_success "✅ Open Notebook is running (Port 8100)"
+    else
+        FAILED_SERVICES+=("open-notebook")
+    fi
+fi
+
 # Check business tools
 if [[ "$COMPOSE_PROFILES" == *"calcom"* ]]; then
     if docker ps | grep -q "calcom"; then

@@ -66,6 +66,7 @@ base_services_data=(
     "stirling-pdf" "Stirling-PDF (100+ PDF Tools) - Port 8086"
     "crawl4ai" "Crawl4ai (Web Crawler for AI) - Port 8093"
     "ragapp" "RAGApp (Open-source RAG UI) - Port 8030"
+    "open-notebook" "Open Notebook (NotebookLM Alternative) - Ports 8100, 8101"
     "open-webui" "Open WebUI (ChatGPT-like Interface) - Port 8020"
     "searxng" "SearXNG (Private Metasearch Engine) - Port 8089"
     "perplexica" "Perplexica (AI-powered Search Engine) - Port 8090"

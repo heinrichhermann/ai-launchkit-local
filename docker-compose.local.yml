@@ -584,6 +584,44 @@ services:
       - "host.docker.internal:host-gateway"
 
   # ============================================================================
+  # RESEARCH & NOTEBOOKS (8100-8110)
+  # ============================================================================
+
+  open-notebook:
+    image: lfnovo/open_notebook:v1-latest-single
+    container_name: open-notebook
+    profiles: ["open-notebook"]
+    restart: unless-stopped
+    ports:
+      - "8100:8502"
+      - "8101:5055"
+    volumes:
+      - ./open-notebook/data:/app/data
+      - ./open-notebook/surreal:/mydata
+      - ./shared:/data/shared
+    environment:
+      # AI Provider Integration (uses existing API keys)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      # Optional: Ollama Integration for local models
+      - OLLAMA_API_BASE_URL=http://ollama:11434
+      # SurrealDB Configuration
+      - SURREAL_URL=file:///mydata
+      - SURREAL_USER=root
+      - SURREAL_PASSWORD=${OPEN_NOTEBOOK_DB_PASSWORD:-insecure}
+      - SURREAL_NS=notebook
+      - SURREAL_DB=notebook
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8502"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ============================================================================
   # LEARNING TOOLS (8040-8050)
   # ============================================================================
 

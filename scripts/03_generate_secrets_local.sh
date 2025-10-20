@@ -91,6 +91,7 @@ declare -A VARS_TO_GENERATE=(
     ["MAILPIT_PASSWORD"]="password:32"
     ["SMTP_PASS"]="password:16"
     ["MAIL_NOREPLY_PASSWORD"]="password:32"
+    ["OPEN_NOTEBOOK_DB_PASSWORD"]="password:32"
 )
 
 # Initialize existing_env_vars and attempt to read .env if it exists
