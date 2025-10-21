@@ -622,6 +622,13 @@ services:
       - OLLAMA_MAX_LOADED_MODELS=2
       - OLLAMA_NUM_PARALLEL=4
       
+      # Optional: Local Speech Services Integration (AI LaunchKit Services)
+      # Enables podcast generation without cloud API costs
+      # - Whisper for Speech-to-Text (transcription)
+      # - OpenedAI Speech for Text-to-Speech (podcast audio generation)
+      - WHISPER_API_BASE=http://faster-whisper:8000
+      - OPENAI_SPEECH_API_BASE=http://openedai-speech:8000
+      
       # Frontend API Configuration
       # Tell Next.js frontend where to reach the API (external port)
       - NEXT_PUBLIC_API_URL=http://${SERVER_IP}:8101
