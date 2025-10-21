@@ -627,7 +627,7 @@ services:
       # - Whisper for Speech-to-Text (transcription)
       # - OpenedAI Speech for Text-to-Speech (podcast audio generation)
       - WHISPER_API_BASE=http://faster-whisper:8000
-      - OPENAI_SPEECH_API_BASE=http://openedai-speech:8000
+      - OPENAI_COMPATIBLE_BASE_URL_TTS=http://openedai-speech:8000/v1
       
       # Frontend API Configuration
       # Tell Next.js frontend where to reach the API (external port)
