@@ -616,7 +616,11 @@ services:
       
       # Optional: Ollama Integration for local/offline models
       # Works automatically if Ollama is running (cpu/gpu-nvidia/gpu-amd profiles)
-      - OLLAMA_API_BASE_URL=http://ollama:11434
+      # Note: Use OLLAMA_API_BASE (not OLLAMA_API_BASE_URL) per official docs
+      - OLLAMA_API_BASE=http://ollama:11434
+      - OLLAMA_KEEP_ALIVE=5m
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_NUM_PARALLEL=4
       
       # Frontend API Configuration
       # Tell Next.js frontend where to reach the API (external port)
