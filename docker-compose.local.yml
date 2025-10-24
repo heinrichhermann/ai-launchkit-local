@@ -1157,10 +1157,11 @@ services:
   # SPECIALIZED SERVICES (8080-8099)
   # ============================================================================
 
-  faster-whisper:
+  # Speech Services - CPU Version (recommended for most users)
+  faster-whisper-cpu:
     image: fedirz/faster-whisper-server:latest-cpu
     container_name: faster-whisper
-    profiles: ["speech"]
+    profiles: ["speech-cpu", "speech"]  # "speech" for backward compatibility
     restart: unless-stopped
     ports:
       - "8080:8000"
@@ -1178,10 +1179,10 @@ services:
       timeout: 10s
       retries: 3
 
-  openedai-speech:
+  openedai-speech-cpu:
     image: ghcr.io/matatonic/openedai-speech-min:latest
     container_name: openedai-speech
-    profiles: ["speech"]
+    profiles: ["speech-cpu", "speech"]  # "speech" for backward compatibility
     restart: unless-stopped
     ports:
       - "8081:8000"
@@ -1191,6 +1192,59 @@ services:
     environment:
       - TTS_HOME=voices
       - HF_HOME=voices
+
+  # Speech Services - GPU Version (4-5x faster with NVIDIA GPU)
+  faster-whisper-gpu:
+    image: fedirz/faster-whisper-server:latest-cuda
+    container_name: faster-whisper
+    profiles: ["speech-gpu"]
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+    environment:
+      - WHISPER__MODEL=${WHISPER_MODEL:-Systran/faster-distil-whisper-large-v3}
+      - WHISPER__COMPUTE_TYPE=float16
+      - WHISPER__DEVICE=cuda
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - whisper-models:/root/.cache/huggingface
+      - ./shared:/data/shared
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  openedai-speech-gpu:
+    image: ghcr.io/matatonic/openedai-speech:latest-cuda
+    container_name: openedai-speech
+    profiles: ["speech-gpu"]
+    restart: unless-stopped
+    ports:
+      - "8081:8000"
+    volumes:
+      - ./openedai-voices:/app/voices
+      - ./openedai-config:/app/config
+    environment:
+      - TTS_HOME=voices
+      - HF_HOME=voices
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   libretranslate:
     image: libretranslate/libretranslate:v1.6.1

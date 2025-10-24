@@ -73,7 +73,7 @@ base_services_data=(
     "python-runner" "Python Runner (Custom Python Code) - Port 8095"
     "ollama" "Ollama (Local LLM Runner - select hardware next)"
     "comfyui" "ComfyUI (Node-based Stable Diffusion) - Port 8024"
-    "speech" "Speech Stack (Whisper ASR + TTS) - Ports 8080, 8081"
+    "speech" "Speech Stack (Whisper ASR + TTS - select hardware next) - Ports 8080, 8081"
     "tts-chatterbox" "TTS Chatterbox (Advanced TTS) - Ports 8087, 8088"
     "scriberr" "Scriberr (AI Audio Transcription) - Port 8083"
     "ocr" "OCR Bundle (Tesseract + EasyOCR) - Ports 8084, 8085"
@@ -149,7 +149,9 @@ fi
 selected_profiles=()
 ollama_selected=0
 scriberr_selected=0
+speech_selected=0
 ollama_profile=""
+speech_profile=""
 
 if [ -n "$CHOICES" ]; then
     temp_choices=()
@@ -160,6 +162,8 @@ if [ -n "$CHOICES" ]; then
             ollama_selected=1
         elif [ "$choice" == "scriberr" ]; then
             scriberr_selected=1
+        elif [ "$choice" == "speech" ]; then
+            speech_selected=1
         else
             selected_profiles+=("$choice")
         fi
@@ -206,6 +210,44 @@ if [ $ollama_selected -eq 1 ]; then
     else
         log_info "Ollama hardware profile selection cancelled."
         ollama_selected=0
+    fi
+fi
+
+# Handle Speech Services hardware selection
+if [ $speech_selected -eq 1 ]; then
+    default_speech_hardware="speech-cpu"
+    speech_hw_on_cpu="OFF"
+    speech_hw_on_gpu="OFF"
+
+    if [[ "$current_profiles_for_matching" == *",speech-cpu,"* || "$current_profiles_for_matching" == *",speech,"* ]]; then
+        speech_hw_on_cpu="ON"
+        default_speech_hardware="speech-cpu"
+    elif [[ "$current_profiles_for_matching" == *",speech-gpu,"* ]]; then
+        speech_hw_on_gpu="ON"
+        default_speech_hardware="speech-gpu"
+    else
+        speech_hw_on_cpu="ON"
+        default_speech_hardware="speech-cpu"
+    fi
+
+    speech_hardware_options=(
+        "speech-cpu" "CPU (Recommended for most users) - Ports 8080, 8081" "$speech_hw_on_cpu"
+        "speech-gpu" "GPU/CUDA (4-5x faster with NVIDIA GPU) - Ports 8080, 8081" "$speech_hw_on_gpu"
+    )
+    
+    CHOSEN_SPEECH_PROFILE=$(whiptail --title "Speech Services Hardware Profile" --default-item "$default_speech_hardware" --radiolist \
+      "Choose the hardware profile for Speech Services (Whisper STT + OpenedAI TTS)." 15 85 2 \
+      "${speech_hardware_options[@]}" \
+      3>&1 1>&2 2>&3)
+
+    speech_exitstatus=$?
+    if [ $speech_exitstatus -eq 0 ] && [ -n "$CHOSEN_SPEECH_PROFILE" ]; then
+        selected_profiles+=("$CHOSEN_SPEECH_PROFILE")
+        speech_profile="$CHOSEN_SPEECH_PROFILE"
+        log_info "Speech Services hardware profile selected: $CHOSEN_SPEECH_PROFILE"
+    else
+        log_info "Speech Services hardware profile selection cancelled."
+        speech_selected=0
     fi
 fi
 
