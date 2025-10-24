@@ -1224,7 +1224,7 @@ services:
       retries: 3
 
   openedai-speech-gpu:
-    image: ghcr.io/matatonic/openedai-speech:latest-cuda
+    image: ghcr.io/matatonic/openedai-speech:latest
     container_name: openedai-speech
     profiles: ["speech-gpu"]
     restart: unless-stopped
