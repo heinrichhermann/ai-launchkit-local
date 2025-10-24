@@ -7,6 +7,13 @@
 > **Beispiel:** Wenn Ihr Ubuntu Server die IP `192.168.1.50` hat, dann wäre der 
 > Zugriff: `http://192.168.1.50:8100`
 
+> **📚 NEU: Umfassende Anleitung verfügbar!**
+> 
+> Für detaillierte Use Cases, Best Practices und Schritt-für-Schritt Anleitungen siehe:
+> **[Open Notebook - Umfassende Anleitung & Use Cases](OPEN_NOTEBOOK_GUIDE.md)**
+>
+> Themen: Deutsche Podcasts, YouTube Transkription, PDF Research, API Integration, Performance-Optimierung
+
 ## 🎯 Was ist Open Notebook?
 
 Open Notebook ist eine **vollständige, selbst-gehostete Alternative zu Google's NotebookLM**. Es bietet erweiterte Features für AI-gestützte Recherche, Podcast-Generierung und Wissensmanagement.

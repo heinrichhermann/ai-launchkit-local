@@ -7,6 +7,11 @@
 > **Beispiel:** Wenn Ihr Ubuntu Server die IP `192.168.1.50` hat, dann wäre der 
 > Zugriff: `http://192.168.1.50:8100`
 
+> **📚 Siehe auch: Umfassende Anleitung**
+> 
+> Für detaillierte Use Cases, Deutsche Podcasts, YouTube Transkription und mehr:
+> **[Open Notebook - Umfassende Anleitung & Use Cases](OPEN_NOTEBOOK_GUIDE.md)**
+
 ## 🎯 Übersicht
 
 Diese Anleitung zeigt dir, wie du die **lokalen Speech-Services** des AI LaunchKit mit Open Notebook nutzt:
