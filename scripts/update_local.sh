@@ -397,13 +397,6 @@ if [[ "$COMPOSE_PROFILES" == *"postiz"* ]]; then
     fi
 fi
 
-if [[ "$COMPOSE_PROFILES" == *"vaultwarden"* ]]; then
-    if docker ps | grep -q "vaultwarden"; then
-        log_success "✅ Vaultwarden is running (Port 8061)"
-    else
-        FAILED_SERVICES+=("vaultwarden")
-    fi
-fi
 
 if [[ "$COMPOSE_PROFILES" == *"kopia"* ]]; then
     if docker ps | grep -q "kopia"; then

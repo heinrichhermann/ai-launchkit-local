@@ -798,7 +798,6 @@ All services are accessible via `http://SERVER_IP:PORT`:
 | Port | Service | Description | Setup Guide |
 |------|---------|-------------|-------------|
 | 8060 | Postiz | Social Media Manager | [→ Providers Setup](docs/POSTIZ_PROVIDERS_SETUP.md) |
-| 8061 | Vaultwarden | Password Manager | - |
 | 8062 | Kopia | Backup System | - |
 
 ### Mail Services (8071 only - Learning/Testing)
@@ -1179,7 +1178,7 @@ No manual configuration needed.
    - AI: n8n, flowise, bolt, openui, comfyui, cpu, gpu-nvidia, open-webui
    - RAG: qdrant, weaviate, neo4j, lightrag, ragapp
    - Learning: calcom, baserow, nocodb, vikunja, leantime
-   - Tools: vaultwarden, kopia, postiz, monitoring
+   - Tools: kopia, postiz, monitoring
    - Specialized: speech, ocr, libretranslate, stirling-pdf, searxng, perplexica
 
 5. **Save and exit:**

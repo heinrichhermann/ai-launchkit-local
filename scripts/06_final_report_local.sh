@@ -170,10 +170,6 @@ if [[ "$COMPOSE_PROFILES" == *"postiz"* ]]; then
     test_port 8060 "Postiz"
 fi
 
-if [[ "$COMPOSE_PROFILES" == *"vaultwarden"* ]]; then
-    echo "Vaultwarden Password Manager: $(is_service_running "vaultwarden")"
-    test_port 8061 "Vaultwarden"
-fi
 
 if [[ "$COMPOSE_PROFILES" == *"kopia"* ]]; then
     echo "Kopia Backup System: $(is_service_running "kopia")"
@@ -336,9 +332,6 @@ if [[ "$COMPOSE_PROFILES" == *"flowise"* ]]; then
     echo "  Flowise: admin@localhost / [Check .env: FLOWISE_PASSWORD]"
 fi
 
-if [[ "$COMPOSE_PROFILES" == *"vaultwarden"* ]]; then
-    echo "  Vaultwarden Admin: [Check .env: VAULTWARDEN_ADMIN_TOKEN]"
-fi
 
 echo ""
 

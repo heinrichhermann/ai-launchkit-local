@@ -80,40 +80,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
 
-        .api-category {
-            background: #f9f9f9;
-            border: 1px dashed #d0d0d0;
-        }
-
-        .api-category:not([open]) {
-            padding: 15px;
-            max-height: 80px;
-        }
-
-        .api-category summary {
-            list-style: none;
-        }
-
-        .api-category summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .api-category[open] .category-title::after {
-            content: ' ▼';
-            font-size: 0.8em;
-            opacity: 0.5;
-        }
-
-        .api-category:not([open]) .category-title::after {
-            content: ' ▶';
-            font-size: 0.8em;
-            opacity: 0.5;
-        }
-
-        .api-services {
-            margin-top: 10px;
-        }
-
         .category-header {
             display: flex;
             align-items: center;
@@ -263,87 +229,103 @@
             <span class="status-indicator"></span>
             <strong>Server Status: Online</strong> | 
             <span id="server-ip">Loading...</span> | 
-            <span id="service-count">40+ Services Available</span>
+            <span id="service-count">35+ Services Available</span>
         </div>
 
         <div class="services-grid">
-            <!-- AI Core Services -->
+            <!-- Core Services -->
             <div class="category">
                 <div class="category-header">
-                    <span class="category-icon">🤖</span>
-                    <h2 class="category-title">AI Core</h2>
+                    <span class="category-icon">🎯</span>
+                    <h2 class="category-title">Core Services</h2>
                 </div>
                 <a href="http://SERVER_IP:8000" class="service-link" target="_blank">
                     <span class="service-name">n8n <span class="port-badge">:8000</span></span>
-                    <span class="service-description">Workflow Automation & AI Orchestration</span>
+                    <span class="service-description">Workflow Automation & AI Orchestration Hub</span>
                 </a>
                 <a href="http://SERVER_IP:8022" class="service-link" target="_blank">
                     <span class="service-name">Flowise <span class="port-badge">:8022</span></span>
-                    <span class="service-description">AI Agent Builder (Drag & Drop)</span>
+                    <span class="service-description">AI Agent Builder (Drag & Drop Interface)</span>
                 </a>
+                <a href="http://SERVER_IP:8003" class="service-link" target="_blank">
+                    <span class="service-name">Grafana <span class="port-badge">:8003</span></span>
+                    <span class="service-description">System Monitoring & Analytics Dashboards</span>
+                </a>
+                <a href="http://SERVER_IP:8004" class="service-link" target="_blank">
+                    <span class="service-name">Prometheus <span class="port-badge">:8004</span></span>
+                    <span class="service-description">Metrics Collection & Monitoring</span>
+                </a>
+            </div>
+
+            <!-- AI Models & Processing -->
+            <div class="category">
+                <div class="category-header">
+                    <span class="category-icon">🤖</span>
+                    <h2 class="category-title">AI Models & Processing</h2>
+                </div>
                 <a href="http://SERVER_IP:8020" class="service-link" target="_blank">
                     <span class="service-name">Open WebUI <span class="port-badge">:8020</span></span>
-                    <span class="service-description">ChatGPT-like Interface</span>
+                    <span class="service-description">ChatGPT-like Interface for Local & Cloud AI</span>
                 </a>
                 <a href="http://SERVER_IP:8023" class="service-link" target="_blank">
                     <span class="service-name">bolt.diy <span class="port-badge">:8023</span></span>
-                    <span class="service-description">AI Web Development</span>
+                    <span class="service-description">AI-Powered Web Development Assistant</span>
                 </a>
                 <a href="http://SERVER_IP:8024" class="service-link" target="_blank">
                     <span class="service-name">ComfyUI <span class="port-badge">:8024</span></span>
-                    <span class="service-description">AI Image Generation</span>
+                    <span class="service-description">Advanced AI Image Generation Workflows</span>
                 </a>
                 <a href="http://SERVER_IP:8025" class="service-link" target="_blank">
                     <span class="service-name">OpenUI <span class="port-badge">:8025</span></span>
                     <span class="service-description">AI UI Component Generator</span>
                 </a>
-            </div>
-
-            <!-- RAG & Vector Applications -->
-            <div class="category">
-                <div class="category-header">
-                    <span class="category-icon">🗄️</span>
-                    <h2 class="category-title">RAG & Vector Apps</h2>
-                </div>
-                <a href="http://SERVER_IP:8026/dashboard" class="service-link" target="_blank">
-                    <span class="service-name">Qdrant <span class="port-badge">:8026</span></span>
-                    <span class="service-description">Vector Search Database Dashboard</span>
-                </a>
-                <a href="http://SERVER_IP:8028" class="service-link" target="_blank">
-                    <span class="service-name">Neo4j <span class="port-badge">:8028</span></span>
-                    <span class="service-description">Graph Database Browser</span>
-                </a>
-                <a href="http://SERVER_IP:8029" class="service-link" target="_blank">
-                    <span class="service-name">LightRAG <span class="port-badge">:8029</span></span>
-                    <span class="service-description">Graph-based RAG System</span>
-                </a>
-                <a href="http://SERVER_IP:8030" class="service-link" target="_blank">
-                    <span class="service-name">RAGApp <span class="port-badge">:8030</span></span>
-                    <span class="service-description">Open-source RAG Interface</span>
+                <a href="http://SERVER_IP:8031" class="service-link" target="_blank">
+                    <span class="service-name">Letta <span class="port-badge">:8031</span></span>
+                    <span class="service-description">AI Agent with Long-Term Memory</span>
                 </a>
             </div>
 
-            <!-- Research & Notebooks -->
+            <!-- AI Research & Knowledge -->
             <div class="category">
                 <div class="category-header">
-                    <span class="category-icon">📓</span>
-                    <h2 class="category-title">Research & Notebooks</h2>
+                    <span class="category-icon">🧠</span>
+                    <h2 class="category-title">AI Research & Knowledge</h2>
                 </div>
                 <a href="http://SERVER_IP:8100" class="service-link" target="_blank">
                     <span class="service-name">Open Notebook <span class="port-badge">:8100</span></span>
                     <span class="service-description">NotebookLM Alternative - Research Assistant with Podcast Generation</span>
                 </a>
+                <a href="http://SERVER_IP:8026/dashboard" class="service-link" target="_blank">
+                    <span class="service-name">Qdrant <span class="port-badge">:8026</span></span>
+                    <span class="service-description">Vector Search Database for AI Applications</span>
+                </a>
+                <a href="http://SERVER_IP:8028" class="service-link" target="_blank">
+                    <span class="service-name">Neo4j <span class="port-badge">:8028</span></span>
+                    <span class="service-description">Graph Database for Knowledge Networks</span>
+                </a>
+                <a href="http://SERVER_IP:8029" class="service-link" target="_blank">
+                    <span class="service-name">LightRAG <span class="port-badge">:8029</span></span>
+                    <span class="service-description">Graph-Based RAG System</span>
+                </a>
+                <a href="http://SERVER_IP:8030" class="service-link" target="_blank">
+                    <span class="service-name">RAGApp <span class="port-badge">:8030</span></span>
+                    <span class="service-description">Open-Source RAG Interface</span>
+                </a>
+                <a href="http://SERVER_IP:8027" class="service-link" target="_blank">
+                    <span class="service-name">Weaviate <span class="port-badge">:8027</span></span>
+                    <span class="service-description">Vector Database for AI Applications</span>
+                </a>
             </div>
 
-            <!-- Learning Tools -->
+            <!-- Productivity Tools -->
             <div class="category">
                 <div class="category-header">
-                    <span class="category-icon">📚</span>
-                    <h2 class="category-title">Learning Tools</h2>
+                    <span class="category-icon">📋</span>
+                    <h2 class="category-title">Productivity Tools</h2>
                 </div>
                 <a href="http://SERVER_IP:8040" class="service-link" target="_blank">
                     <span class="service-name">Cal.com <span class="port-badge">:8040</span></span>
-                    <span class="service-description">Meeting Scheduling Platform</span>
+                    <span class="service-description">Open Source Scheduling Platform</span>
                 </a>
                 <a href="http://SERVER_IP:8047" class="service-link" target="_blank">
                     <span class="service-name">Baserow <span class="port-badge">:8047</span></span>
@@ -351,31 +333,63 @@
                 </a>
                 <a href="http://SERVER_IP:8048" class="service-link" target="_blank">
                     <span class="service-name">NocoDB <span class="port-badge">:8048</span></span>
-                    <span class="service-description">Smart Spreadsheet UI</span>
+                    <span class="service-description">Smart Spreadsheet Database Interface</span>
                 </a>
                 <a href="http://SERVER_IP:8049" class="service-link" target="_blank">
                     <span class="service-name">Vikunja <span class="port-badge">:8049</span></span>
-                    <span class="service-description">Task Management</span>
+                    <span class="service-description">Task Management & Todo Lists</span>
                 </a>
                 <a href="http://SERVER_IP:8050" class="service-link" target="_blank">
                     <span class="service-name">Leantime <span class="port-badge">:8050</span></span>
-                    <span class="service-description">Project Management</span>
+                    <span class="service-description">Project Management Platform</span>
+                </a>
+                <a href="http://SERVER_IP:8091" class="service-link" target="_blank">
+                    <span class="service-name">Formbricks <span class="port-badge">:8091</span></span>
+                    <span class="service-description">Open Source Survey & Form Builder</span>
+                </a>
+                <a href="http://SERVER_IP:8092" class="service-link" target="_blank">
+                    <span class="service-name">Metabase <span class="port-badge">:8092</span></span>
+                    <span class="service-description">Business Intelligence & Analytics</span>
                 </a>
             </div>
 
-            <!-- Voice & Document Processing -->
+            <!-- Media Processing -->
             <div class="category">
                 <div class="category-header">
                     <span class="category-icon">🎙️</span>
-                    <h2 class="category-title">Voice & Documents</h2>
+                    <h2 class="category-title">Media Processing</h2>
                 </div>
                 <a href="http://SERVER_IP:8083" class="service-link" target="_blank">
                     <span class="service-name">Scriberr <span class="port-badge">:8083</span></span>
-                    <span class="service-description">AI Audio Transcription + n8n Automation</span>
+                    <span class="service-description">AI Audio Transcription with n8n Automation</span>
                 </a>
                 <a href="http://SERVER_IP:8086" class="service-link" target="_blank">
                     <span class="service-name">Stirling-PDF <span class="port-badge">:8086</span></span>
-                    <span class="service-description">100+ PDF Tools</span>
+                    <span class="service-description">100+ PDF Processing Tools</span>
+                </a>
+                <a href="http://SERVER_IP:8080" class="service-link" target="_blank">
+                    <span class="service-name">Faster Whisper <span class="port-badge">:8080</span></span>
+                    <span class="service-description">High-Performance Speech-to-Text API</span>
+                </a>
+                <a href="http://SERVER_IP:8081" class="service-link" target="_blank">
+                    <span class="service-name">OpenedAI Speech <span class="port-badge">:8081</span></span>
+                    <span class="service-description">Text-to-Speech with Voice Cloning</span>
+                </a>
+                <a href="http://SERVER_IP:8087" class="service-link" target="_blank">
+                    <span class="service-name">Chatterbox TTS <span class="port-badge">:8087</span></span>
+                    <span class="service-description">Voice Cloning & TTS Interface</span>
+                </a>
+                <a href="http://SERVER_IP:8082" class="service-link" target="_blank">
+                    <span class="service-name">LibreTranslate <span class="port-badge">:8082</span></span>
+                    <span class="service-description">Self-Hosted Translation Service</span>
+                </a>
+                <a href="http://SERVER_IP:8084" class="service-link" target="_blank">
+                    <span class="service-name">Tesseract OCR <span class="port-badge">:8084</span></span>
+                    <span class="service-description">Optical Character Recognition API</span>
+                </a>
+                <a href="http://SERVER_IP:8085" class="service-link" target="_blank">
+                    <span class="service-name">EasyOCR <span class="port-badge">:8085</span></span>
+                    <span class="service-description">Multi-Language OCR Service</span>
                 </a>
             </div>
 
@@ -387,67 +401,75 @@
                 </div>
                 <a href="http://SERVER_IP:8089" class="service-link" target="_blank">
                     <span class="service-name">SearXNG <span class="port-badge">:8089</span></span>
-                    <span class="service-description">Private Metasearch Engine</span>
+                    <span class="service-description">Private Meta-Search Engine</span>
                 </a>
                 <a href="http://SERVER_IP:8090" class="service-link" target="_blank">
                     <span class="service-name">Perplexica <span class="port-badge">:8090</span></span>
-                    <span class="service-description">AI-Powered Search</span>
+                    <span class="service-description">AI-Powered Research & Search Assistant</span>
                 </a>
                 <a href="http://SERVER_IP:8093" class="service-link" target="_blank">
                     <span class="service-name">Crawl4AI <span class="port-badge">:8093</span></span>
-                    <span class="service-description">Intelligent Web Crawler</span>
+                    <span class="service-description">Intelligent Web Crawling & Extraction</span>
                 </a>
             </div>
 
-            <!-- Monitoring & Management -->
-            <div class="category">
-                <div class="category-header">
-                    <span class="category-icon">📊</span>
-                    <h2 class="category-title">Monitoring</h2>
-                </div>
-                <a href="http://SERVER_IP:8003" class="service-link" target="_blank">
-                    <span class="service-name">Grafana <span class="port-badge">:8003</span></span>
-                    <span class="service-description">System Monitoring Dashboards</span>
-                </a>
-                <a href="http://SERVER_IP:8004" class="service-link" target="_blank">
-                    <span class="service-name">Prometheus <span class="port-badge">:8004</span></span>
-                    <span class="service-description">Metrics Collection</span>
-                </a>
-                <a href="http://SERVER_IP:8007" class="service-link" target="_blank">
-                    <span class="service-name">Portainer <span class="port-badge">:8007</span></span>
-                    <span class="service-description">Docker Management UI</span>
-                </a>
-                <a href="http://SERVER_IP:8096" class="service-link" target="_blank">
-                    <span class="service-name">Langfuse <span class="port-badge">:8096</span></span>
-                    <span class="service-description">LLM Performance Tracking</span>
-                </a>
-            </div>
-
-            <!-- Utilities -->
+            <!-- Infrastructure & Monitoring -->
             <div class="category">
                 <div class="category-header">
                     <span class="category-icon">🔧</span>
-                    <h2 class="category-title">Utilities</h2>
+                    <h2 class="category-title">Infrastructure & Monitoring</h2>
+                </div>
+                <a href="http://SERVER_IP:8007" class="service-link" target="_blank">
+                    <span class="service-name">Portainer <span class="port-badge">:8007</span></span>
+                    <span class="service-description">Docker Container Management Interface</span>
+                </a>
+                <a href="http://SERVER_IP:8001" class="service-link" target="_blank">
+                    <span class="service-name">PostgreSQL <span class="port-badge">:8001</span></span>
+                    <span class="service-description">Primary Database Server</span>
+                </a>
+                <a href="http://SERVER_IP:8002" class="service-link" target="_blank">
+                    <span class="service-name">Redis <span class="port-badge">:8002</span></span>
+                    <span class="service-description">In-Memory Data Structure Store</span>
+                </a>
+                <a href="http://SERVER_IP:8096" class="service-link" target="_blank">
+                    <span class="service-name">Langfuse <span class="port-badge">:8096</span></span>
+                    <span class="service-description">LLM Performance Tracking & Analytics</span>
+                </a>
+                <a href="http://SERVER_IP:8097" class="service-link" target="_blank">
+                    <span class="service-name">ClickHouse <span class="port-badge">:8097</span></span>
+                    <span class="service-description">Analytics Database for Langfuse</span>
+                </a>
+                <a href="http://SERVER_IP:8098" class="service-link" target="_blank">
+                    <span class="service-name">MinIO <span class="port-badge">:8098</span></span>
+                    <span class="service-description">Object Storage for Langfuse</span>
+                </a>
+            </div>
+
+            <!-- System Utilities -->
+            <div class="category">
+                <div class="category-header">
+                    <span class="category-icon">⚙️</span>
+                    <h2 class="category-title">System Utilities</h2>
                 </div>
                 <a href="http://SERVER_IP:8071" class="service-link" target="_blank">
                     <span class="service-name">Mailpit <span class="port-badge">:8071</span></span>
-                    <span class="service-description">Email Testing & Capture</span>
+                    <span class="service-description">Email Testing & Development Tool</span>
                 </a>
                 <a href="http://SERVER_IP:8060" class="service-link" target="_blank">
                     <span class="service-name">Postiz <span class="port-badge">:8060</span></span>
-                    <span class="service-description">Social Media Manager</span>
-                </a>
-                <a href="http://SERVER_IP:8061" class="service-link" target="_blank">
-                    <span class="service-name">Vaultwarden <span class="port-badge">:8061</span></span>
-                    <span class="service-description">Password Manager</span>
+                    <span class="service-description">Social Media Publishing & Scheduling</span>
                 </a>
                 <a href="http://SERVER_IP:8062" class="service-link" target="_blank">
                     <span class="service-name">Kopia <span class="port-badge">:8062</span></span>
-                    <span class="service-description">Backup System</span>
+                    <span class="service-description">Automated Backup & Data Protection</span>
                 </a>
-                <a href="http://SERVER_IP:8082" class="service-link" target="_blank">
-                    <span class="service-name">LibreTranslate <span class="port-badge">:8082</span></span>
-                    <span class="service-description">Translation Service</span>
+                <a href="http://SERVER_IP:8094" class="service-link" target="_blank">
+                    <span class="service-name">Gotenberg <span class="port-badge">:8094</span></span>
+                    <span class="service-description">PDF Generation & Document Conversion</span>
+                </a>
+                <a href="http://SERVER_IP:8095" class="service-link" target="_blank">
+                    <span class="service-name">Python Runner <span class="port-badge">:8095</span></span>
+                    <span class="service-description">Custom Python Script Execution Environment</span>
                 </a>
             </div>
 
@@ -524,7 +546,7 @@
                    onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(255,255,255,0.2)';"
                 >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                     </svg>
                     GitHub
                 </a>
