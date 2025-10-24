@@ -97,7 +97,7 @@ x-ollama: &service-ollama
   container_name: ollama
   restart: unless-stopped
   environment:
-    - OLLAMA_CONTEXT_LENGTH=40960
+    - OLLAMA_CONTEXT_LENGTH=131072
     - OLLAMA_FLASH_ATTENTION=1
     - OLLAMA_KV_CACHE_TYPE=q8_0
     - OLLAMA_MAX_LOADED_MODELS=2
@@ -622,15 +622,15 @@ services:
       - OLLAMA_NUM_PARALLEL=4
       
       # Timeout Configuration for Large Models (Official Recommendation)
-      # CRITICAL: Qwen3 32B and other large models require extended timeouts
+      # Optimized for gpt-oss:20b (20B parameters, 128K context)
       # API_CLIENT_TIMEOUT: Frontend waits for API responses (default: 300s)
-      # - For large Ollama models on GPU: 600-900 seconds recommended
-      # - For very large models (32B+): 900 seconds (15 minutes)
+      # - For medium Ollama models (20B) on GPU: 600 seconds recommended
+      # - gpt-oss:20b is faster than 32B+ models but still needs time
       # ESPERANTO_LLM_TIMEOUT: Backend waits for model inference (default: 60s)
-      # - For local Ollama with large models: 300-600 seconds
+      # - For local Ollama with medium models: 300 seconds
       # - Must be LOWER than API_CLIENT_TIMEOUT for proper error handling
-      - API_CLIENT_TIMEOUT=900       # 15 minutes - allows large models to complete
-      - ESPERANTO_LLM_TIMEOUT=600    # 10 minutes - model inference timeout
+      - API_CLIENT_TIMEOUT=600       # 10 minutes - sufficient for 20B model
+      - ESPERANTO_LLM_TIMEOUT=300    # 5 minutes - model inference timeout
       
       # Optional: Local Speech Services Integration (AI LaunchKit Services)
       # Enables podcast generation without cloud API costs
