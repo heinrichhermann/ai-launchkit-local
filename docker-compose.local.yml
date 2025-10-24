@@ -39,7 +39,6 @@ volumes:
   leantime-logs:
   mailpit_data:
   calcom_data:
-  vaultwarden_data:
   kopia_config:
   kopia_cache:
   kopia_logs:
@@ -98,7 +97,7 @@ x-ollama: &service-ollama
   container_name: ollama
   restart: unless-stopped
   environment:
-    - OLLAMA_CONTEXT_LENGTH=65536
+    - OLLAMA_CONTEXT_LENGTH=40960
     - OLLAMA_FLASH_ATTENTION=1
     - OLLAMA_KV_CACHE_TYPE=q8_0
     - OLLAMA_MAX_LOADED_MODELS=2
@@ -1035,48 +1034,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-
-  vaultwarden:
-    image: vaultwarden/server:latest
-    container_name: vaultwarden
-    profiles: ["vaultwarden"]
-    restart: unless-stopped
-    ports:
-      - "8061:80"
-    volumes:
-      - vaultwarden_data:/data
-      - ./shared:/data/shared
-    environment:
-      - DOMAIN=http://${SERVER_IP}:8061
-      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
-      - SMTP_HOST=mailpit
-      - SMTP_FROM=${EMAIL_FROM:-vault@localhost}
-      - SMTP_FROM_NAME=Vaultwarden
-      - SMTP_PORT=1025
-      - SMTP_AUTH_MECHANISM=Plain
-      - SMTP_SECURITY=off
-      - SMTP_TIMEOUT=15
-      - SIGNUPS_ALLOWED=false
-      - SIGNUPS_DOMAINS_WHITELIST=${SIGNUPS_DOMAINS_WHITELIST:-}
-      - SHOW_PASSWORD_HINT=false
-      - WEB_VAULT_ENABLED=true
-      - WEBSOCKET_ENABLED=true
-      - INVITATIONS_ALLOWED=true
-      - EMERGENCY_ACCESS_ALLOWED=true
-      - SENDS_ALLOWED=true
-      - PASSWORD_ITERATIONS=600000
-      - ICON_CACHE_TTL=2592000
-      - ICON_CACHE_NEGTTL=259200
-      - IP_HEADER=X-Forwarded-For
-      - LOG_LEVEL=warn
-      - EXTENDED_LOGGING=true
-      - TZ=${TZ:-UTC}
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:80/alive"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
   kopia:
     image: kopia/kopia:latest
