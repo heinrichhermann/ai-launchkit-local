@@ -1,5 +1,12 @@
 # Open Notebook - NotebookLM Alternative Setup
 
+> **📍 Hinweis zur SERVER_IP:** 
+> `${SERVER_IP}` ist eine Variable, die während der Installation automatisch erkannt 
+> oder manuell konfiguriert wird. Sie finden den Wert in Ihrer `.env` Datei.
+> 
+> **Beispiel:** Wenn Ihr Ubuntu Server die IP `192.168.1.50` hat, dann wäre der 
+> Zugriff: `http://192.168.1.50:8100`
+
 ## 🎯 Was ist Open Notebook?
 
 Open Notebook ist eine **vollständige, selbst-gehostete Alternative zu Google's NotebookLM**. Es bietet erweiterte Features für AI-gestützte Recherche, Podcast-Generierung und Wissensmanagement.
@@ -70,17 +77,17 @@ OLLAMA_API_BASE_URL=http://ollama:11434
 
 ### Frontend UI
 ```
-http://SERVER_IP:8100
+http://${SERVER_IP}:8100
 ```
 
 ### REST API
 ```
-http://SERVER_IP:8101
+http://${SERVER_IP}:8101
 ```
 
 ### API Dokumentation
 ```
-http://SERVER_IP:8101/docs
+http://${SERVER_IP}:8101/docs
 ```
 
 **Architektur:** Open Notebook nutzt ein Single-Container-Setup mit zwei exponierten Ports:
@@ -92,7 +99,7 @@ Beide Services laufen im selben Container, aber auf separaten Ports für saubere
 ## 🎯 Erste Schritte
 
 ### 1. Neues Notebook erstellen
-- Öffne http://SERVER_IP:8100
+- Öffne http://${SERVER_IP}:8100
 - Klicke auf "New Notebook"
 - Gib einen Namen ein
 
@@ -215,7 +222,7 @@ Open Notebook kann über die REST API mit n8n automatisiert werden:
 - POST `/api/notebooks/{id}/podcast` - Podcast generieren
 - GET `/api/search` - Suche durchführen
 
-Siehe: http://SERVER_IP:8101/docs für vollständige API-Dokumentation
+Siehe: http://${SERVER_IP}:8101/docs für vollständige API-Dokumentation
 
 ### Ollama Integration
 
@@ -348,7 +355,7 @@ docker compose -p localai -f docker-compose.local.yml up -d open-notebook
 - [Open Notebook GitHub](https://github.com/lfnovo/open-notebook)
 - [Open Notebook Website](https://www.open-notebook.ai)
 - [Open Notebook Docs](https://github.com/lfnovo/open-notebook/tree/main/docs)
-- [API Documentation](http://SERVER_IP:8101/docs)
+- [API Documentation](http://${SERVER_IP}:8101/docs)
 - [Discord Community](https://discord.gg/37XJPXfz2w)
 
 ## 📝 Vergleich: Open Notebook vs Google NotebookLM

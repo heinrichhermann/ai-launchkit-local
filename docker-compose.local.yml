@@ -626,7 +626,7 @@ services:
       # Enables podcast generation without cloud API costs
       # - Whisper for Speech-to-Text (transcription)
       # - OpenedAI Speech for Text-to-Speech (podcast audio generation)
-      - WHISPER_API_BASE=http://faster-whisper:8000
+      - OPENAI_COMPATIBLE_BASE_URL_STT=http://faster-whisper:8000/v1
       - OPENAI_COMPATIBLE_BASE_URL_TTS=http://openedai-speech:8000/v1
       
       # Frontend API Configuration

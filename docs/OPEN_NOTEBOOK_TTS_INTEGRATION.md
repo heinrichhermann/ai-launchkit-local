@@ -1,8 +1,19 @@
-# Open Notebook - Lokale TTS Service Integration
+# Open Notebook - Lokale Speech Services Integration (STT + TTS)
+
+> **📍 Hinweis zur SERVER_IP:** 
+> `${SERVER_IP}` ist eine Variable, die während der Installation automatisch erkannt 
+> oder manuell konfiguriert wird. Sie finden den Wert in Ihrer `.env` Datei.
+> 
+> **Beispiel:** Wenn Ihr Ubuntu Server die IP `192.168.1.50` hat, dann wäre der 
+> Zugriff: `http://192.168.1.50:8100`
 
 ## 🎯 Übersicht
 
-Diese Anleitung zeigt dir, wie du die **lokalen TTS-Services** (OpenedAI Speech) des AI LaunchKit mit Open Notebook nutzt, um **kostenlos** Podcasts zu generieren.
+Diese Anleitung zeigt dir, wie du die **lokalen Speech-Services** des AI LaunchKit mit Open Notebook nutzt:
+- **STT (Speech-to-Text):** Faster Whisper für Audio-Transkription
+- **TTS (Text-to-Speech):** OpenedAI Speech für Podcast-Generierung
+
+Beide Services sind **komplett kostenlos** und laufen lokal auf deinem Server! 🎉
 
 ## ✅ Voraussetzungen
 
@@ -10,30 +21,31 @@ Diese Anleitung zeigt dir, wie du die **lokalen TTS-Services** (OpenedAI Speech)
 2. **Services laufen:**
    ```bash
    # Prüfe ob Services laufen:
-   curl http://AISERVER:8080/health  # Faster Whisper (STT)
-   curl http://AISERVER:8081/health  # OpenedAI Speech (TTS)
+   curl http://${SERVER_IP}:8080/health  # Faster Whisper (STT)
+   curl http://${SERVER_IP}:8081/health  # OpenedAI Speech (TTS)
    ```
 3. **docker-compose.local.yml korrekt konfiguriert** (siehe unten)
 
 ## 📋 Konfiguration
 
-### Schritt 1: Environment-Variable in docker-compose.local.yml
+### Schritt 1: Environment-Variablen in docker-compose.local.yml
 
-Die docker-compose.local.yml wurde bereits korrigiert und enthält:
+Die docker-compose.local.yml wurde korrigiert und enthält **beide** Speech-Services:
 
 ```yaml
 open-notebook:
   environment:
-    # Für Speech-to-Text (Transkription)
-    - WHISPER_API_BASE=http://faster-whisper:8000
+    # Für Speech-to-Text (Audio/Video-Transkription)
+    - OPENAI_COMPATIBLE_BASE_URL_STT=http://faster-whisper:8000/v1
     
-    # Für Text-to-Speech (Podcast-Generierung)
+    # Für Text-to-Speech (Podcast-Audio-Generierung)
     - OPENAI_COMPATIBLE_BASE_URL_TTS=http://openedai-speech:8000/v1
 ```
 
 **⚠️ WICHTIG:** 
-- Variable heißt `OPENAI_COMPATIBLE_BASE_URL_TTS` (nicht `OPENAI_SPEECH_API_BASE`)
-- Pfad endet mit `/v1` (OpenAI API Standard)
+- Variablen heißen `OPENAI_COMPATIBLE_BASE_URL_STT` und `OPENAI_COMPATIBLE_BASE_URL_TTS`
+- **NICHT** `WHISPER_API_BASE` oder `OPENAI_SPEECH_API_BASE`
+- Pfade enden mit `/v1` (OpenAI API Standard)
 
 ### Schritt 2: Container neu starten
 
@@ -53,7 +65,7 @@ OPENAI_COMPATIBLE_BASE_URL_TTS=http://openedai-speech:8000/v1
 
 **WICHTIG:** Du konfigurierst **NICHT den Provider**, sondern fügst ein **Model** hinzu!
 
-1. **Öffne:** `http://AISERVER:8100`
+1. **Öffne:** `http://${SERVER_IP}:8100`
 2. **Gehe zu:** Settings (⚙️) → **Models**
 3. **Im "Text-to-Speech" Bereich:** Klicke **"+ Add Model"**
 4. **Konfiguriere das Model:**
@@ -66,9 +78,28 @@ OPENAI_COMPATIBLE_BASE_URL_TTS=http://openedai-speech:8000/v1
 
 **⚠️ KEINE Base URL eingeben!** Die Base URL kommt automatisch aus der Environment-Variable `OPENAI_COMPATIBLE_BASE_URL_TTS`.
 
-### Schritt 4: Optional - Als Default setzen
+### Schritt 4: STT Model in Open Notebook UI hinzufügen
 
-In Settings → Models kannst du "Local OpenedAI TTS" als **Standard TTS Model** setzen.
+Für **Speech-to-Text** (Audio-Transkription):
+
+1. **Öffne:** `http://${SERVER_IP}:8100`
+2. **Gehe zu:** Settings (⚙️) → **Models**
+3. **Im "Speech-to-Text" Bereich:** Klicke **"+ Add Model"**
+4. **Konfiguriere das Model:**
+   ```
+   Provider: openai_compatible (aus Dropdown wählen)
+   Model Name: whisper-1
+   Display Name: Local Whisper STT
+   ```
+5. **Speichern**
+
+**⚠️ Auch hier:** KEINE Base URL eingeben! Die kommt aus `OPENAI_COMPATIBLE_BASE_URL_STT`.
+
+### Schritt 5: Optional - Models als Default setzen
+
+In Settings → Models kannst du die lokalen Models als Standard setzen:
+- **TTS:** "Local OpenedAI TTS" als Standard TTS Model
+- **STT:** "Local Whisper STT" als Standard STT Model
 
 ## 🎙️ Podcast mit lokalem TTS generieren
 
@@ -116,7 +147,36 @@ OpenedAI Speech unterstützt:
 
 **Die Audio-Generierung erfolgt jetzt komplett lokal und kostenlos!** 🎉
 
-## 🔍 Verifizierung
+## 🎧 Audio-Transkription mit lokalem STT
+
+### Audio/Video-Dateien transkribieren
+
+1. **Öffne ein Notebook**
+2. **Add Source** → **Upload File**
+3. **Wähle Audio oder Video-Datei** (MP3, WAV, MP4, etc.)
+4. Open Notebook nutzt automatisch **Local Whisper STT** für die Transkription
+5. **Ergebnis:** Text wird extrahiert und durchsuchbar gemacht
+
+### Verfügbare Formate
+
+Faster Whisper unterstützt:
+- **Audio:** MP3, WAV, M4A, FLAC, OGG
+- **Video:** MP4, MKV, AVI, MOV (extrahiert Audio)
+
+### Verwendung
+
+**Automatische Transkription bei:**
+- Upload von Audio/Video-Dateien
+- Verarbeitung von YouTube-Videos
+- Podcast-Analyse
+
+**Vorteile:**
+- ✅ Komplett offline
+- ✅ Keine API-Kosten
+- ✅ Unbegrenzte Nutzung
+- ✅ Schnelle Verarbeitung (CPU-optimiert)
+
+## � Verifizierung
 
 ### Prüfe ob lokaler TTS genutzt wird
 
@@ -145,7 +205,7 @@ docker exec open-notebook curl -s http://openedai-speech:8000/v1/models
 
 Sollte eine Liste von verfügbaren Modellen zurückgeben.
 
-## 📍 Wo finde ich den generierten Podcast?
+## �📍 Wo finde ich den generierten Podcast?
 
 ### In der UI
 
@@ -171,10 +231,10 @@ ls -lah podcasts/episodes/
 
 ```bash
 # Liste alle Podcasts auf:
-curl http://AISERVER:8101/api/podcasts
+curl http://${SERVER_IP}:8101/api/podcasts
 
 # API Dokumentation:
-http://AISERVER:8101/docs
+http://${SERVER_IP}:8101/docs
 ```
 
 ## 💰 Kosten-Vergleich
