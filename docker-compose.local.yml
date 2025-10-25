@@ -1478,7 +1478,7 @@ services:
   perplexica:
     build:
       context: ./perplexica
-      dockerfile: app.dockerfile
+      dockerfile: Dockerfile
     container_name: perplexica
     profiles: ["perplexica"]
     restart: unless-stopped
