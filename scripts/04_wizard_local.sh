@@ -472,7 +472,7 @@ fi
 # Admin Credentials Configuration for services that need it
 NEEDS_ADMIN_CREDENTIALS=false
 
-if [[ "$COMPOSE_PROFILES_VALUE" == *"langfuse"* ]] || [[ "$COMPOSE_PROFILES_VALUE" == *"monitoring"* ]]; then
+if [[ "$COMPOSE_PROFILES_VALUE" == *"langfuse"* ]] || [[ "$COMPOSE_PROFILES_VALUE" == *"monitoring"* ]] || [[ "$COMPOSE_PROFILES_VALUE" == *"formbricks"* ]]; then
     NEEDS_ADMIN_CREDENTIALS=true
 fi
 
@@ -483,6 +483,7 @@ if [ "$NEEDS_ADMIN_CREDENTIALS" = true ]; then
     log_info "The following services will use these admin credentials:"
     [[ "$COMPOSE_PROFILES_VALUE" == *"langfuse"* ]] && echo "  - Langfuse (LLM Observability) - Port 8096"
     [[ "$COMPOSE_PROFILES_VALUE" == *"monitoring"* ]] && echo "  - Grafana (Monitoring Dashboard) - Port 8003"
+    [[ "$COMPOSE_PROFILES_VALUE" == *"formbricks"* ]] && echo "  - Formbricks (Survey Platform) - Port 8091"
     echo ""
     log_info "Configure unified admin account for these services"
     echo ""
