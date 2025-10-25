@@ -35,13 +35,33 @@ if [[ "$COMPOSE_PROFILES" == *"perplexica"* ]]; then
     cd perplexica
     
     if [ ! -f "config.toml" ]; then
-        if [ ! -f "sample.config.toml" ]; then
-            log_error "sample.config.toml not found in Perplexica repository"
-            exit 1
+        # Try multiple config sources (Perplexica repo structure changes)
+        if [ -f "sample.config.toml" ]; then
+            log_info "Using sample.config.toml from Perplexica repository..."
+            cp sample.config.toml config.toml
+        elif [ -f "$PROJECT_ROOT/perplexica.config.toml" ]; then
+            log_info "Using perplexica.config.toml from AI LaunchKit root..."
+            cp "$PROJECT_ROOT/perplexica.config.toml" config.toml
+        elif [ -f ".env.example" ]; then
+            log_warning "sample.config.toml not found, Perplexica uses .env configuration now"
+            log_info "Using .env.example as template..."
+            cp .env.example .env
+            # Configure .env instead
+            sed -i 's|OLLAMA_API_URL=.*|OLLAMA_API_URL=http://ollama:11434|' .env
+            sed -i 's|SEARXNG_API_URL=.*|SEARXNG_API_URL=http://searxng:8080|' .env
+            log_success "Perplexica configured via .env"
+            cd "$PROJECT_ROOT"
+            exit 0
+        else
+            log_error "No configuration template found in Perplexica repository"
+            log_warning "Perplexica repository structure may have changed"
+            log_info "Skipping Perplexica configuration - service may not work correctly"
+            log_info "You can configure manually later or report this issue"
+            cd "$PROJECT_ROOT"
+            exit 0  # Non-critical - continue installation
         fi
         
         log_info "Configuring Perplexica..."
-        cp sample.config.toml config.toml
         
         # Update Ollama API URL
         sed -i 's|API_URL = ""|API_URL = "http://ollama:11434"|' config.toml
