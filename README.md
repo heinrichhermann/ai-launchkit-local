@@ -1204,7 +1204,7 @@ No manual configuration needed.
 
 1. **Stop all services:**
    ```bash
-   cd ~/ai/ai-launchkit-local
+   cd ~/ai-launchkit-local
    docker compose -p localai -f docker-compose.local.yml down
    ```
    - This stops all containers safely
@@ -1283,7 +1283,7 @@ No manual configuration needed.
 
 2. **Stop all services:**
    ```bash
-   cd ~/ai/ai-launchkit-local
+   cd ~/ai-launchkit-local
    docker compose -p localai -f docker-compose.local.yml down
    ```
 
@@ -1330,7 +1330,7 @@ No manual configuration needed.
 
 1. **Open .env file:**
    ```bash
-   cd ~/ai/ai-launchkit-local
+   cd ~/ai-launchkit-local
    nano .env
    ```
 
