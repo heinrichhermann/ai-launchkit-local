@@ -34,40 +34,6 @@ This is a **port-based local network version** of the AI LaunchKit that runs com
 - ✅ **Local Network Ready** - Designed for LAN access from multiple devices
 - ✅ **Production-Grade** - Same services as cloud version, just local
 
-## ⭐ Featured: Open Notebook - NotebookLM Alternative
-
-**Transform Any Content Into AI-Powered Podcasts & Research!**
-
-Open Notebook is your locally-hosted research assistant that rivals Google's NotebookLM:
-
-### 🎙️ Create Professional Podcasts From Anything
-- **YouTube Videos** → AI-generated podcast discussions
-- **PDFs & Documents** → Engaging audio summaries  
-- **Web Pages** → Podcast episodes with multiple AI hosts
-- **Audio/Video Files** → Transcribed & analyzed content
-
-### 🤖 Fully Local & Private
-- **Speech-to-Text:** Faster Whisper (German Thorsten voice available!)
-- **Text-to-Speech:** OpenedAI Speech with voice cloning
-- **LLM Processing:** Ollama integration (works completely offline!)
-- **16+ AI Providers:** OpenAI, Anthropic, Groq, Ollama, and more
-
-### 🚀 One-Click Workflow
-1. Upload content (YouTube URL, PDF, audio file)
-2. AI analyzes and creates podcast script
-3. Choose 1-4 AI speakers with different voices
-4. Generate professional-quality podcast
-5. Download MP3 - ready to publish!
-
-### 📖 Complete Documentation
-- [Setup Guide](docs/OPEN_NOTEBOOK_SETUP.md)
-- [TTS Integration](docs/OPEN_NOTEBOOK_TTS_INTEGRATION.md)  
-- [Full Feature Guide](docs/OPEN_NOTEBOOK_GUIDE.md)
-
-**All running locally on your server - no cloud dependencies!**
-
----
-
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -928,6 +894,40 @@ This AI LaunchKit serves **multiple purposes** - from education to professional 
 - Process documents without external APIs
 
 ### 🎓 Learning & Education Scenarios
+
+## ⭐ Open Notebook - Transform Content into AI Podcasts
+
+**NotebookLM Alternative - Fully Local & Private!**
+
+Open Notebook is the standout feature for creating professional AI-powered podcasts and research:
+
+### 🎙️ Create Professional Podcasts From Any Content
+- **YouTube Videos** → Multi-speaker AI podcast discussions
+- **PDFs & Documents** → Engaging audio summaries with analysis
+- **Web Pages & Articles** → Podcast episodes with AI hosts debating topics
+- **Audio/Video Files** → Transcribed, analyzed, and converted to podcasts
+
+### 🤖 Completely Local AI Integration
+- **Speech-to-Text:** Faster Whisper with multi-language support
+- **Text-to-Speech:** OpenedAI Speech + German Thorsten voice (native pronunciation!)
+- **LLM Processing:** Ollama integration - works 100% offline
+- **Cloud Option:** Also supports OpenAI, Anthropic, Groq (16+ providers)
+
+### 🚀 Simple Workflow
+1. **Upload:** Paste YouTube URL, upload PDF, or add audio file
+2. **Analyze:** AI reads, understands, and structures content
+3. **Script:** AI creates engaging multi-speaker podcast script
+4. **Generate:** Choose 1-4 AI voices with different personalities
+5. **Download:** Professional MP3 ready to publish
+
+### 📖 Complete Documentation
+- [Setup Guide](docs/OPEN_NOTEBOOK_SETUP.md) - Configuration and first steps
+- [TTS Integration](docs/OPEN_NOTEBOOK_TTS_INTEGRATION.md) - Speech services setup
+- [Full Feature Guide](docs/OPEN_NOTEBOOK_GUIDE.md) - Advanced features and examples
+
+**Perfect for:** Content creators, educators, researchers, and anyone wanting to transform written/video content into engaging audio format!
+
+---
 
 ### 🤖 AI Core Services
 
