@@ -285,7 +285,28 @@ Import workflows? (y/n):
 
 ---
 
-#### Question 6: n8n Worker Count
+#### Question 6: Admin Credentials (If Monitoring or Langfuse Selected)
+```
+Admin Email: 
+Admin Password:
+```
+
+**What to do:** ✅ **Enter your email and a strong password**
+
+**What are these for:**
+- **Grafana Login** - View system monitoring dashboards (Port 8003)
+- **Langfuse Login** - Track LLM performance and usage (Port 8096)
+- Same credentials work for both services
+- This is YOUR admin account, not public-facing
+
+**Security note:**
+- Only accessible from your local network
+- No internet exposure
+- Strong password still recommended
+
+---
+
+#### Question 7: n8n Worker Count
 ```
 Enter the number of n8n workers to run (default is 1):
 ```
@@ -299,7 +320,7 @@ Enter the number of n8n workers to run (default is 1):
 
 ---
 
-#### Question 7-9: API Keys (Optional)
+#### Question 8-10: API Keys (Optional)
 ```
 OpenAI API Key (press Enter to skip):
 Anthropic API Key (press Enter to skip):
