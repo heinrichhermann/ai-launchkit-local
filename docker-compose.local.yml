@@ -1542,6 +1542,7 @@ services:
       - INVITE_DISABLED=0
       - EMAIL_AUTH_DISABLED=0
       - MAIL_FROM=${ADMIN_EMAIL:-forms@ailaunchkit.local}
+      - MAIL_FROM_NAME=AI LaunchKit
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
       - SMTP_USER=dummy
