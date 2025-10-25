@@ -77,90 +77,28 @@ if [[ "$COMPOSE_PROFILES" == *"speech"* ]] || [[ "$COMPOSE_PROFILES" == *"speech
     
     # Create voice_to_speaker.yaml configuration
     VOICE_CONFIG="openedai-config/voice_to_speaker.yaml"
+    VOICE_TEMPLATE="$PROJECT_ROOT/templates/voice_to_speaker.yaml"
     
     if [ ! -f "$VOICE_CONFIG" ]; then
         log_info "Creating voice configuration with German support..."
         
-        cat > "$VOICE_CONFIG" << 'EOF'
-# OpenedAI Speech - Voice Configuration
-# This file maps voice names to specific TTS models and speakers
-
-# TTS-1 Voices (Piper - Fast, CPU-friendly)
-# These voices use the Piper TTS engine and work on CPU
+        # Use template file if available, otherwise create inline
+        if [ -f "$VOICE_TEMPLATE" ]; then
+            cp "$VOICE_TEMPLATE" "$VOICE_CONFIG"
+            log_success "Voice configuration created from template!"
+        else
+            log_warning "Template not found, creating basic configuration..."
+            # Fallback: create minimal config
+            cat > "$VOICE_CONFIG" << 'EOFCONFIG'
 tts-1:
-  # Original OpenAI-compatible voices (English)
   alloy:
-    model: voices/en_US-amy-medium.onnx
-    speaker: # default speaker
-  
-  echo:
-    model: voices/en_US-danny-low.onnx
-    speaker: # default speaker
-  
-  fable:
-    model: voices/en_GB-alan-medium.onnx
-    speaker: # default speaker
-  
-  onyx:
-    model: voices/en_US-libritts-high.onnx
-    speaker: # default speaker
-  
-  nova:
-    model: voices/en_US-amy-medium.onnx
-    speaker: # default speaker
-  
-  shimmer:
-    model: voices/en_US-amy-medium.onnx
-    speaker: # default speaker
-  
-  # German Voice - Thorsten (Male, High Quality)
-  # Native German pronunciation for professional podcasts
+    model: voices/en_US-libritts_r-medium.onnx
+    speaker: 79
   thorsten:
     model: voices/de_DE-thorsten-high.onnx
     speaker: # default speaker
-
-# TTS-1-HD Voices (XTTS v2 - High Quality, GPU-accelerated)
-# These voices use neural voice cloning for better quality
-tts-1-hd:
-  # Original OpenAI-compatible voices with voice cloning
-  alloy:
-    model: xtts
-    speaker: voices/alloy.wav
-  
-  echo:
-    model: xtts
-    speaker: voices/echo.wav
-  
-  fable:
-    model: xtts
-    speaker: voices/fable.wav
-  
-  onyx:
-    model: xtts
-    speaker: voices/onyx.wav
-  
-  nova:
-    model: xtts
-    speaker: voices/nova.wav
-  
-  shimmer:
-    model: xtts
-    speaker: voices/shimmer.wav
-
-# Usage Instructions:
-# 
-# 1. In Open Notebook Settings -> Models:
-#    - Add Model: tts-1
-#    - Provider: openai_compatible
-#    - Voice: thorsten (for German) or alloy/nova (for English)
-#
-# 2. For podcasts, use:
-#    - Voice name: "thorsten" for German content
-#    - Voice name: "alloy", "nova", etc. for English content
-#
-# 3. Voice files are automatically downloaded during installation
-#    and mounted to the container via docker-compose.local.yml
-EOF
+EOFCONFIG
+        fi
         
         log_success "Voice configuration created with German support!"
         log_info "Available voices:"
@@ -169,19 +107,19 @@ EOF
     else
         log_info "Voice configuration already exists"
         
-        # Check if thorsten is configured
+        # Check if thorsten is configured and in correct position
         if ! grep -q "thorsten:" "$VOICE_CONFIG"; then
             log_info "Adding thorsten voice to existing configuration..."
             cp "$VOICE_CONFIG" "${VOICE_CONFIG}.bak" 2>/dev/null || true
             
-            # Simple append if tts-1 section exists
-            if grep -q "^tts-1:" "$VOICE_CONFIG"; then
-                echo "" >> "$VOICE_CONFIG"
-                echo "  # German Voice - Thorsten (Male, High Quality)" >> "$VOICE_CONFIG"
-                echo "  thorsten:" >> "$VOICE_CONFIG"
-                echo "    model: voices/de_DE-thorsten-high.onnx" >> "$VOICE_CONFIG"
-                echo "    speaker: # default speaker" >> "$VOICE_CONFIG"
+            # Insert thorsten before tts-1-hd section (correct position)
+            if grep -q "^tts-1-hd:" "$VOICE_CONFIG"; then
+                # Use sed to insert before tts-1-hd
+                sudo sed -i '/^tts-1-hd:/i\  # German Voice - Thorsten (Male, High Quality)\n  thorsten:\n    model: voices/de_DE-thorsten-high.onnx\n    speaker: # default speaker\n' "$VOICE_CONFIG"
                 log_success "Added thorsten voice to configuration!"
+            else
+                log_warning "Could not add thorsten voice automatically"
+                log_info "Use template: cp templates/voice_to_speaker.yaml openedai-config/"
             fi
         else
             log_success "Thorsten voice already configured!"
