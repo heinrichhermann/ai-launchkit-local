@@ -71,7 +71,7 @@ base_services_data=(
     "perplexica" "Perplexica (AI-powered Search Engine) - Port 8090"
     "python-runner" "Python Runner (Custom Python Code) - Port 8095"
     "ollama" "Ollama (Local LLM Runner - select hardware next)"
-    "comfyui" "ComfyUI (Node-based Stable Diffusion) - Port 8024"
+    "comfyui" "ComfyUI (Image Generation - select hardware next) - Port 8024"
     "speech" "Speech Stack (Whisper ASR + TTS - select hardware next) - Ports 8080, 8081"
     "tts-chatterbox" "TTS Chatterbox (Advanced TTS) - Ports 8087, 8088"
     "scriberr" "Scriberr (AI Audio Transcription) - Port 8083"
@@ -149,8 +149,10 @@ selected_profiles=()
 ollama_selected=0
 scriberr_selected=0
 speech_selected=0
+comfyui_selected=0
 ollama_profile=""
 speech_profile=""
+comfyui_profile=""
 
 if [ -n "$CHOICES" ]; then
     temp_choices=()
@@ -163,6 +165,8 @@ if [ -n "$CHOICES" ]; then
             scriberr_selected=1
         elif [ "$choice" == "speech" ]; then
             speech_selected=1
+        elif [ "$choice" == "comfyui" ]; then
+            comfyui_selected=1
         else
             selected_profiles+=("$choice")
         fi
@@ -209,6 +213,44 @@ if [ $ollama_selected -eq 1 ]; then
     else
         log_info "Ollama hardware profile selection cancelled."
         ollama_selected=0
+    fi
+fi
+
+# Handle ComfyUI hardware selection
+if [ $comfyui_selected -eq 1 ]; then
+    default_comfyui_hardware="comfyui-cpu"
+    comfyui_hw_on_cpu="OFF"
+    comfyui_hw_on_gpu="OFF"
+
+    if [[ "$current_profiles_for_matching" == *",comfyui-cpu,"* ]]; then
+        comfyui_hw_on_cpu="ON"
+        default_comfyui_hardware="comfyui-cpu"
+    elif [[ "$current_profiles_for_matching" == *",comfyui-gpu,"* ]]; then
+        comfyui_hw_on_gpu="ON"
+        default_comfyui_hardware="comfyui-gpu"
+    else
+        comfyui_hw_on_cpu="ON"
+        default_comfyui_hardware="comfyui-cpu"
+    fi
+
+    comfyui_hardware_options=(
+        "comfyui-cpu" "CPU (Works everywhere, slower) - Port 8024" "$comfyui_hw_on_cpu"
+        "comfyui-gpu" "GPU/CUDA (NVIDIA GPU required, 5-10x faster) - Port 8024" "$comfyui_hw_on_gpu"
+    )
+    
+    CHOSEN_COMFYUI_PROFILE=$(whiptail --title "ComfyUI Hardware Profile" --default-item "$default_comfyui_hardware" --radiolist \
+      "Choose the hardware profile for ComfyUI (AI Image Generation)." 15 85 2 \
+      "${comfyui_hardware_options[@]}" \
+      3>&1 1>&2 2>&3)
+
+    comfyui_exitstatus=$?
+    if [ $comfyui_exitstatus -eq 0 ] && [ -n "$CHOSEN_COMFYUI_PROFILE" ]; then
+        selected_profiles+=("$CHOSEN_COMFYUI_PROFILE")
+        comfyui_profile="$CHOSEN_COMFYUI_PROFILE"
+        log_info "ComfyUI hardware profile selected: $CHOSEN_COMFYUI_PROFILE"
+    else
+        log_info "ComfyUI hardware profile selection cancelled."
+        comfyui_selected=0
     fi
 fi
 
