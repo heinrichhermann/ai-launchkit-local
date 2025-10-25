@@ -113,15 +113,26 @@ In Settings → Models kannst du die lokalen Models als Standard setzen:
 1. **Gehe zu:** Podcasts → Episode Profiles → **"+ New Profile"**
 2. **Konfiguriere:**
    ```
-   Name: Mein Lokales Podcast-Profil
-   Number of Speakers: 2 (oder 1, 3, 4)
+   Name: Deutsches Podcast-Profil
+   Number of Speakers: 1 oder 2
    ```
 
 3. **Speaker konfigurieren:**
+
+   **Für deutsche Podcasts (empfohlen):**
+   ```
+   Speaker 1:
+   - Name: Moderator
+   - TTS Model: Local OpenedAI TTS
+   - Voice: thorsten
+   - Role: "Professional German podcast host"
+   ```
+   
+   **Für englische Podcasts:**
    ```
    Speaker 1 (Host):
    - Name: Host
-   - TTS Model: Local OpenedAI TTS (das hinzugefügte Model)
+   - TTS Model: Local OpenedAI TTS
    - Voice: alloy
    - Role: "Professional host, asks engaging questions"
    
@@ -134,13 +145,20 @@ In Settings → Models kannst du die lokalen Models als Standard setzen:
 
 ### Verfügbare Stimmen
 
-OpenedAI Speech unterstützt:
+**Englische Stimmen (OpenAI-kompatibel):**
 - **alloy** - Neutral, ausgewogen
 - **echo** - Männlich, warm
 - **fable** - Männlich, kräftig
 - **onyx** - Männlich, tief
 - **nova** - Weiblich, freundlich
 - **shimmer** - Weiblich, weich
+
+**Deutsche Stimmen:**
+- **thorsten** - Männlich, High Quality (22.05kHz)
+  - Native deutsche Aussprache
+  - Professionelle Qualität für Podcasts
+  - Automatisch installiert bei Speech Services
+  - Quelle: Piper TTS (Thorsten Voice)
 
 ### Podcast generieren
 
@@ -151,6 +169,19 @@ OpenedAI Speech unterstützt:
 5. **Generate**
 
 **Die Audio-Generierung erfolgt jetzt komplett lokal und kostenlos!** 🎉
+
+### Sprachauswahl
+
+**Für deutsche Inhalte:**
+- Verwende Voice: `thorsten`
+- Spricht native deutschen Text
+- Englische Fachwörter werden phonetisch ausgesprochen
+
+**Für englische Inhalte:**
+- Verwende Voice: `alloy`, `nova`, `echo`, etc.
+- Optimiert für englische Aussprache
+
+**Hinweis:** Thorsten ist ein monolinguales deutsches Modell. Englische Wörter (z.B. "App", "Framework") werden mit deutscher Phonetik ausgesprochen. Für gemischte Inhalte mit vielen englischen Fachbegriffen empfehlen wir XTTS-v2 mit custom Sample (fortgeschrittenes Setup).
 
 ## 🎧 Audio-Transkription mit lokalem STT
 
@@ -249,6 +280,7 @@ http://${SERVER_IP}:8101/docs
 | **Script-Generierung (LLM)** | $0.01-0.03 per 1K tokens | Kostenlos mit Ollama |
 | **Audio-Generierung (TTS)** | $15 per 1M Zeichen | **Kostenlos** ✅ |
 | **Gesamt für 10-Min Podcast** | $2-5 | **$0** ✅ |
+| **Deutsche Stimme** | Nicht verfügbar | **Thorsten inkludiert** ✅ |
 
 ## 🚨 Troubleshooting
 

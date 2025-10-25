@@ -247,6 +247,31 @@ else
 fi
 echo ""
 
+# Speech services configuration cleanup
+log_info "🎙️ Speech Services Configuration"
+echo "=========================================="
+if [ -d "openedai-voices" ] || [ -d "openedai-config" ]; then
+    log_info "Found Speech services configuration directories:"
+    [ -d "openedai-voices" ] && echo "  - openedai-voices/ ($(du -sh openedai-voices 2>/dev/null | cut -f1) - voice models)"
+    [ -d "openedai-config" ] && echo "  - openedai-config/ (configuration files)"
+    echo ""
+    
+    read -p "Remove Speech services configuration? (y/N): " speech_remove
+    
+    if [[ "$speech_remove" =~ ^[Yy]$ ]]; then
+        log_info "Removing Speech services configuration..."
+        [ -d "openedai-voices" ] && rm -rf openedai-voices
+        [ -d "openedai-config" ] && rm -rf openedai-config
+        log_success "✅ Speech configuration removed"
+    else
+        log_info "✅ Speech configuration preserved"
+        log_info "   (You can manually remove: rm -rf openedai-voices openedai-config)"
+    fi
+else
+    log_info "No Speech services configuration found"
+fi
+echo ""
+
 # Install or start Portainer if needed
 log_info "🐳 Portainer Docker Management"
 echo "=========================================="
