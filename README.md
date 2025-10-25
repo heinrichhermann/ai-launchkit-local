@@ -34,6 +34,40 @@ This is a **port-based local network version** of the AI LaunchKit that runs com
 - ✅ **Local Network Ready** - Designed for LAN access from multiple devices
 - ✅ **Production-Grade** - Same services as cloud version, just local
 
+## ⭐ Featured: Open Notebook - NotebookLM Alternative
+
+**Transform Any Content Into AI-Powered Podcasts & Research!**
+
+Open Notebook is your locally-hosted research assistant that rivals Google's NotebookLM:
+
+### 🎙️ Create Professional Podcasts From Anything
+- **YouTube Videos** → AI-generated podcast discussions
+- **PDFs & Documents** → Engaging audio summaries  
+- **Web Pages** → Podcast episodes with multiple AI hosts
+- **Audio/Video Files** → Transcribed & analyzed content
+
+### 🤖 Fully Local & Private
+- **Speech-to-Text:** Faster Whisper (German Thorsten voice available!)
+- **Text-to-Speech:** OpenedAI Speech with voice cloning
+- **LLM Processing:** Ollama integration (works completely offline!)
+- **16+ AI Providers:** OpenAI, Anthropic, Groq, Ollama, and more
+
+### 🚀 One-Click Workflow
+1. Upload content (YouTube URL, PDF, audio file)
+2. AI analyzes and creates podcast script
+3. Choose 1-4 AI speakers with different voices
+4. Generate professional-quality podcast
+5. Download MP3 - ready to publish!
+
+### 📖 Complete Documentation
+- [Setup Guide](docs/OPEN_NOTEBOOK_SETUP.md)
+- [TTS Integration](docs/OPEN_NOTEBOOK_TTS_INTEGRATION.md)  
+- [Full Feature Guide](docs/OPEN_NOTEBOOK_GUIDE.md)
+
+**All running locally on your server - no cloud dependencies!**
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
