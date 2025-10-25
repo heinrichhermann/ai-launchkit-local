@@ -49,7 +49,7 @@ This is a **port-based local network version** of the AI LaunchKit that runs com
 
 ```bash
 # Clone and install in one command
-git clone https://github.com/hermannheinrich/ai-launchkit-local && cd ai-launchkit-local && sudo bash ./scripts/install_local.sh
+git clone https://github.com/heinrichhermann/ai-launchkit-local && cd ai-launchkit-local && sudo bash ./scripts/install_local.sh
 ```
 
 **Installation time:** 10-15 minutes (plus optional n8n workflows import)
@@ -154,7 +154,7 @@ If you're sitting at the server:
 
 **Copy and paste this into your terminal:**
 ```bash
-git clone https://github.com/hermannheinrich/ai-launchkit-local && cd ai-launchkit-local && sudo bash ./scripts/install_local.sh
+git clone https://github.com/heinrichhermann/ai-launchkit-local && cd ai-launchkit-local && sudo bash ./scripts/install_local.sh
 ```
 
 **Press Enter**, then type your password when asked.
@@ -164,7 +164,7 @@ git clone https://github.com/hermannheinrich/ai-launchkit-local && cd ai-launchk
 
 Breaking down the command:
 
-**Part 1:** `git clone https://github.com/hermannheinrich/ai-launchkit-local`
+**Part 1:** `git clone https://github.com/heinrichhermann/ai-launchkit-local`
 - Downloads the AI Learning Kit to your server
 - Creates folder: `ai-launchkit-local`
 
@@ -528,7 +528,7 @@ Your services are accessible at:
    - Safe to re-run
 
 4. **Still having issues?**
-   - Post in [GitHub Issues](https://github.com/hermannheinrich/ai-launchkit-local/issues)
+   - Post in [GitHub Issues](https://github.com/heinrichhermann/ai-launchkit-local/issues)
    - Include: Error message, Ubuntu version, server specs
    - Community will help!
 
@@ -724,7 +724,7 @@ docker logs postgres
 ```
 
 **3. Ask for help:**
-- **GitHub Issues:** [Report a problem](https://github.com/hermannheinrich/ai-launchkit-local/issues)
+- **GitHub Issues:** [Report a problem](https://github.com/heinrichhermann/ai-launchkit-local/issues)
   - Include: Error message, what you were doing, Ubuntu version
   
 - **Original AI LaunchKit:** [Main project](https://github.com/freddy-schuetz/ai-launchkit)
@@ -1844,7 +1844,7 @@ docker run --rm -v localai_n8n_storage:/data -v $(pwd):/backup alpine \
 4. **Port Conflicts:** `netstat -tuln | grep 80`
 
 ### Reporting Issues
-- **GitHub:** [Report local network issues](https://github.com/hermannheinrich/ai-launchkit-local/issues)
+- **GitHub:** [Report local network issues](https://github.com/heinrichhermann/ai-launchkit-local/issues)
 - **Original:** [AI LaunchKit issues](https://github.com/freddy-schuetz/ai-launchkit/issues)
 
 ### Community
@@ -1953,6 +1953,6 @@ Based on [AI LaunchKit](https://github.com/freddy-schuetz/ai-launchkit) by Fried
 
 **Ready to launch your local AI stack?**
 
-[💬 Issues & Feature Requests](https://github.com/hermannheinrich/ai-launchkit-local/issues)
+[💬 Issues & Feature Requests](https://github.com/heinrichhermann/ai-launchkit-local/issues)
 
 </div>
