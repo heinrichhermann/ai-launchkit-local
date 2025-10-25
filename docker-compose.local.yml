@@ -1541,7 +1541,7 @@ services:
       - PASSWORD_RESET_DISABLED=0
       - INVITE_DISABLED=0
       - EMAIL_AUTH_DISABLED=0
-      - MAIL_FROM=${FORMBRICKS_MAIL_FROM:-noreply@localhost}
+      - MAIL_FROM=forms@ailaunchkit.local
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
       - SMTP_USER=dummy
