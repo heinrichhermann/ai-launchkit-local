@@ -166,8 +166,13 @@ log_info "========== STEP 4a: $CURRENT_STEP =========="
 bash "$SCRIPT_DIR/04a_setup_perplexica.sh" || { log_error "Perplexica setup failed"; exit 1; }
 log_success "Perplexica setup complete!"
 
-CURRENT_STEP="Building Cal.com (if selected)"
+CURRENT_STEP="Setting up German Voice (if speech services selected)"
 log_info "========== STEP 4b: $CURRENT_STEP =========="
+bash "$SCRIPT_DIR/04b_setup_german_voice.sh" || { log_error "German voice setup failed"; exit 1; }
+log_success "German voice setup complete!"
+
+CURRENT_STEP="Building Cal.com (if selected)"
+log_info "========== STEP 4c: $CURRENT_STEP =========="
 # Check if calcom profile is in COMPOSE_PROFILES
 if grep -q "calcom" .env 2>/dev/null || [[ "$COMPOSE_PROFILES" == *"calcom"* ]]; then
     if [ -f "$SCRIPT_DIR/build_calcom.sh" ]; then
