@@ -835,11 +835,11 @@ All services are accessible via `http://SERVER_IP:PORT`:
 | 8098 | MinIO | Object Storage | - |
 | 8099 | MinIO Console | Storage Management | - |
 
-### External Repository Services
-| Port | Service | Description |
-|------|---------|-------------|
-| 8100 | Supabase | Backend-as-a-Service |
-| 8101 | Dify | AI Application Platform |
+### Research & Notebooks (8100-8110)
+| Port | Service | Description | Setup Guide |
+|------|---------|-------------|-------------|
+| 8100 | Open Notebook | NotebookLM Alternative - Research Assistant | [→ Setup](docs/OPEN_NOTEBOOK_SETUP.md) |
+| 8101 | Open Notebook API | REST API for Open Notebook | [→ TTS Integration](docs/OPEN_NOTEBOOK_TTS_INTEGRATION.md) |
 
 ### Special Ports
 | Port | Service | Protocol | Description |
@@ -1858,15 +1858,21 @@ docker run --rm -v localai_n8n_storage:/data -v $(pwd):/backup alpine \
 ```
 ai-launchkit-local/
 ├── docker-compose.local.yml        # Port-based service definitions
-├── .env.local.example              # Local network configuration template  
-├── start_services_local.py         # Service orchestration script
+├── .env.local.example              # Local network configuration template
 ├── LOCAL_ACCESS_URLS.txt           # Generated access URLs
 ├── scripts/
 │   ├── install_local.sh            # Main installation script
 │   ├── 03_generate_secrets_local.sh # Password generation (no Caddy)
 │   ├── 04_wizard_local.sh          # Service selection (no domains)
+│   ├── 04a_setup_perplexica.sh     # Perplexica setup
+│   ├── 04b_setup_german_voice.sh   # German TTS voice setup
 │   ├── 05_run_services_local.sh    # Service startup (port-based)
-│   └── 06_final_report_local.sh    # Access report generation
+│   ├── 06_final_report_local.sh    # Access report generation
+│   ├── update_local.sh             # Update script
+│   └── uninstall_local.sh          # Uninstall script
+├── templates/
+│   ├── landing-page.html           # Service dashboard template
+│   └── voice_to_speaker.yaml       # TTS voice configuration
 ├── shared/                         # Shared files between services
 ├── media/                          # Media processing files
 ├── temp/                           # Temporary processing files
