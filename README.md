@@ -1914,25 +1914,51 @@ docker run --rm -v localai_n8n_storage:/data -v $(pwd):/backup alpine \
 ai-launchkit-local/
 ├── docker-compose.local.yml        # Port-based service definitions
 ├── .env.local.example              # Local network configuration template
-├── LOCAL_ACCESS_URLS.txt           # Generated access URLs
 ├── scripts/
 │   ├── install_local.sh            # Main installation script
-│   ├── 03_generate_secrets_local.sh # Password generation (no Caddy)
-│   ├── 04_wizard_local.sh          # Service selection (no domains)
-│   ├── 04a_setup_perplexica.sh     # Perplexica setup
-│   ├── 04b_setup_german_voice.sh   # German TTS voice setup
-│   ├── 05_run_services_local.sh    # Service startup (port-based)
-│   ├── 06_final_report_local.sh    # Access report generation
-│   ├── update_local.sh             # Update script
-│   └── uninstall_local.sh          # Uninstall script
+│   ├── 01_system_preparation.sh    # System setup & firewall
+│   ├── 02_install_docker.sh        # Docker installation
+│   ├── 02a_install_nvidia_toolkit.sh # NVIDIA GPU support
+│   ├── 03_generate_secrets_local.sh # Password generation
+│   ├── 04_wizard_local.sh          # Interactive service selection
+│   ├── 04a_setup_perplexica.sh     # Perplexica AI search setup
+│   ├── 04b_setup_german_voice.sh   # German TTS voice auto-install
+│   ├── 05_run_services_local.sh    # Service startup
+│   ├── 06_final_report_local.sh    # Installation summary
+│   ├── update_local.sh             # Update all services
+│   ├── uninstall_local.sh          # Safe uninstall with backup
+│   ├── generate_landing_page.sh    # Generate service dashboard
+│   └── utils.sh                    # Shared utility functions
+├── docs/                           # Complete documentation
+│   ├── OPEN_NOTEBOOK_GUIDE.md      # Open Notebook features & use cases
+│   ├── OPEN_NOTEBOOK_SETUP.md      # Open Notebook configuration
+│   ├── OPEN_NOTEBOOK_TTS_INTEGRATION.md # Speech services setup
+│   ├── QDRANT_SETUP.md             # Vector database API key setup
+│   ├── GOTENBERG_GUIDE.md          # Document conversion API
+│   ├── LANGFUSE_OLLAMA_INTEGRATION.md # LLM tracking setup
+│   └── [service-specific guides]/  # Individual service documentation
 ├── templates/
-│   ├── landing-page.html           # Service dashboard template
-│   └── voice_to_speaker.yaml       # TTS voice configuration
+│   ├── landing-page.html           # Auto-generated service dashboard
+│   └── voice_to_speaker.yaml       # German TTS voice configuration
+├── n8n/
+│   ├── backup/workflows/           # 300+ pre-built n8n workflows
+│   └── n8n_import_script.sh        # Workflow import automation
+├── grafana/
+│   ├── dashboards/                 # Pre-configured monitoring dashboards
+│   └── provisioning/               # Auto-configuration for data sources
+├── prometheus/
+│   └── prometheus.yml              # Metrics collection configuration
 ├── shared/                         # Shared files between services
-├── media/                          # Media processing files
-├── temp/                           # Temporary processing files
-└── [service directories]/          # Individual service configurations
+├── media/                          # Media processing workspace
+└── [runtime directories]/          # Created during installation
+    ├── open-notebook/              # Research assistant data
+    ├── openedai-voices/            # TTS voice models
+    ├── openedai-config/            # TTS configuration
+    ├── perplexica/                 # AI search engine (git cloned)
+    └── website/                    # Generated landing page
 ```
+
+**Note:** Runtime directories are created automatically during installation and excluded via .gitignore.
 
 ---
 
