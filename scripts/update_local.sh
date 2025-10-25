@@ -153,6 +153,16 @@ if [ -f "$BACKUP_DIR/.env.backup" ]; then
     log_success "✅ .env restored"
 fi
 
+# Regenerate landing page with updated template
+if [ -f "$SCRIPT_DIR/generate_landing_page.sh" ]; then
+    log_info "Regenerating landing page with updated template..."
+    bash "$SCRIPT_DIR/generate_landing_page.sh" || {
+        log_warning "Landing page generation failed (non-critical)"
+    }
+else
+    log_warning "Landing page generator not found (skipping)"
+fi
+
 # Pull latest Docker images
 CURRENT_STEP="Updating Docker Images"
 log_info "========== Step 3: Updating Docker Images =========="
