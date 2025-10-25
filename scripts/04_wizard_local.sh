@@ -54,7 +54,6 @@ base_services_data=(
     "calcom" "Cal.com (Open Source Scheduling) - Port 8040"
     "formbricks" "Formbricks (Privacy-first Surveys) - Port 8091"
     "metabase" "Metabase (Business Intelligence) - Port 8092"
-    "vaultwarden" "Vaultwarden (Password Manager) - Port 8061"
     "kopia" "Kopia (Fast Secure Backup) - Port 8062"
     "langfuse" "Langfuse Suite (AI Observability) - Port 8096"
     "qdrant" "Qdrant (Vector Database) - Port 8026"
