@@ -1529,8 +1529,8 @@ services:
       - ./shared:/data/shared
     environment:
       # Core Configuration
-      - WEBAPP_URL=http://127.0.0.1:8091
-      - NEXTAUTH_URL=http://127.0.0.1:8091
+      - WEBAPP_URL=http://${SERVER_IP}:8091
+      - NEXTAUTH_URL=http://${SERVER_IP}:8091
       
       # Database - eigene PostgreSQL mit pgvector!
       - DATABASE_URL=postgresql://formbricks:${FORMBRICKS_DB_PASSWORD:-formbricks_secure_password}@formbricks_db:5432/formbricks?schema=public
@@ -1728,7 +1728,7 @@ services:
       REDIS_TLS_CA: ${REDIS_TLS_CA:-/certs/ca.crt}
       REDIS_TLS_CERT: ${REDIS_TLS_CERT:-/certs/redis.crt}
       REDIS_TLS_KEY: ${REDIS_TLS_KEY:-/certs/redis.key}
-      NEXTAUTH_URL: http://127.0.0.1:8096
+      NEXTAUTH_URL: http://${SERVER_IP}:8096
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       LANGFUSE_INIT_ORG_ID: ${LANGFUSE_INIT_ORG_ID:-organization_id}
       LANGFUSE_INIT_ORG_NAME: ${LANGFUSE_INIT_ORG_NAME:-Organization}
