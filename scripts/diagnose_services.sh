@@ -52,8 +52,9 @@ test_service() {
     log_detail "HTTP Code: $http_code"
     log_detail "Response Time: ${response_time}ms"
     
-    if [ $curl_exit -eq 0 ] && [ "$http_code" = "200" ] || [ "$http_code" = "302" ] || [ -z "$http_code" ]; then
-        echo "✅ $name: ONLINE ($url)"
+    # Accept 2xx and 3xx codes as SUCCESS (redirects are normal for web apps)
+    if [ $curl_exit -eq 0 ] && [[ "$http_code" =~ ^[23] ]] || [ -z "$http_code" ]; then
+        echo "✅ $name: ONLINE ($url) [HTTP $http_code]"
         log_detail "Status: ✅ ONLINE"
         log_detail ""
         return 0

@@ -161,10 +161,9 @@ if grep -q "gpu-nvidia" .env 2>/dev/null; then
     fi
 fi
 
-CURRENT_STEP="Setting up Perplexica (if selected)"
-log_info "========== STEP 4a: $CURRENT_STEP =========="
-bash "$SCRIPT_DIR/04a_setup_perplexica.sh" || { log_error "Perplexica setup failed"; exit 1; }
-log_success "Perplexica setup complete!"
+# Perplexica setup no longer needed - using pre-built Docker Hub image
+log_info "========== STEP 4a: Perplexica uses Docker Hub image (no setup needed) =========="
+log_info "Perplexica will download automatically from Docker Hub when started"
 
 CURRENT_STEP="Setting up German Voice (if speech services selected)"
 log_info "========== STEP 4b: $CURRENT_STEP =========="

@@ -1476,9 +1476,7 @@ services:
         max-file: "1"
 
   perplexica:
-    build:
-      context: ./perplexica
-      dockerfile: Dockerfile
+    image: itzcrazykns1337/perplexica:slim-latest
     container_name: perplexica
     profiles: ["perplexica"]
     restart: unless-stopped
@@ -1490,14 +1488,19 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     volumes:
-      - ./perplexica/backend-dbstore:/home/perplexica/data
-      - ./perplexica/uploads:/home/perplexica/uploads
-      - ./perplexica/config.toml:/home/perplexica/config.toml
+      - ./perplexica-data:/home/perplexica/data
+      - ./perplexica-uploads:/home/perplexica/uploads
       - ./shared:/data/shared
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
       - searxng
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   formbricks_db:
     image: pgvector/pgvector:pg17

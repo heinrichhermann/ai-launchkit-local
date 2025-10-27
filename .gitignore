@@ -39,3 +39,7 @@ chatterbox-frontend/
 chatterbox-frontend/
 website/
 .cursor/
+
+# Perplexica - now uses Docker Hub image (no local git clone needed)
+perplexica/
+perplexica.config.toml
