@@ -862,6 +862,11 @@ All services are accessible via `http://SERVER_IP:PORT`:
 | 8100 | Open Notebook | NotebookLM Alternative - Research Assistant | [→ Setup](docs/OPEN_NOTEBOOK_SETUP.md) |
 | 8101 | Open Notebook API | REST API for Open Notebook | [→ TTS Integration](docs/OPEN_NOTEBOOK_TTS_INTEGRATION.md) |
 
+### Design & Prototyping (8111-8116)
+| Port | Service | Description | Setup Guide |
+|------|---------|-------------|-------------|
+| 8111 | Penpot | Open Source Design & Prototyping Platform | [→ Setup](docs/PENPOT_SETUP.md) |
+
 ### Special Ports
 | Port | Service | Protocol | Description |
 |------|---------|----------|-------------|

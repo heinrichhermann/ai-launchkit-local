@@ -546,6 +546,15 @@ if [[ "$COMPOSE_PROFILES" == *"python-runner"* ]]; then
     fi
 fi
 
+# Check design tools
+if [[ "$COMPOSE_PROFILES" == *"penpot"* ]]; then
+    if docker ps | grep -q "penpot-frontend"; then
+        log_success "✅ Penpot is running (Port 8111)"
+    else
+        FAILED_SERVICES+=("penpot-frontend")
+    fi
+fi
+
 # Check Langfuse stack
 if [[ "$COMPOSE_PROFILES" == *"langfuse"* ]]; then
     if docker ps | grep -q "langfuse-web"; then

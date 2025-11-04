@@ -273,6 +273,12 @@ if [[ "$COMPOSE_PROFILES" == *"python-runner"* ]]; then
     test_port 8095 "Python Runner"
 fi
 
+# Design & Prototyping
+if [[ "$COMPOSE_PROFILES" == *"penpot"* ]]; then
+    echo "Penpot Design Platform: $(is_service_running "penpot-frontend")"
+    test_port 8111 "Penpot"
+fi
+
 echo ""
 
 # Langfuse Stack
