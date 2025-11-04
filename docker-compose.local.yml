@@ -675,8 +675,14 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     command: >
       sh -c "
-      psql -h postgres -U postgres -c \"CREATE DATABASE penpot\" || true &&
-      echo 'Penpot database ready'
+      # Wait for PostgreSQL to be truly ready
+      until pg_isready -h postgres -U postgres; do
+        echo 'Waiting for PostgreSQL to be ready...'
+        sleep 2
+      done
+      # Create penpot database
+      psql -h postgres -U postgres -c \"CREATE DATABASE penpot\" || true
+      echo 'Penpot database initialized successfully'
       "
     restart: "no"
 
@@ -695,16 +701,32 @@ services:
       redis:
         condition: service_healthy
     environment:
+      # Public URI configuration
       - PENPOT_PUBLIC_URI=http://${SERVER_IP}:8111
-      - PENPOT_DATABASE_URI=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/penpot
+      
+      # Database Configuration - Using separate variables to avoid URL encoding issues
+      # This prevents special characters in password from breaking the connection string
+      - PENPOT_DATABASE_HOST=postgres
+      - PENPOT_DATABASE_PORT=5432
+      - PENPOT_DATABASE_NAME=penpot
       - PENPOT_DATABASE_USERNAME=postgres
       - PENPOT_DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+      
+      # Redis Configuration
       - PENPOT_REDIS_URI=redis://redis/1
+      
+      # Assets Storage Configuration
       - PENPOT_ASSETS_STORAGE_BACKEND=assets-fs
       - PENPOT_STORAGE_ASSETS_FS_DIRECTORY=/opt/data/assets
+      
+      # Feature Flags
       - PENPOT_TELEMETRY_ENABLED=false
       - PENPOT_FLAGS=disable-email-verification enable-smtp enable-prepl-server disable-secure-session-cookies
+      
+      # Security
       - PENPOT_SECRET_KEY=${PENPOT_SECRET_KEY}
+      
+      # Email Configuration (Mailpit for local testing)
       - PENPOT_SMTP_DEFAULT_FROM=${EMAIL_FROM:-noreply@localhost}
       - PENPOT_SMTP_DEFAULT_REPLY_TO=${EMAIL_FROM:-noreply@localhost}
       - PENPOT_SMTP_HOST=mailpit

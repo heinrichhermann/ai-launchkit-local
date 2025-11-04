@@ -214,15 +214,52 @@ docker logs penpot-exporter
 
 ### Database Connection Errors
 
+**Symptom:** `java.net.UnknownHostException: postgres:PASSWORD@postgres`
+
+**Cause:** Special characters in PostgreSQL password breaking connection string
+
+**Fix Applied (v2.0+):**
+The configuration now uses separate database variables instead of a connection string:
+```yaml
+# OLD (broken with special chars):
+PENPOT_DATABASE_URI=postgresql://postgres:PASSWORD@postgres:5432/penpot
+
+# NEW (fixed):
+PENPOT_DATABASE_HOST=postgres
+PENPOT_DATABASE_PORT=5432
+PENPOT_DATABASE_NAME=penpot
+PENPOT_DATABASE_USERNAME=postgres
+PENPOT_DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+```
+
+**Manual Check:**
 ```bash
-# Check PostgreSQL
+# Check PostgreSQL is running
 docker ps | grep postgres
+
+# Test connection from penpot-backend
+docker exec penpot-backend pg_isready -h postgres -U postgres
 
 # Check penpot database exists
 docker exec postgres psql -U postgres -l | grep penpot
 
 # Recreate if needed
 docker exec postgres psql -U postgres -c "CREATE DATABASE penpot;"
+
+# Check penpot-backend logs
+docker logs penpot-backend --tail 50
+```
+
+**If Still Failing:**
+```bash
+# Stop all services
+docker compose -p localai -f docker-compose.local.yml down
+
+# Remove penpot containers
+docker rm -f penpot-frontend penpot-backend penpot-exporter penpot-postgres-init
+
+# Restart
+docker compose -p localai -f docker-compose.local.yml up -d
 ```
 
 ### Assets Not Saving
