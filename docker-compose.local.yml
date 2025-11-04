@@ -718,9 +718,10 @@ services:
       - PENPOT_ASSETS_STORAGE_BACKEND=assets-fs
       - PENPOT_STORAGE_ASSETS_FS_DIRECTORY=/opt/data/assets
       
-      # Feature Flags
+      # Feature Flags - Disable email verification for local network use
       - PENPOT_TELEMETRY_ENABLED=false
       - PENPOT_FLAGS=disable-email-verification enable-smtp enable-prepl-server disable-secure-session-cookies
+      - PENPOT_EMAIL_VERIFICATION_ENABLED=false
       
       # Security
       - PENPOT_SECRET_KEY=${PENPOT_SECRET_KEY}
