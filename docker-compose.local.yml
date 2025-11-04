@@ -675,14 +675,13 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     command: >
       sh -c "
-      # Wait for PostgreSQL to be truly ready
-      until pg_isready -h postgres -U postgres; do
-        echo 'Waiting for PostgreSQL to be ready...'
-        sleep 2
-      done
-      # Create penpot database
-      psql -h postgres -U postgres -c \"CREATE DATABASE penpot\" || true
-      echo 'Penpot database initialized successfully'
+      while ! pg_isready -h postgres -U postgres > /dev/null 2>&1; do
+        echo 'Waiting for PostgreSQL to be ready...';
+        sleep 2;
+      done;
+      psql -h postgres -U postgres -c \"CREATE DATABASE penpot\" || true;
+      echo 'Penpot database initialized successfully';
+      exit 0
       "
     restart: "no"
 
