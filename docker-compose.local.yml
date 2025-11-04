@@ -703,11 +703,9 @@ services:
       # Public URI configuration
       - PENPOT_PUBLIC_URI=http://${SERVER_IP}:8111
       
-      # Database Configuration - Using separate variables to avoid URL encoding issues
-      # This prevents special characters in password from breaking the connection string
-      - PENPOT_DATABASE_HOST=postgres
-      - PENPOT_DATABASE_PORT=5432
-      - PENPOT_DATABASE_NAME=penpot
+      # Database Configuration - Penpot requires URI + separate credentials
+      # URI format: postgresql://HOST:PORT/DATABASE (no credentials in URI!)
+      - PENPOT_DATABASE_URI=postgresql://postgres:5432/penpot
       - PENPOT_DATABASE_USERNAME=postgres
       - PENPOT_DATABASE_PASSWORD=${POSTGRES_PASSWORD}
       
@@ -721,7 +719,6 @@ services:
       # Feature Flags - Disable email verification for local network use
       - PENPOT_TELEMETRY_ENABLED=false
       - PENPOT_FLAGS=disable-email-verification enable-smtp enable-prepl-server disable-secure-session-cookies
-      - PENPOT_EMAIL_VERIFICATION_ENABLED=false
       
       # Security
       - PENPOT_SECRET_KEY=${PENPOT_SECRET_KEY}
