@@ -55,6 +55,10 @@ volumes:
   chatterbox_models:
   penpot_assets:
 
+# Penpot Configuration - Using YAML anchors for consistent flags across all services
+x-penpot-flags: &penpot-flags
+  PENPOT_FLAGS: disable-email-verification enable-smtp enable-prepl-server disable-secure-session-cookies
+
 x-n8n: &service-n8n
   build:
     context: ./n8n
@@ -700,38 +704,39 @@ services:
       redis:
         condition: service_healthy
     environment:
+      <<: *penpot-flags
+      
       # Public URI configuration
-      - PENPOT_PUBLIC_URI=http://${SERVER_IP}:8111
+      PENPOT_PUBLIC_URI: http://${SERVER_IP}:8111
       
       # Database Configuration - Penpot requires URI + separate credentials
       # URI format: postgresql://HOST:PORT/DATABASE (no credentials in URI!)
-      - PENPOT_DATABASE_URI=postgresql://postgres:5432/penpot
-      - PENPOT_DATABASE_USERNAME=postgres
-      - PENPOT_DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+      PENPOT_DATABASE_URI: postgresql://postgres:5432/penpot
+      PENPOT_DATABASE_USERNAME: postgres
+      PENPOT_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       
       # Redis Configuration
-      - PENPOT_REDIS_URI=redis://redis/1
+      PENPOT_REDIS_URI: redis://redis/1
       
       # Assets Storage Configuration
-      - PENPOT_ASSETS_STORAGE_BACKEND=assets-fs
-      - PENPOT_STORAGE_ASSETS_FS_DIRECTORY=/opt/data/assets
+      PENPOT_ASSETS_STORAGE_BACKEND: assets-fs
+      PENPOT_STORAGE_ASSETS_FS_DIRECTORY: /opt/data/assets
       
-      # Feature Flags - Disable email verification for local network use
-      - PENPOT_TELEMETRY_ENABLED=false
-      - PENPOT_FLAGS=disable-email-verification enable-smtp enable-prepl-server disable-secure-session-cookies
+      # Telemetry
+      PENPOT_TELEMETRY_ENABLED: false
       
       # Security
-      - PENPOT_SECRET_KEY=${PENPOT_SECRET_KEY}
+      PENPOT_SECRET_KEY: ${PENPOT_SECRET_KEY}
       
       # Email Configuration (Mailpit for local testing)
-      - PENPOT_SMTP_DEFAULT_FROM=${EMAIL_FROM:-noreply@localhost}
-      - PENPOT_SMTP_DEFAULT_REPLY_TO=${EMAIL_FROM:-noreply@localhost}
-      - PENPOT_SMTP_HOST=mailpit
-      - PENPOT_SMTP_PORT=1025
-      - PENPOT_SMTP_USERNAME=
-      - PENPOT_SMTP_PASSWORD=
-      - PENPOT_SMTP_TLS=false
-      - PENPOT_SMTP_SSL=false
+      PENPOT_SMTP_DEFAULT_FROM: ${EMAIL_FROM:-noreply@localhost}
+      PENPOT_SMTP_DEFAULT_REPLY_TO: ${EMAIL_FROM:-noreply@localhost}
+      PENPOT_SMTP_HOST: mailpit
+      PENPOT_SMTP_PORT: 1025
+      PENPOT_SMTP_USERNAME:
+      PENPOT_SMTP_PASSWORD:
+      PENPOT_SMTP_TLS: false
+      PENPOT_SMTP_SSL: false
 
   penpot-exporter:
     image: "penpotapp/exporter:${PENPOT_VERSION:-latest}"
@@ -758,7 +763,7 @@ services:
       - penpot-backend
       - penpot-exporter
     environment:
-      - PENPOT_FLAGS=disable-email-verification enable-smtp enable-prepl-server disable-secure-session-cookies
+      <<: *penpot-flags
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080"]
       interval: 30s
