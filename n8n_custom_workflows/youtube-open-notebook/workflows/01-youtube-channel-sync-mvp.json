@@ -20,24 +20,21 @@
     },
     {
       "parameters": {
-        "operation": "read",
-        "table": "youtube_channels",
-        "returnAll": true,
-        "filters": {
-          "conditions": [
-            {
-              "field": "enabled",
-              "operation": "equals",
-              "value": true
-            }
-          ]
-        }
+        "operation": "executeQuery",
+        "query": "SELECT * FROM youtube_channels WHERE enabled = true",
+        "options": {}
       },
       "id": "read-channels",
       "name": "Read Active Channels",
-      "type": "n8n-nodes-base.n8nTable",
-      "typeVersion": 1,
-      "position": [450, 300]
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [450, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-credentials",
+          "name": "AI LaunchKit PostgreSQL"
+        }
+      }
     },
     {
       "parameters": {
@@ -74,28 +71,25 @@
     },
     {
       "parameters": {
-        "operation": "read",
-        "table": "youtube_videos",
-        "returnAll": true,
-        "filters": {
-          "conditions": [
-            {
-              "field": "channel_id",
-              "operation": "equals",
-              "value": "={{$('Loop Channels').item.json.channel_id}}"
-            }
-          ]
-        }
+        "operation": "executeQuery",
+        "query": "=SELECT video_id FROM youtube_videos WHERE channel_id = '{{$('Loop Channels').item.json.channel_id}}'",
+        "options": {}
       },
       "id": "read-processed",
       "name": "Read Processed Videos",
-      "type": "n8n-nodes-base.n8nTable",
-      "typeVersion": 1,
-      "position": [1250, 300]
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [1250, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-credentials",
+          "name": "AI LaunchKit PostgreSQL"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "// Filter out already processed videos and detect shorts\nconst newVideos = $input.all();\nconst processedVideos = $('Read Processed Videos').all();\n\n// Create set of processed video IDs\nconst processedIds = new Set(\n  processedVideos.map(v => v.json.video_id)\n);\n\n// Filter and classify\nconst filtered = newVideos\n  .filter(v => !processedIds.has(v.json.video_id))\n  .map(v => {\n    // Note: Duration will be fetched from YouTube API in full version\n    // For MVP, we estimate based on typical lengths\n    const video = v.json;\n    \n    return {\n      ...video,\n      // We'll get real duration from YouTube API\n      // For now, mark for processing\n      needs_duration_check: true\n    };\n  });\n\nif (filtered.length === 0) {\n  // No new videos\n  return [];\n}\n\nreturn filtered.map(v => ({json: v}));"
+        "jsCode": "// Filter out already processed videos\nconst newVideos = $input.all();\nconst processedVideos = $('Read Processed Videos').all();\n\n// Create set of processed video IDs\nconst processedIds = new Set(\n  processedVideos.map(v => v.json.video_id)\n);\n\n// Filter new videos\nconst filtered = newVideos\n  .filter(v => !processedIds.has(v.json.video_id))\n  .map(v => v.json);\n\nif (filtered.length === 0) {\n  return [];\n}\n\nreturn filtered.map(v => ({json: v}));"
       },
       "id": "filter-new",
       "name": "Filter New Videos",
@@ -177,56 +171,44 @@
     },
     {
       "parameters": {
-        "operation": "create",
-        "table": "youtube_videos",
-        "dataToSend": "defineInNode",
-        "fieldsToSend": {
-          "fields": [
-            {
-              "field": "video_id",
-              "value": "={{$('Loop Videos (Batch 5)').item.json.video_id}}"
-            },
-            {
-              "field": "channel_id",
-              "value": "={{$('Loop Videos (Batch 5)').item.json.channel_id}}"
-            },
-            {
-              "field": "title",
-              "value": "={{$('Loop Videos (Batch 5)').item.json.title}}"
-            },
-            {
-              "field": "url",
-              "value": "={{$('Loop Videos (Batch 5)').item.json.url}}"
-            },
-            {
-              "field": "duration_seconds",
-              "value": "=0"
-            },
-            {
-              "field": "published_date",
-              "value": "={{$('Loop Videos (Batch 5)').item.json.published_date}}"
-            },
-            {
-              "field": "thumbnail_url",
-              "value": "={{$('Loop Videos (Batch 5)').item.json.thumbnail_url}}"
-            },
-            {
-              "field": "status",
-              "value": "completed"
-            },
-            {
-              "field": "notebook_entry_url",
-              "value": "={{$json.entry_url}}"
-            }
-          ]
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "youtube_videos",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "video_id": "={{$('Loop Videos (Batch 5)').item.json.video_id}}",
+            "channel_id": "={{$('Loop Videos (Batch 5)').item.json.channel_id}}",
+            "title": "={{$('Loop Videos (Batch 5)').item.json.title}}",
+            "url": "={{$('Loop Videos (Batch 5)').item.json.url}}",
+            "duration_seconds": "=0",
+            "published_date": "={{$('Loop Videos (Batch 5)').item.json.published_date}}",
+            "thumbnail_url": "={{$('Loop Videos (Batch 5)').item.json.thumbnail_url}}",
+            "status": "completed",
+            "notebook_entry_url": "={{$json.entry_url || ''}}"
+          }
         },
         "options": {}
       },
       "id": "insert-video",
       "name": "Mark as Completed",
-      "type": "n8n-nodes-base.n8nTable",
-      "typeVersion": 1,
-      "position": [2250, 200]
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [2250, 200],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-credentials",
+          "name": "AI LaunchKit PostgreSQL"
+        }
+      }
     },
     {
       "parameters": {
@@ -393,6 +375,6 @@
     }
   ],
   "triggerCount": 1,
-  "updatedAt": "2025-11-08T12:30:00.000Z",
-  "versionId": "1"
+  "updatedAt": "2025-11-08T13:21:00.000Z",
+  "versionId": "2"
 }

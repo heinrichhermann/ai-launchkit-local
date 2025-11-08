@@ -90,7 +90,32 @@ docker exec postgres psql -U postgres -d postgres -c "
 
 ## 🚀 Workflow Installation
 
-### Schritt 1: Workflow importieren
+### Schritt 1: PostgreSQL Credentials in n8n erstellen
+
+**Wichtig:** Der Workflow benötigt PostgreSQL Credentials!
+
+**In n8n Web UI:**
+1. Gehe zu **Settings** → **Credentials** → **Add Credential**
+2. Wähle **"Postgres"**
+3. Konfiguriere:
+   ```
+   Name: AI LaunchKit PostgreSQL
+   Host: postgres
+   Database: postgres
+   User: postgres
+   Password: [Dein POSTGRES_PASSWORD aus .env]
+   Port: 5432
+   SSL: Disabled
+   ```
+4. **Test Connection** klicken
+5. **Save** klicken
+
+**Hinweis:** Passwort findest du in deiner `.env` Datei:
+```bash
+grep POSTGRES_PASSWORD ~/ai/ai-launchkit-local/.env
+```
+
+### Schritt 2: Workflow importieren
 
 ```bash
 # Tables sollten bereits existieren (via SQL-Script oben)
