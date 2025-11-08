@@ -1,0 +1,159 @@
+{
+  "name": "youtube_videos",
+  "description": "Tracking aller verarbeiteten YouTube-Videos mit Status",
+  "columns": [
+    {
+      "name": "video_id",
+      "type": "text",
+      "required": true,
+      "unique": true,
+      "description": "YouTube Video ID (aus Video-URL)"
+    },
+    {
+      "name": "channel_id",
+      "type": "text",
+      "required": true,
+      "description": "Gehört zu Channel (youtube_channels.channel_id)"
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "required": true,
+      "description": "Video-Titel"
+    },
+    {
+      "name": "url",
+      "type": "text",
+      "required": true,
+      "description": "Vollständige YouTube-URL"
+    },
+    {
+      "name": "duration_seconds",
+      "type": "number",
+      "required": true,
+      "description": "Video-Länge in Sekunden"
+    },
+    {
+      "name": "published_date",
+      "type": "datetime",
+      "required": true,
+      "description": "Veröffentlichungsdatum auf YouTube"
+    },
+    {
+      "name": "thumbnail_url",
+      "type": "text",
+      "required": false,
+      "description": "URL des Video-Thumbnails"
+    },
+    {
+      "name": "detected_language",
+      "type": "text",
+      "required": false,
+      "description": "Von Whisper erkannte Sprache (ISO 639-1)"
+    },
+    {
+      "name": "needs_translation",
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "true wenn Originalsprache nicht Deutsch"
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "required": true,
+      "default": "discovered",
+      "options": [
+        "discovered",
+        "transcribing",
+        "translating",
+        "summarizing",
+        "podcast_generating",
+        "completed",
+        "failed",
+        "skipped"
+      ],
+      "description": "Aktueller Verarbeitungs-Status"
+    },
+    {
+      "name": "skip_reason",
+      "type": "text",
+      "required": false,
+      "description": "Grund für Überspringen (z.B. 'is_short', 'too_long')"
+    },
+    {
+      "name": "notebook_entry_url",
+      "type": "text",
+      "required": false,
+      "description": "Link zum Open Notebook Entry"
+    },
+    {
+      "name": "discovered_at",
+      "type": "datetime",
+      "required": true,
+      "auto": "created",
+      "description": "Wann das Video entdeckt wurde"
+    },
+    {
+      "name": "processed_at",
+      "type": "datetime",
+      "required": false,
+      "description": "Wann die Verarbeitung abgeschlossen wurde"
+    },
+    {
+      "name": "error_message",
+      "type": "text",
+      "required": false,
+      "description": "Fehlermeldung bei status=failed"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "idx_channel_status",
+      "columns": ["channel_id", "status"],
+      "description": "Schnelle Suche nach Channel und Status"
+    },
+    {
+      "name": "idx_status",
+      "columns": ["status"],
+      "description": "Filterung nach Verarbeitungsstatus"
+    }
+  ],
+  "example_data": [
+    {
+      "video_id": "dQw4w9WgXcQ",
+      "channel_id": "UCXuqSBlHAE6Xw-yeJA0Tunw",
+      "title": "Example Video Title",
+      "url": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+      "duration_seconds": 1832,
+      "published_date": "2025-11-07T10:00:00Z",
+      "thumbnail_url": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+      "detected_language": "en",
+      "needs_translation": true,
+      "status": "completed",
+      "skip_reason": null,
+      "notebook_entry_url": "http://192.168.178.151:8100/notebooks/abc123/entry/456",
+      "discovered_at": "2025-11-07T06:00:00Z",
+      "processed_at": "2025-11-07T06:15:32Z",
+      "error_message": null
+    },
+    {
+      "video_id": "shortVideoId",
+      "channel_id": "UCXuqSBlHAE6Xw-yeJA0Tunw",
+      "title": "A YouTube Short #shorts",
+      "url": "https://youtube.com/watch?v=shortVideoId",
+      "duration_seconds": 45,
+      "published_date": "2025-11-07T12:00:00Z",
+      "thumbnail_url": "https://i.ytimg.com/vi/shortVideoId/maxresdefault.jpg",
+      "detected_language": null,
+      "needs_translation": false,
+      "status": "skipped",
+      "skip_reason": "is_short",
+      "notebook_entry_url": null,
+      "discovered_at": "2025-11-07T06:00:00Z",
+      "processed_at": null,
+      "error_message": null
+    }
+  ],
+  "notes": "Diese Table wird vom Workflow automatisch gefüllt. Manuelle Einträge nicht nötig."
+}
