@@ -168,12 +168,37 @@ CURRENT_STEP="Updating Docker Images"
 log_info "========== Step 3: Updating Docker Images =========="
 log_info "Pulling latest versions (this may take a few minutes)..."
 
+# First pull all pre-built images (ignore buildable services)
 docker compose -p localai -f docker-compose.local.yml pull --ignore-buildable || {
     log_warning "Some images failed to pull"
     log_info "Continuing with available images..."
 }
 
-log_success "✅ Docker images updated"
+log_success "✅ Pre-built Docker images updated"
+echo ""
+
+# Now rebuild buildable services (n8n, bolt, chatterbox)
+log_info "Rebuilding custom services (n8n, bolt, chatterbox)..."
+docker compose -p localai -f docker-compose.local.yml build --pull n8n n8n-import n8n-worker || {
+    log_warning "n8n rebuild failed"
+    log_info "Continuing with existing n8n image..."
+}
+
+# Build bolt if in profile
+if [[ "$COMPOSE_PROFILES" == *"bolt"* ]]; then
+    docker compose -p localai -f docker-compose.local.yml build --pull bolt || {
+        log_warning "Bolt rebuild failed (non-critical)"
+    }
+fi
+
+# Build chatterbox if in profile  
+if [[ "$COMPOSE_PROFILES" == *"tts-chatterbox"* ]]; then
+    docker compose -p localai -f docker-compose.local.yml build --pull chatterbox-tts chatterbox-frontend || {
+        log_warning "Chatterbox rebuild failed (non-critical)"
+    }
+fi
+
+log_success "✅ All Docker images updated"
 echo ""
 
 # Restart services
