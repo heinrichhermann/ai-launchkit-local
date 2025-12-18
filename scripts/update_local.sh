@@ -168,7 +168,17 @@ CURRENT_STEP="Updating Docker Images"
 log_info "========== Step 3: Updating Docker Images =========="
 log_info "Pulling latest versions (this may take a few minutes)..."
 
-# First pull all pre-built images (ignore buildable services)
+# Force pull floating-tag images that don't auto-update
+log_info "Force pulling floating-tag images (open-notebook, n8n base)..."
+docker pull lfnovo/open_notebook:v1-latest-single 2>/dev/null || {
+    log_warning "Failed to pull open-notebook (continuing...)"
+}
+docker pull n8nio/n8n:latest 2>/dev/null || {
+    log_warning "Failed to pull n8n base image (continuing...)"
+}
+
+# Pull all pre-built images (ignore buildable services)
+log_info "Pulling standard images..."
 docker compose -p localai -f docker-compose.local.yml pull --ignore-buildable || {
     log_warning "Some images failed to pull"
     log_info "Continuing with available images..."
@@ -177,15 +187,17 @@ docker compose -p localai -f docker-compose.local.yml pull --ignore-buildable ||
 log_success "✅ Pre-built Docker images updated"
 echo ""
 
-# Now rebuild buildable services (n8n, bolt, chatterbox)
-log_info "Rebuilding custom services (n8n, bolt, chatterbox)..."
-docker compose -p localai -f docker-compose.local.yml build --pull n8n n8n-import n8n-worker || {
+# Rebuild buildable services (n8n, bolt, chatterbox)
+log_info "Rebuilding custom services with latest base images..."
+log_info "Building n8n (this rebuilds with latest n8nio/n8n:latest)..."
+docker compose -p localai -f docker-compose.local.yml build --no-cache --pull n8n n8n-import n8n-worker || {
     log_warning "n8n rebuild failed"
     log_info "Continuing with existing n8n image..."
 }
 
 # Build bolt if in profile
 if [[ "$COMPOSE_PROFILES" == *"bolt"* ]]; then
+    log_info "Building bolt..."
     docker compose -p localai -f docker-compose.local.yml build --pull bolt || {
         log_warning "Bolt rebuild failed (non-critical)"
     }
@@ -193,6 +205,7 @@ fi
 
 # Build chatterbox if in profile  
 if [[ "$COMPOSE_PROFILES" == *"tts-chatterbox"* ]]; then
+    log_info "Building chatterbox..."
     docker compose -p localai -f docker-compose.local.yml build --pull chatterbox-tts chatterbox-frontend || {
         log_warning "Chatterbox rebuild failed (non-critical)"
     }
@@ -205,7 +218,16 @@ echo ""
 CURRENT_STEP="Restarting Services"
 log_info "========== Step 4: Restarting Services =========="
 log_info "Stopping current services..."
-docker compose -p localai -f docker-compose.local.yml down
+docker compose -p localai -f docker-compose.local.yml down --remove-orphans
+
+# Additional cleanup: Remove any containers with conflicting names
+# This handles cases where containers were deployed with different project names
+log_info "Cleaning up any conflicting containers..."
+docker ps -a --format "{{.Names}}" | grep -E "^(n8n|portainer|postgres|redis|ollama|neo4j|lightrag|faster-whisper|scriberr|python-runner|formbricks_db)$" | while read container; do
+    if docker ps -a --format "{{.Names}}" | grep -q "^${container}$"; then
+        docker rm -f "$container" 2>/dev/null || true
+    fi
+done
 
 log_info "Starting services with new versions..."
 docker compose -p localai -f docker-compose.local.yml up -d
