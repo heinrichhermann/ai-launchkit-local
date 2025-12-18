@@ -611,7 +611,7 @@ services:
     # - Private and self-hosted - no cloud dependencies
     # Single-container architecture: Both frontend and API in one container
     # Documentation: docs/OPEN_NOTEBOOK_SETUP.md
-    image: lfnovo/open_notebook:v1-latest-single
+    image: lfnovo/open_notebook:1.2.4-single
     container_name: open-notebook
     profiles: ["open-notebook"]
     restart: unless-stopped

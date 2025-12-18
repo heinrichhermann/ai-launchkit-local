@@ -170,7 +170,7 @@ log_info "Pulling latest versions (this may take a few minutes)..."
 
 # Force pull floating-tag images that don't auto-update
 log_info "Force pulling floating-tag images (open-notebook, n8n base, scriberr-cuda)..."
-docker pull lfnovo/open_notebook:v1-latest-single 2>/dev/null || {
+docker pull lfnovo/open_notebook:1.2.4-single 2>/dev/null || {
     log_warning "Failed to pull open-notebook (continuing...)"
 }
 docker pull n8nio/n8n:latest 2>/dev/null || {
