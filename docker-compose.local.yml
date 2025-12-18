@@ -656,8 +656,8 @@ services:
       - OPENAI_COMPATIBLE_BASE_URL_TTS=http://openedai-speech:8000/v1
       
       # API Configuration
-      # Backend internal API endpoint (container-internal)
-      - API_URL=http://localhost:5055
+      # Backend API endpoint (must use external IP and port for remote access)
+      - API_URL=http://${SERVER_IP}:8101
       # Frontend API Configuration (external access)
       - NEXT_PUBLIC_API_URL=http://${SERVER_IP}:8101
       
