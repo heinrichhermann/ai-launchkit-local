@@ -169,12 +169,15 @@ log_info "========== Step 3: Updating Docker Images =========="
 log_info "Pulling latest versions (this may take a few minutes)..."
 
 # Force pull floating-tag images that don't auto-update
-log_info "Force pulling floating-tag images (open-notebook, n8n base)..."
+log_info "Force pulling floating-tag images (open-notebook, n8n base, scriberr-cuda)..."
 docker pull lfnovo/open_notebook:v1-latest-single 2>/dev/null || {
     log_warning "Failed to pull open-notebook (continuing...)"
 }
 docker pull n8nio/n8n:latest 2>/dev/null || {
     log_warning "Failed to pull n8n base image (continuing...)"
+}
+docker pull ghcr.io/rishikanthc/scriberr-cuda:v1.2.0 2>/dev/null || {
+    log_warning "Failed to pull scriberr-cuda (continuing...)"
 }
 
 # Pull all pre-built images (ignore buildable services)
@@ -221,13 +224,17 @@ log_info "Stopping current services..."
 docker compose -p localai -f docker-compose.local.yml down --remove-orphans
 
 # Additional cleanup: Remove any containers with conflicting names
-# This handles cases where containers were deployed with different project names
+# This handles cases where containers were deployed with different project names or compose-generated names
 log_info "Cleaning up any conflicting containers..."
-docker ps -a --format "{{.Names}}" | grep -E "^(n8n|portainer|postgres|redis|ollama|neo4j|lightrag|faster-whisper|scriberr|python-runner|formbricks_db)$" | while read container; do
-    if docker ps -a --format "{{.Names}}" | grep -q "^${container}$"; then
-        docker rm -f "$container" 2>/dev/null || true
-    fi
-done
+
+# Remove containers from wrong project names (ai-launchkit-local instead of localai)
+docker ps -a --filter "label=com.docker.compose.project=ai-launchkit-local" -q | xargs -r docker rm -f 2>/dev/null || true
+
+# Remove standalone containers with specific names
+docker ps -a --format "{{.Names}}" | grep -E "^(n8n|portainer|postgres|redis|ollama|neo4j|lightrag|faster-whisper|scriberr|python-runner|formbricks_db|open-notebook)$" | xargs -r docker rm -f 2>/dev/null || true
+
+# Remove compose-generated containers (e.g., localai-scriberr-gpu-1, localai-n8n-worker-1)
+docker ps -a --format "{{.Names}}" | grep -E "^(localai|ai-launchkit-local)-.*-[0-9]+$" | xargs -r docker rm -f 2>/dev/null || true
 
 log_info "Starting services with new versions..."
 docker compose -p localai -f docker-compose.local.yml up -d

@@ -1403,7 +1403,7 @@ services:
       start_period: 60s
 
   scriberr-gpu:
-    image: ghcr.io/rishikanthc/scriberr:v1.0.4-cuda
+    image: ghcr.io/rishikanthc/scriberr-cuda:v1.2.0
     profiles: ["gpu-nvidia"]
     restart: unless-stopped
     ports:
