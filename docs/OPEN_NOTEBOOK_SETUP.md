@@ -33,6 +33,8 @@ Open Notebook ist eine **vollständige, selbst-gehostete Alternative zu Google's
 
 Open Notebook ist bereits in AI LaunchKit integriert!
 
+**Version:** 1.2.4-single (Stabile Release)
+
 ### Im Wizard aktivieren:
 
 ```bash
@@ -51,6 +53,18 @@ Wähle im Wizard:
 ```bash
 # Füge "open-notebook" zu COMPOSE_PROFILES hinzu:
 COMPOSE_PROFILES="n8n,flowise,monitoring,open-notebook"
+```
+
+### Update auf neueste Version:
+
+```bash
+# Automatisches Update (empfohlen):
+cd ~/ai-launchkit-local
+sudo bash ./scripts/update_local.sh
+
+# Oder nur Open Notebook:
+docker pull lfnovo/open_notebook:1.2.4-single
+docker compose -p localai -f docker-compose.local.yml up -d --force-recreate open-notebook
 ```
 
 ## 🔧 Konfiguration

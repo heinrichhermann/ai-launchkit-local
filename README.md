@@ -1524,10 +1524,28 @@ sudo bash ./scripts/update_local.sh
 The update script will:
 1. ✅ Create automatic backup of your configuration
 2. ✅ Pull latest changes from GitHub
-3. ✅ Update all Docker images
-4. ✅ Restart services with new versions
-5. ✅ Perform health checks
-6. ✅ Provide rollback instructions if needed
+3. ✅ **Force-pull floating-tag images** (open-notebook, n8n, scriberr-cuda)
+4. ✅ **Rebuild n8n with --no-cache** for clean updates
+5. ✅ Update all other Docker images
+6. ✅ **Automatic container cleanup** (prevents name conflicts)
+7. ✅ Restart services with new versions
+8. ✅ Perform health checks
+9. ✅ Provide rollback instructions if needed
+
+**Update Individual Services:**
+```bash
+# Update only n8n (rebuilds with latest n8nio/n8n:latest)
+docker compose -p localai -f docker-compose.local.yml build --no-cache --pull n8n n8n-import n8n-worker
+docker compose -p localai -f docker-compose.local.yml up -d n8n n8n-import n8n-worker
+
+# Update only open-notebook (pulls latest 1.2.4-single image)
+docker pull lfnovo/open_notebook:1.2.4-single
+docker compose -p localai -f docker-compose.local.yml up -d --force-recreate open-notebook
+
+# Update only scriberr-gpu (pulls latest CUDA version)
+docker pull ghcr.io/rishikanthc/scriberr-cuda:v1.2.0
+docker compose -p localai -f docker-compose.local.yml up -d --force-recreate scriberr-gpu
+```
 
 **Manual Update:**
 ```bash
@@ -1548,14 +1566,19 @@ docker image prune -f
 
 **What Gets Updated:**
 - ✅ AI LaunchKit scripts and configurations
-- ✅ Docker images for all services
+- ✅ Docker images for all services (including custom builds)
+- ✅ n8n base image and custom Dockerfile layers
+- ✅ open-notebook to stable version 1.2.4-single
+- ✅ scriberr to correct CPU/GPU images
 - ✅ Landing page and templates
 - ✅ Documentation
 
 **What Gets Preserved:**
 - ✅ Your .env configuration (automatically backed up and restored)
-- ✅ All data in Docker volumes
+- ✅ All data in Docker volumes (workflows, databases, uploads)
 - ✅ Service selections and settings
+- ✅ n8n workflows and credentials
+- ✅ All AI models and embeddings
 
 ---
 

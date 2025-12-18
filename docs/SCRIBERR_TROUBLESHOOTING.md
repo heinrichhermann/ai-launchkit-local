@@ -17,9 +17,13 @@ The following fixes are **automatically applied** by AI LaunchKit:
 
 ### ✅ GPU Support (Automatic)
 - Scriberr GPU variant activates with `gpu-nvidia` profile
-- Uses correct CUDA image: `v1.0.4-cuda`
+- Uses correct CUDA image: `ghcr.io/rishikanthc/scriberr-cuda:v1.2.0`
 - GPU passthrough with `count: all` (uses all available GPUs)
-- Both CPUs available for multi-GPU systems
+- Automatic deployment resource configuration
+
+**Note:** Scriberr has **separate repositories** for CPU and GPU:
+- CPU: `ghcr.io/rishikanthc/scriberr:latest` (v1.2.0)
+- GPU/CUDA: `ghcr.io/rishikanthc/scriberr-cuda:v1.2.0` (separate repo)
 
 ### ✅ YouTube Transcription (Automatic)
 - Node.js automatically installed at startup
@@ -147,6 +151,32 @@ docker exec localai-scriberr-gpu-1 yt-dlp --version
 ```
 
 **If still fails:** Wait for Scriberr image update with permanent fix
+
+---
+
+## 🔄 Updates
+
+### Scriberr auf neueste Version aktualisieren:
+
+```bash
+# Automatisches Update (empfohlen - updated alle Services):
+cd ~/ai-launchkit-local
+sudo bash ./scripts/update_local.sh
+
+# Nur Scriberr CPU updaten:
+docker pull ghcr.io/rishikanthc/scriberr:latest
+docker compose -p localai -f docker-compose.local.yml up -d --force-recreate scriberr
+
+# Nur Scriberr GPU updaten:
+docker pull ghcr.io/rishikanthc/scriberr-cuda:v1.2.0
+docker compose -p localai -f docker-compose.local.yml up -d --force-recreate scriberr-gpu
+```
+
+**Welche Version läuft bei mir?**
+```bash
+docker ps | grep scriberr
+# Zeigt: "scriberr" (CPU) oder "localai-scriberr-gpu-1" (GPU)
+```
 
 ---
 
