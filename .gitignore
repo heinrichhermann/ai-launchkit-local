@@ -43,3 +43,4 @@ website/
 # Perplexica - now uses Docker Hub image (no local git clone needed)
 perplexica/
 perplexica.config.toml
+open-notebook/
