@@ -194,6 +194,9 @@ echo ""
 log_info "Rebuilding custom services with latest base images..."
 log_info "Building n8n (this rebuilds with latest n8nio/n8n:latest)..."
 docker builder prune -f 2>/dev/null || true
+# Remove old local n8n image to force complete rebuild
+docker rmi localai-n8n localai-n8n-import localai-n8n-worker 2>/dev/null || true
+docker rmi ai-launchkit-local-n8n ai-launchkit-local-n8n-import ai-launchkit-local-n8n-worker 2>/dev/null || true
 docker compose -p localai -f docker-compose.local.yml build --no-cache --pull n8n n8n-import n8n-worker || {
     log_warning "n8n rebuild failed"
     log_info "Continuing with existing n8n image..."
