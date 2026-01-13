@@ -1416,25 +1416,54 @@ services:
     command:
       - "-c"
       - |
-        # Fix permissions for data directory (prevents "readonly database" error)
-        echo "Fixing data directory permissions..."
-        chown -R root:root /app/data 2>/dev/null || true
-        chmod -R 755 /app/data 2>/dev/null || true
-        # Ensure database file is writable
-        if [ -f /app/data/scriberr.db ]; then
-          chmod 644 /app/data/scriberr.db
-          echo "Database permissions fixed"
+        # ============================================================
+        # CRITICAL: Fix SQLite "readonly database" error (Issue #89)
+        # Must run BEFORE app starts to prevent database lock issues
+        # ============================================================
+        echo "=== Scriberr GPU Startup Script ==="
+        
+        # Step 1: Ensure data directory structure exists with correct permissions
+        echo "Step 1: Creating data directory structure..."
+        mkdir -p /app/data/uploads /app/data/whisperx-env
+        
+        # Step 2: Initialize empty database file if it doesn't exist
+        # This prevents SQLite from failing on first write
+        if [ ! -f /app/data/scriberr.db ]; then
+          echo "Step 2: Initializing empty database file..."
+          touch /app/data/scriberr.db
         fi
-        # Install Node.js + yt-dlp for YouTube transcription (Issue #224)
+        
+        # Step 3: Fix all permissions recursively
+        echo "Step 3: Fixing permissions (running as root)..."
+        chown -R root:root /app/data
+        chmod -R 755 /app/data
+        chmod 666 /app/data/scriberr.db
+        
+        # Step 4: Remove any stale SQLite locks (common cause of readonly errors)
+        echo "Step 4: Removing stale database locks..."
+        rm -f /app/data/scriberr.db-journal /app/data/scriberr.db-wal /app/data/scriberr.db-shm 2>/dev/null || true
+        
+        # Step 5: Verify database is writable
+        echo "Step 5: Verifying database is writable..."
+        if touch /app/data/scriberr.db 2>/dev/null; then
+          echo "  ✓ Database file is writable"
+        else
+          echo "  ✗ ERROR: Database file is NOT writable!"
+          exit 1
+        fi
+        
+        # Step 6: Install Node.js + yt-dlp for YouTube transcription (Issue #224)
+        echo "Step 6: Installing yt-dlp dependencies..."
         if ! command -v node &> /dev/null; then
           apt-get update && apt-get install -y nodejs npm curl && rm -rf /var/lib/apt/lists/*
         fi
-        # Install/upgrade yt-dlp globally (not just in venv)
         if ! command -v yt-dlp &> /dev/null; then
           pip install --no-cache-dir yt-dlp
         else
-          pip install --no-cache-dir --upgrade yt-dlp
+          pip install --no-cache-dir --upgrade yt-dlp 2>/dev/null || true
         fi
+        
+        echo "=== Starting Scriberr ==="
         # Start Scriberr as normal
         exec docker-entrypoint.sh /app/scriberr
     environment:
