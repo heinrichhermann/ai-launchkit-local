@@ -193,6 +193,7 @@ echo ""
 # Rebuild buildable services (n8n, bolt, chatterbox)
 log_info "Rebuilding custom services with latest base images..."
 log_info "Building n8n (this rebuilds with latest n8nio/n8n:latest)..."
+docker builder prune -f 2>/dev/null || true
 docker compose -p localai -f docker-compose.local.yml build --no-cache --pull n8n n8n-import n8n-worker || {
     log_warning "n8n rebuild failed"
     log_info "Continuing with existing n8n image..."
