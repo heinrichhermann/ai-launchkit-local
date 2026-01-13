@@ -1416,6 +1416,15 @@ services:
     command:
       - "-c"
       - |
+        # Fix permissions for data directory (prevents "readonly database" error)
+        echo "Fixing data directory permissions..."
+        chown -R root:root /app/data 2>/dev/null || true
+        chmod -R 755 /app/data 2>/dev/null || true
+        # Ensure database file is writable
+        if [ -f /app/data/scriberr.db ]; then
+          chmod 644 /app/data/scriberr.db
+          echo "Database permissions fixed"
+        fi
         # Install Node.js + yt-dlp for YouTube transcription (Issue #224)
         if ! command -v node &> /dev/null; then
           apt-get update && apt-get install -y nodejs npm curl && rm -rf /var/lib/apt/lists/*
