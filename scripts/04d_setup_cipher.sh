@@ -43,6 +43,13 @@ fi
 mkdir -p "$CIPHER_DIR/data"
 log_info "Created data directory: $CIPHER_DIR/data"
 
+# Create empty SQLite backup file (required for volume mount)
+# Docker will mount this file to /app/cipher-backup.db
+if [ ! -f "$CIPHER_DIR/data/cipher-backup.db" ]; then
+    touch "$CIPHER_DIR/data/cipher-backup.db"
+    log_info "Created SQLite backup file: $CIPHER_DIR/data/cipher-backup.db"
+fi
+
 # Note: Cipher uses ONLY environment variables for configuration
 # No YAML config file needed - all settings are in docker-compose.local.yml
 # See: https://github.com/campfirein/cipher/blob/main/docs/configuration.md

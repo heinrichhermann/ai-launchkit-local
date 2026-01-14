@@ -2045,10 +2045,10 @@ services:
       # MCP Configuration
       - MCP_TRANSPORT_TYPE=sse
       
-      # SQLite Backup Path - redirect to writable data directory
-      - CIPHER_BACKUP_DB_PATH=/app/data/cipher-backup.db
     volumes:
       - ./cipher/data:/app/data
+      # SQLite backup file - must be created before container start
+      - ./cipher/data/cipher-backup.db:/app/cipher-backup.db
     depends_on:
       cipher-init:
         condition: service_completed_successfully
