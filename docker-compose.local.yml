@@ -1994,6 +1994,8 @@ services:
         - BUILD_UI=true
     container_name: cipher
     profiles: ["cipher"]
+    # Run as root to allow writing to mounted volumes
+    user: root
     restart: unless-stopped
     ports:
       - "3000:3000"  # API + MCP SSE endpoint
