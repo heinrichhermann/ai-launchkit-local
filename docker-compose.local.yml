@@ -1980,3 +1980,101 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # ============================================================================
+  # CIPHER - Memory-Powered AI Agent (Ports 3000-3001)
+  # External port range - uses standard Cipher ports for compatibility
+  # Documentation: docs/CIPHER_SETUP.md
+  # ============================================================================
+
+  cipher:
+    build:
+      context: ./cipher
+      args:
+        - BUILD_UI=true
+    container_name: cipher
+    profiles: ["cipher"]
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # API + MCP SSE endpoint
+      - "3001:3001"  # Web UI (Next.js)
+    environment:
+      # LLM Provider - Ollama (local)
+      - OLLAMA_BASE_URL=http://ollama:11434
+      
+      # Dummy API key for Ollama-only operation
+      # Cipher requires at least one API key even if not used
+      - OPENAI_API_KEY=${CIPHER_OPENAI_API_KEY:-sk-dummy-for-ollama-only}
+      - ANTHROPIC_API_KEY=${CIPHER_ANTHROPIC_API_KEY:-}
+      
+      # Vector Store - Qdrant (AI LaunchKit)
+      - VECTOR_STORE_TYPE=qdrant
+      - VECTOR_STORE_URL=http://qdrant:6333
+      - VECTOR_STORE_API_KEY=${QDRANT_API_KEY}
+      - VECTOR_STORE_COLLECTION=cipher_knowledge
+      - VECTOR_STORE_DIMENSION=768
+      - VECTOR_STORE_DISTANCE=Cosine
+      
+      # Reflection Memory Collection
+      - REFLECTION_VECTOR_STORE_COLLECTION=cipher_reflection
+      - DISABLE_REFLECTION_MEMORY=false
+      
+      # Chat History - PostgreSQL (AI LaunchKit)
+      - CIPHER_MULTI_BACKEND=1
+      - CIPHER_PG_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/cipher
+      - STORAGE_DATABASE_TYPE=postgres
+      
+      # Embedding - Use Ollama with nomic-embed-text
+      - OLLAMA_EMBEDDING=true
+      - EMBEDDING_MODEL=nomic-embed-text
+      
+      # Application Settings
+      - NODE_ENV=production
+      - CIPHER_LOG_LEVEL=info
+      - REDACT_SECRETS=true
+      
+      # Memory Configuration
+      - SEARCH_MEMORY_TYPE=both
+      
+      # Web Search (DuckDuckGo)
+      - WEB_SEARCH_ENABLE=true
+      - WEB_SEARCH_ENGINE=duckduckgo
+      - WEB_SEARCH_SAFETY_MODE=moderate
+      - WEB_SEARCH_MAX_RESULTS=5
+      
+      # MCP Configuration
+      - MCP_TRANSPORT_TYPE=sse
+    volumes:
+      - ./cipher/memAgent:/app/memAgent:ro
+      - ./cipher/data:/app/data
+    depends_on:
+      cipher-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    networks:
+      - ailaunchkit
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  cipher-init:
+    image: postgres:${POSTGRES_VERSION:-17-alpine}
+    container_name: cipher-init
+    profiles: ["cipher"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command: >
+      sh -c "
+      psql -h postgres -U postgres -c \"CREATE DATABASE cipher\" || true &&
+      echo 'Cipher database ready'
+      "
+    networks:
+      - ailaunchkit
+    restart: "no"

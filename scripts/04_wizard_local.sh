@@ -44,6 +44,7 @@ base_services_data=(
     "flowise" "Flowise (AI Agent Builder) - Port 8022"
     "bolt" "bolt.diy (AI Web Development) - Port 8023"
     "openui" "OpenUI (AI Frontend/UI Generator) - Port 8025"
+    "cipher" "Cipher (Memory-Powered AI Agent) - Ports 3000, 3001"
     "monitoring" "Monitoring Suite (Prometheus: 8004, Grafana: 8003)"
     "portainer" "Portainer (Docker Management UI) - Port 8007"
     "postiz" "Postiz (Social Publishing Platform) - Port 8060"
@@ -313,6 +314,24 @@ if [[ " ${selected_profiles[@]} " =~ " leantime " ]]; then
         echo
         log_info "📦 MySQL 8.4 will be installed automatically for Leantime"
         log_info "   You can use this MySQL instance for other services too"
+        sleep 2
+    fi
+fi
+
+# Auto-enable Qdrant when Cipher is selected (required for vector memory)
+if [[ " ${selected_profiles[@]} " =~ " cipher " ]]; then
+    if [[ ! " ${selected_profiles[@]} " =~ " qdrant " ]]; then
+        selected_profiles+=("qdrant")
+        echo
+        log_info "📦 Qdrant will be installed automatically for Cipher"
+        log_info "   Cipher uses Qdrant for persistent vector memory"
+        sleep 2
+    fi
+    # Also recommend Ollama if not selected
+    if [[ ! " ${selected_profiles[@]} " =~ " cpu " ]] && [[ ! " ${selected_profiles[@]} " =~ " gpu-nvidia " ]] && [[ ! " ${selected_profiles[@]} " =~ " gpu-amd " ]]; then
+        echo
+        log_warning "⚠️ Cipher requires Ollama for local LLM"
+        log_info "   Please also select 'ollama' to enable local AI capabilities"
         sleep 2
     fi
 fi

@@ -415,6 +415,15 @@ if [[ "$COMPOSE_PROFILES" == *"open-notebook"* ]]; then
     fi
 fi
 
+# Check Cipher (Memory-Powered AI Agent)
+if [[ "$COMPOSE_PROFILES" == *"cipher"* ]]; then
+    if docker ps | grep -q "cipher"; then
+        log_success "✅ Cipher is running (Ports 3000/3001)"
+    else
+        FAILED_SERVICES+=("cipher")
+    fi
+fi
+
 # Check business tools
 if [[ "$COMPOSE_PROFILES" == *"calcom"* ]]; then
     if docker ps | grep -q "calcom"; then
