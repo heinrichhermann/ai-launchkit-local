@@ -39,16 +39,16 @@ else
     }
 fi
 
-# Create data directory for persistent storage (mounted as /app/.cipher)
-# This is where Cipher stores SQLite backup and other data
+# Create data directory for persistent storage
+# mounted as both /app/.cipher and /app/data
 mkdir -p "$CIPHER_DIR/data"
-log_info "Created data directory: $CIPHER_DIR/data (mounted as /app/.cipher)"
+log_info "Created data directory: $CIPHER_DIR/data"
 
 # Create empty SQLite backup file for volume mount
-# Cipher hardcodes this path to /app/cipher-backup.db
-if [ ! -f "$CIPHER_DIR/data/cipher-backup.db" ]; then
-    touch "$CIPHER_DIR/data/cipher-backup.db"
-    log_info "Created SQLite backup file: $CIPHER_DIR/data/cipher-backup.db"
+# Cipher hardcodes this path to /app/cipher-backup.db (internal backup mechanism)
+if [ ! -f "$CIPHER_DIR/cipher-backup.db" ]; then
+    touch "$CIPHER_DIR/cipher-backup.db"
+    log_info "Created SQLite backup file: $CIPHER_DIR/cipher-backup.db"
 fi
 
 # Note: Cipher uses environment variables for configuration

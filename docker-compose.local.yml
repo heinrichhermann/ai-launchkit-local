@@ -2046,10 +2046,11 @@ services:
       - MCP_TRANSPORT_TYPE=sse
       
     volumes:
-      # Cipher data directory per official docker-compose
+      # Cipher data directories
       - ./cipher/data:/app/.cipher
-      # SQLite backup - hardcoded path in Cipher source
-      - ./cipher/data/cipher-backup.db:/app/cipher-backup.db
+      - ./cipher/data:/app/data
+      # cipher-backup.db - internal backup mechanism (hardcoded path)
+      - ./cipher/cipher-backup.db:/app/cipher-backup.db
     depends_on:
       cipher-init:
         condition: service_completed_successfully
