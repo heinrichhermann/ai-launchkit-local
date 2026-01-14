@@ -2044,6 +2044,9 @@ services:
       
       # MCP Configuration
       - MCP_TRANSPORT_TYPE=sse
+      
+      # SQLite Backup Path - redirect to writable data directory
+      - CIPHER_BACKUP_DB_PATH=/app/data/cipher-backup.db
     volumes:
       - ./cipher/data:/app/data
     depends_on:
