@@ -2051,8 +2051,6 @@ services:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
-    networks:
-      - ailaunchkit
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -2074,6 +2072,4 @@ services:
       psql -h postgres -U postgres -c \"CREATE DATABASE cipher\" || true &&
       echo 'Cipher database ready'
       "
-    networks:
-      - ailaunchkit
     restart: "no"
