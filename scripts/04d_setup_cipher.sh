@@ -43,127 +43,10 @@ fi
 mkdir -p "$CIPHER_DIR/data"
 log_info "Created data directory: $CIPHER_DIR/data"
 
-# Create memAgent directory if it doesn't exist
-mkdir -p "$CIPHER_DIR/memAgent"
-
-# Create cipher.yml configuration for Ollama + Qdrant
-log_info "Creating Cipher agent configuration..."
-
-cat > "$CIPHER_DIR/memAgent/cipher.yml" << 'EOF'
-# Cipher Agent Configuration for AI LaunchKit
-# Uses Ollama for LLM and Qdrant for vector storage
-# Documentation: https://github.com/campfirein/cipher
-
-name: "AI LaunchKit Cipher Agent"
-description: "Memory-powered AI assistant integrated with local Ollama and Qdrant"
-version: "1.0.0"
-
-# LLM Configuration - Use Ollama (local)
-llm:
-  provider: "ollama"
-  model: "qwen2.5:7b-instruct-q4_K_M"
-  temperature: 0.7
-  maxTokens: 4096
-  # Fallback models if primary is not available
-  fallbackModels:
-    - "llama3.2:3b"
-    - "mistral:7b"
-
-# Embedding Configuration - Use Ollama with nomic-embed-text
-embedding:
-  provider: "ollama"
-  model: "nomic-embed-text"
-  dimensions: 768
-
-# Memory Configuration
-memory:
-  enabled: true
-  type: "long-term"
-  
-  # Vector Store - Qdrant (AI LaunchKit)
-  vectorStore:
-    type: "qdrant"
-    collection: "cipher_knowledge"
-    # Distance metric for similarity search
-    distance: "Cosine"
-  
-  # Maximum memories to retrieve per query
-  maxResults: 10
-  
-  # Minimum similarity score to include memory
-  minScore: 0.7
-
-# Reflection Memory (Self-improvement)
-reflection:
-  enabled: true
-  collection: "cipher_reflection"
-  # How often to reflect on conversations
-  interval: 5
-
-# Tools available to the agent
-tools:
-  - name: "web_search"
-    enabled: true
-    config:
-      engine: "duckduckgo"
-      maxResults: 5
-      safeSearch: "moderate"
-  
-  - name: "memory_search"
-    enabled: true
-    config:
-      maxResults: 10
-  
-  - name: "memory_store"
-    enabled: true
-    config:
-      autoStore: true
-      minImportance: 0.5
-
-# Chat History Configuration
-chatHistory:
-  enabled: true
-  maxMessages: 100
-  # Store in PostgreSQL via CIPHER_PG_URL environment variable
-
-# System Prompt
-systemPrompt: |
-  You are a helpful AI assistant with persistent memory capabilities.
-  You can remember information from previous conversations and learn over time.
-  You are running locally on AI LaunchKit with Ollama as your LLM backend.
-  
-  Key capabilities:
-  - Store and retrieve knowledge from your vector memory (Qdrant)
-  - Search the web for current information (DuckDuckGo)
-  - Learn and improve from interactions through reflection
-  - Maintain conversation context across sessions
-  
-  Guidelines:
-  - Be helpful, accurate, and acknowledge when you're uncertain
-  - When storing memories, focus on important facts and user preferences
-  - Use web search for current events or information you don't have
-  - Reference previous conversations when relevant
-  
-  You have access to the following AI LaunchKit services:
-  - n8n (workflow automation) at port 8000
-  - Ollama (local LLM) at port 8021
-  - Qdrant (vector database) at port 8026
-  - PostgreSQL (database) at port 8001
-
-# MCP (Model Context Protocol) Configuration
-mcp:
-  enabled: true
-  transport: "sse"
-  # SSE endpoint will be available at /mcp/sse
-
-# Rate Limiting
-rateLimit:
-  enabled: false
-  maxRequests: 100
-  windowMs: 60000
-EOF
-
-log_success "Cipher configuration created: $CIPHER_DIR/memAgent/cipher.yml"
+# Note: Cipher uses ONLY environment variables for configuration
+# No YAML config file needed - all settings are in docker-compose.local.yml
+# See: https://github.com/campfirein/cipher/blob/main/docs/configuration.md
+log_info "Cipher configuration is done via environment variables in docker-compose"
 
 # Verify required services will be available
 log_info "Verifying service dependencies..."
@@ -190,11 +73,12 @@ echo ""
 log_success "✅ Cipher setup completed!"
 log_info ""
 log_info "📋 Cipher Configuration Summary:"
-log_info "   - Agent Config: $CIPHER_DIR/memAgent/cipher.yml"
+log_info "   - Repository: $CIPHER_DIR"
 log_info "   - Data Directory: $CIPHER_DIR/data"
-log_info "   - LLM Provider: Ollama (qwen2.5:7b-instruct-q4_K_M)"
-log_info "   - Vector Store: Qdrant (cipher_knowledge collection)"
-log_info "   - Chat History: PostgreSQL (cipher database)"
+log_info "   - Configuration: Environment variables (docker-compose.local.yml)"
+log_info "   - LLM Provider: Ollama (via OLLAMA_BASE_URL)"
+log_info "   - Vector Store: Qdrant (via VECTOR_STORE_URL)"
+log_info "   - Chat History: PostgreSQL (via CIPHER_PG_URL)"
 log_info ""
 log_info "📡 Cipher will be accessible at:"
 log_info "   - Web UI: http://SERVER_IP:3001"

@@ -2045,7 +2045,6 @@ services:
       # MCP Configuration
       - MCP_TRANSPORT_TYPE=sse
     volumes:
-      - ./cipher/memAgent:/app/memAgent:ro
       - ./cipher/data:/app/data
     depends_on:
       cipher-init:
