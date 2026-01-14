@@ -54,6 +54,7 @@ volumes:
   scriberr_data:
   chatterbox_models:
   penpot_assets:
+  cipher_data:
 
 # Penpot Configuration - Using YAML anchors for consistent flags across all services
 x-penpot-flags: &penpot-flags
@@ -1994,12 +1995,11 @@ services:
         - BUILD_UI=true
     container_name: cipher
     profiles: ["cipher"]
-    # Run as root to allow writing to mounted volumes
-    user: root
     restart: unless-stopped
     ports:
-      - "3000:3000"  # API + MCP SSE endpoint
-      - "3001:3001"  # Web UI (Next.js)
+      - "3000:3000"  # API + MCP SSE endpoint + Web UI (with BUILD_UI=true)
+    # Override default command to run with UI
+    command: ["sh", "-c", "node dist/src/app/index.cjs --mode ui --port 3000 --host 0.0.0.0 --agent /app/memAgent/cipher.yml --mcp-transport-type sse"]
     environment:
       # LLM Provider - Ollama (local)
       - OLLAMA_BASE_URL=http://ollama:11434
@@ -2048,11 +2048,8 @@ services:
       - MCP_TRANSPORT_TYPE=sse
       
     volumes:
-      # Cipher data directories
-      - ./cipher/data:/app/.cipher
-      - ./cipher/data:/app/data
-      # cipher-backup.db - internal backup mechanism (hardcoded path)
-      - ./cipher/cipher-backup.db:/app/cipher-backup.db
+      # Named volume for Cipher data - preserves permissions from Dockerfile
+      - cipher_data:/app/.cipher
     depends_on:
       cipher-init:
         condition: service_completed_successfully
