@@ -1997,9 +1997,17 @@ services:
     profiles: ["cipher"]
     restart: unless-stopped
     ports:
-      - "3000:3000"  # API + MCP SSE endpoint + Web UI (with BUILD_UI=true)
-    # Override default command to run with UI
-    command: ["sh", "-c", "node dist/src/app/index.cjs --mode ui --port 3000 --host 0.0.0.0 --agent /app/memAgent/cipher.yml --mcp-transport-type sse"]
+      - "3000:3000"  # API + MCP SSE endpoint (/sse)
+      - "3001:3001"  # Web UI
+    command: >
+      sh -c "node dist/src/app/index.cjs
+      --mode ui
+      --port 3000
+      --ui-port 3001
+      --host 0.0.0.0
+      --ui-host 0.0.0.0
+      --mcp-transport-type sse
+      --agent /app/memAgent/cipher.yml"
     environment:
       # LLM Provider - Ollama (local)
       - OLLAMA_BASE_URL=http://ollama:11434
