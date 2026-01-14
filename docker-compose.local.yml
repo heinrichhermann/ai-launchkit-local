@@ -2046,9 +2046,8 @@ services:
       - MCP_TRANSPORT_TYPE=sse
       
     volumes:
-      - ./cipher/data:/app/data
-      # SQLite backup file - must be created before container start
-      - ./cipher/data/cipher-backup.db:/app/cipher-backup.db
+      # Cipher data directory (SQLite backup, etc.)
+      - ./cipher/data:/app/.cipher
     depends_on:
       cipher-init:
         condition: service_completed_successfully
