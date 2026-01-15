@@ -336,6 +336,18 @@ if [[ " ${selected_profiles[@]} " =~ " cipher " ]]; then
     fi
 fi
 
+# Auto-enable SearXNG when Open WebUI is selected (for web search integration)
+if [[ " ${selected_profiles[@]} " =~ " open-webui " ]]; then
+    if [[ ! " ${selected_profiles[@]} " =~ " searxng " ]]; then
+        selected_profiles+=("searxng")
+        echo
+        log_info "📦 SearXNG will be installed automatically for Open WebUI"
+        log_info "   Enables AI-powered web search in chat (click 🌐 icon)"
+        log_info "   See docs/SEARXNG_OPENWEBUI_SETUP.md for details"
+        sleep 2
+    fi
+fi
+
 # Display selected services
 if [ ${#selected_profiles[@]} -eq 0 ]; then
     log_info "No optional services selected. Only core services will run."
