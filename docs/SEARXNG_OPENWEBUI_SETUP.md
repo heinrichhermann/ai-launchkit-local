@@ -100,12 +100,16 @@ open-webui:
   environment:
     - ENABLE_WEB_SEARCH=${ENABLE_WEB_SEARCH:-true}
     - WEB_SEARCH_ENGINE=${WEB_SEARCH_ENGINE:-searxng}
-    - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>
+    - SEARXNG_QUERY_URL=http://host.docker.internal:8089/search?q=<query>
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   depends_on:
     searxng:
       condition: service_started
       required: false
 ```
+
+**Important:** The URL uses `host.docker.internal:8089` (external port) instead of `searxng:8080` (internal port). This is required because Open WebUI needs to access SearXNG through the host network.
 
 ## How It Works
 
