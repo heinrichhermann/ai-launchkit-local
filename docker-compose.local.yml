@@ -321,11 +321,37 @@ services:
     ports:
       - "8020:8080"
     environment:
+      # Ollama Integration
       - OLLAMA_BASE_URL=http://ollama:11434
+      
+      # ============================================================
+      # SearXNG Web Search Integration
+      # Enables AI-powered web search in Open WebUI chat
+      # Requires: searxng profile to be active
+      # ============================================================
+      - ENABLE_WEB_SEARCH=${ENABLE_WEB_SEARCH:-true}
+      - WEB_SEARCH_ENGINE=${WEB_SEARCH_ENGINE:-searxng}
+      # Internal Docker network URL - searxng:8080 is the container's internal port
+      - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>
+      # Search result configuration
+      - WEB_SEARCH_RESULT_COUNT=${WEB_SEARCH_RESULT_COUNT:-5}
+      - WEB_SEARCH_CONCURRENT_REQUESTS=${WEB_SEARCH_CONCURRENT_REQUESTS:-10}
+      # RAG Web Search (optional - enables automatic web search for RAG)
+      - ENABLE_RAG_WEB_SEARCH=${ENABLE_RAG_WEB_SEARCH:-false}
+      - RAG_WEB_SEARCH_RESULT_COUNT=${RAG_WEB_SEARCH_RESULT_COUNT:-3}
+      - RAG_WEB_SEARCH_CONCURRENT_REQUESTS=${RAG_WEB_SEARCH_CONCURRENT_REQUESTS:-10}
+      # Search engine bypass (optional - for direct URL fetching)
+      - BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL=${BYPASS_WEB_SEARCH_EMBEDDING:-false}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - open-webui:/app/backend/data
+    # Soft dependency on searxng - Open WebUI starts even if searxng is not running
+    # Web search will gracefully fail if searxng is unavailable
+    depends_on:
+      searxng:
+        condition: service_started
+        required: false
 
   ollama-cpu:
     profiles: ["cpu"]

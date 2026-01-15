@@ -1,15 +1,176 @@
-# see https://docs.searxng.org/admin/settings/settings.html#settings-use-default-settings
+# SearXNG Configuration for AI LaunchKit
+# Documentation: https://docs.searxng.org/admin/settings/settings.html
+# Integration: Open WebUI Web Search (docs/SEARXNG_OPENWEBUI_SETUP.md)
+
 use_default_settings: true
+
+general:
+  # Debug mode - set to false in production
+  debug: false
+  # Instance name shown in UI
+  instance_name: "AI LaunchKit Search"
+  # Privacy notice
+  privacypolicy_url: false
+  donation_url: false
+  contact_url: false
+  enable_metrics: false
+
 server:
-  # base_url is defined in the SEARXNG_BASE_URL environment variable, see .env and docker-compose.yml
-  secret_key: "ultrasecretkey"  # change this!
+  # Base URL is defined via SEARXNG_BASE_URL environment variable
+  # Secret key - IMPORTANT: Change this in production!
+  # Generate with: openssl rand -hex 32
+  secret_key: "ultrasecretkey"
+  # Rate limiting - disabled for internal Docker network use
   limiter: false
+  # Enable image proxy for privacy
   image_proxy: true
+  # HTTP protocol version
+  http_protocol_version: "1.1"
+  # Request method
+  method: "GET"
+
 ui:
+  # Use hash for static files (cache busting)
   static_use_hash: true
+  # Default locale
+  default_locale: "en"
+  # Query in title
+  query_in_title: true
+  # Infinite scroll
+  infinite_scroll: false
+  # Center alignment
+  center_alignment: false
+  # Default theme
+  default_theme: "simple"
+  # Theme arguments
+  theme_args:
+    simple_style: "auto"
+
+# Redis cache configuration (uses AI LaunchKit's shared Redis)
 redis:
   url: redis://redis:6379/0
+
 search:
-    formats:
-        - html
-        - json
+  # Safe search level: 0=off, 1=moderate, 2=strict
+  safe_search: 0
+  # Autocomplete provider
+  autocomplete: "google"
+  # Default language
+  default_lang: "auto"
+  # Ban time for failing engines (seconds)
+  ban_time_on_fail: 5
+  # Max ban time
+  max_ban_time_on_fail: 120
+  # Suspended times - how many times an engine can fail before being suspended
+  suspended_times:
+    SearxEngineAccessDenied: 86400
+    SearxEngineCaptcha: 86400
+    SearxEngineTooManyRequests: 3600
+    cf_SearxEngineCaptcha: 1296000
+    cf_SearxEngineAccessDenied: 86400
+    recaptcha_SearxEngineCaptcha: 604800
+  # Output formats - JSON is REQUIRED for Open WebUI integration!
+  formats:
+    - html
+    - json
+    - csv
+    - rss
+
+# Outgoing request configuration
+outgoing:
+  # Request timeout (seconds)
+  request_timeout: 6.0
+  # Max request timeout
+  max_request_timeout: 15.0
+  # Use HTTPS when available
+  useragent_suffix: ""
+  # Pool connections
+  pool_connections: 100
+  pool_maxsize: 20
+  # Enable HTTP/2
+  enable_http2: true
+
+# Engine configuration - optimized for AI/LLM use cases
+engines:
+  # Google - primary search engine
+  - name: google
+    engine: google
+    shortcut: g
+    disabled: false
+    
+  # DuckDuckGo - privacy-focused alternative
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
+    disabled: false
+    
+  # Bing - Microsoft search
+  - name: bing
+    engine: bing
+    shortcut: b
+    disabled: false
+    
+  # Wikipedia - knowledge base
+  - name: wikipedia
+    engine: wikipedia
+    shortcut: w
+    disabled: false
+    
+  # Wikidata - structured data
+  - name: wikidata
+    engine: wikidata
+    shortcut: wd
+    disabled: false
+    
+  # GitHub - code search
+  - name: github
+    engine: github
+    shortcut: gh
+    disabled: false
+    
+  # Stack Overflow - programming Q&A
+  - name: stackoverflow
+    engine: stackoverflow
+    shortcut: so
+    disabled: false
+    
+  # arXiv - scientific papers
+  - name: arxiv
+    engine: arxiv
+    shortcut: ar
+    disabled: false
+    
+  # Google Scholar - academic search
+  - name: google scholar
+    engine: google_scholar
+    shortcut: gs
+    disabled: false
+    
+  # Brave - privacy-focused search
+  - name: brave
+    engine: brave
+    shortcut: br
+    disabled: false
+    
+  # Qwant - European search engine
+  - name: qwant
+    engine: qwant
+    shortcut: qw
+    disabled: false
+
+# Categories configuration
+categories_as_tabs:
+  general:
+  images:
+  videos:
+  news:
+  science:
+  it:
+  files:
+
+# Enabled plugins
+enabled_plugins:
+  - 'Hash plugin'
+  - 'Self Information'
+  - 'Tracker URL remover'
+  - 'Ahmia blacklist'
