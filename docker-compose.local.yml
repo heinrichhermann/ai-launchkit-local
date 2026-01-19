@@ -1423,6 +1423,8 @@ services:
       # Performance Settings
       - WHISPER_THREADS=${SCRIBERR_THREADS:-4}
       - BATCH_SIZE=${SCRIBERR_BATCH_SIZE:-16}
+      - PUID=1005
+      - PGID=1005
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
       interval: 30s
@@ -1519,6 +1521,8 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       # cuDNN Library Path Fix (helps Python find cuDNN libraries)
       - LD_LIBRARY_PATH=/app/whisperx-env/WhisperX/.venv/lib/python3.10/site-packages/nvidia/cudnn/lib:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+      - PUID=1005
+      - PGID=1005
     deploy:
       resources:
         reservations:
