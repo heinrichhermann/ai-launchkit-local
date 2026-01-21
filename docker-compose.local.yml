@@ -2019,6 +2019,26 @@ services:
   # Documentation: docs/CIPHER_SETUP.md
   # ============================================================================
 
+  # Cipher Reverse Proxy - Handles CORS for external IP access
+  # Required because Cipher's built-in CORS only allows localhost origins
+  cipher-proxy:
+    image: nginx:alpine
+    container_name: cipher-proxy
+    profiles: ["cipher"]
+    restart: unless-stopped
+    ports:
+      - "3000:3000"   # Web UI (proxied)
+      - "3001:3001"   # API + MCP SSE (proxied)
+    volumes:
+      - ./cipher/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - cipher
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   cipher:
     build:
       context: ./cipher
@@ -2027,9 +2047,10 @@ services:
     container_name: cipher
     profiles: ["cipher"]
     restart: unless-stopped
-    ports:
-      - "3000:3000"   # Web UI (standard --ui-port default)
-      - "3001:3001"   # API + MCP SSE endpoint (standard --port default)
+    # Ports are now handled by cipher-proxy
+    expose:
+      - "3000"   # Web UI (internal)
+      - "3001"   # API + MCP SSE (internal)
     command:
       [
         'sh',
@@ -2081,7 +2102,10 @@ services:
       # ====================
       # Application Settings
       # ====================
-      - NODE_ENV=production
+      # IMPORTANT: NODE_ENV=development is required for CORS to work with external IPs
+      # In production mode, Cipher only allows localhost origins
+      # In development mode, it's more lenient with CORS
+      - NODE_ENV=development
       - CIPHER_LOG_LEVEL=info
       - REDACT_SECRETS=true
       
