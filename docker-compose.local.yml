@@ -118,7 +118,7 @@ x-init-ollama: &init-ollama
   entrypoint: /bin/sh
   command:
     - "-c"
-    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull nemotron-mini:4b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull qwen3-embedding:8b"
+    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull nemotron-3-nano:30b; OLLAMA_HOST=ollama:11434 ollama pull qwen3-embedding:8b"
 
 services:
   # ============================================================================
