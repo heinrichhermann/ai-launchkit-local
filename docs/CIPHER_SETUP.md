@@ -17,15 +17,15 @@ Cipher is a **memory-powered AI agent framework** that provides persistent knowl
 
 ## Access URLs
 
-All Cipher services are available on **Port 8095**:
+Cipher uses two ports:
 
-| Endpoint | URL | Description |
-|----------|-----|-------------|
-| **Web UI** | `http://SERVER_IP:8095` | Interactive chat interface |
-| **REST API** | `http://SERVER_IP:8095/api/` | Programmatic API access |
-| **API Docs** | `http://SERVER_IP:8095/api/docs` | Swagger/OpenAPI documentation |
-| **MCP SSE** | `http://SERVER_IP:8095/api/mcp/sse` | Model Context Protocol endpoint |
-| **Health** | `http://SERVER_IP:8095/api/health` | Service health check |
+| Port | Endpoint | URL | Description |
+|------|----------|-----|-------------|
+| 3000 | **Web UI** | `http://SERVER_IP:3000` | Interactive chat interface |
+| 3001 | **REST API** | `http://SERVER_IP:3001/api/` | Programmatic API access |
+| 3001 | **API Docs** | `http://SERVER_IP:3001/api/docs` | Swagger/OpenAPI documentation |
+| 3001 | **MCP SSE** | `http://SERVER_IP:3001/api/mcp/sse` | Model Context Protocol endpoint |
+| 3001 | **Health** | `http://SERVER_IP:3001/api/health` | Service health check |
 
 Replace `SERVER_IP` with your server's actual IP address (e.g., `192.168.178.151`).
 
@@ -36,9 +36,9 @@ Replace `SERVER_IP` with your server's actual IP address (e.g., `192.168.178.151
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │                         Cipher                                  │
-│                       Port 8095                                 │
 │  ┌─────────────────────┐    ┌─────────────────────┐           │
 │  │    REST API         │    │    Web UI           │           │
+│  │    Port 3001        │    │    Port 3000        │           │
 │  │    /api/*           │    │    /                │           │
 │  └──────────┬──────────┘    └──────────┬──────────┘           │
 │             │                          │                       │
@@ -178,7 +178,7 @@ docker compose -p localai -f docker-compose.local.yml restart cipher
 
 ### Web Interface
 
-1. Open your browser to `http://SERVER_IP:8095`
+1. Open your browser to `http://SERVER_IP:3000`
 2. Start a conversation - Cipher remembers context!
 3. Ask about previous conversations - it recalls stored memories
 
@@ -187,14 +187,14 @@ docker compose -p localai -f docker-compose.local.yml restart cipher
 **Storing Information:**
 ```
 You: My name is Alex and I work at TechCorp as a software engineer.
-Cipher: Nice to meet you, Alex! I'll remember that you work at TechCorp 
+Cipher: Nice to meet you, Alex! I'll remember that you work at TechCorp
         as a software engineer. How can I help you today?
 ```
 
 **Recalling Information (in a new session):**
 ```
 You: What do you remember about me?
-Cipher: I remember that your name is Alex and you work at TechCorp 
+Cipher: I remember that your name is Alex and you work at TechCorp
         as a software engineer.
 ```
 
@@ -209,12 +209,12 @@ Cipher: Let me search for recent AI news... [performs DuckDuckGo search]
 
 **Health Check:**
 ```bash
-curl http://SERVER_IP:8095/api/health
+curl http://SERVER_IP:3001/api/health
 ```
 
 **Chat via API:**
 ```bash
-curl -X POST http://SERVER_IP:8095/api/chat \
+curl -X POST http://SERVER_IP:3001/api/chat \
   -H "Content-Type: application/json" \
   -d '{
     "message": "Hello! Remember that my favorite color is blue.",
@@ -231,7 +231,7 @@ Cipher exposes an MCP (Model Context Protocol) server via SSE transport. This al
 ### MCP Endpoint
 
 ```
-http://SERVER_IP:8095/api/mcp/sse
+http://SERVER_IP:3001/api/mcp/sse
 ```
 
 ### Configuration for Kilo Code
@@ -242,7 +242,7 @@ Add to your Kilo Code MCP settings (`mcp_settings.json`):
 {
   "mcpServers": {
     "cipher": {
-      "url": "http://SERVER_IP:8095/api/mcp/sse",
+      "url": "http://SERVER_IP:3001/api/mcp/sse",
       "transport": "sse",
       "autoApprove": ["ask_cipher"]
     }
@@ -258,7 +258,7 @@ Add to your Claude Desktop config:
 {
   "mcpServers": {
     "cipher": {
-      "url": "http://SERVER_IP:8095/api/mcp/sse"
+      "url": "http://SERVER_IP:3001/api/mcp/sse"
     }
   }
 }
@@ -347,7 +347,7 @@ docker logs cipher
 **Common issues:**
 1. **Database not ready** - Wait for cipher-init to complete
 2. **Qdrant not running** - Ensure Qdrant profile is enabled
-3. **Port conflict** - Check if 8095 is available
+3. **Port conflict** - Check if 3000/3001 are available
 
 ### Memory Not Persisting
 
@@ -388,12 +388,12 @@ docker exec ollama ollama pull nomic-embed-text
 
 **Test MCP endpoint:**
 ```bash
-curl -N http://SERVER_IP:8095/api/mcp/sse
+curl -N http://SERVER_IP:3001/api/mcp/sse
 ```
 
 **Check CORS headers:**
 ```bash
-curl -I http://SERVER_IP:8095/api/mcp/sse
+curl -I http://SERVER_IP:3001/api/mcp/sse
 ```
 
 **Common MCP issues:**
@@ -463,7 +463,7 @@ docker compose -p localai -f docker-compose.local.yml up -d cipher
 | View Logs | `docker logs cipher -f` |
 | Restart | `docker compose -p localai -f docker-compose.local.yml restart cipher` |
 | Rebuild | `docker compose -p localai -f docker-compose.local.yml build --no-cache cipher` |
-| Check Health | `curl http://SERVER_IP:8095/api/health` |
+| Check Health | `curl http://SERVER_IP:3001/api/health` |
 | Check Qdrant | `curl http://SERVER_IP:8026/collections/cipher_knowledge` |
 
 ---
