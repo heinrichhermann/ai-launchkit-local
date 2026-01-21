@@ -71,7 +71,7 @@ Cipher requires two Ollama models to function. These models are **automatically 
 
 | Model | Purpose | Size | Download Command |
 |-------|---------|------|------------------|
-| `nemotron-3-nano:30b` | LLM (Chat/Reasoning) | ~18 GB | `ollama pull nemotron-3-nano:30b` |
+| `qwen3:8b` | LLM (Chat/Reasoning) | ~5 GB | `ollama pull qwen3:8b` |
 | `qwen3-embedding:8b` | Embeddings (Vector Search) | ~4.5 GB | `ollama pull qwen3-embedding:8b` |
 
 ### Installing Models Manually
@@ -80,7 +80,7 @@ If Cipher fails to start or shows model errors, install the models manually:
 
 ```bash
 # Connect to the Ollama container
-docker exec -it ollama ollama pull nemotron-3-nano:30b
+docker exec -it ollama ollama pull qwen3:8b
 docker exec -it ollama ollama pull qwen3-embedding:8b
 
 # Verify models are installed
@@ -103,7 +103,7 @@ Cipher is pre-configured to use existing AI LaunchKit services:
 ### Ollama (Local LLM + Embeddings)
 - **Internal URL**: `http://ollama:11434` (Docker network)
 - **External URL**: `http://SERVER_IP:8021`
-- **LLM Model**: `nemotron-3-nano:30b` (NVIDIA's powerful 30B parameter model)
+- **LLM Model**: `qwen3:8b` (Alibaba's Qwen3 8B, optimized for tool calling)
 - **Embedding Model**: `qwen3-embedding:8b` (4096 dimensions, state-of-the-art)
 
 ### Qdrant (Vector Store)
@@ -132,7 +132,7 @@ description: "Memory-powered AI assistant with persistent knowledge"
 
 llm:
   provider: ollama
-  model: nemotron-3-nano:30b
+  model: qwen3:8b
   maxIterations: 50
   baseURL: $OLLAMA_BASE_URL
 
@@ -407,13 +407,13 @@ curl http://SERVER_IP:8021/api/tags
 
 **Check model availability:**
 ```bash
-# Should list nemotron-3-nano:30b and qwen3-embedding:8b
+# Should list qwen3:8b and qwen3-embedding:8b
 curl http://SERVER_IP:8021/api/tags | jq '.models[].name'
 ```
 
 **Pull models if missing:**
 ```bash
-docker exec ollama ollama pull nemotron-3-nano:30b
+docker exec ollama ollama pull qwen3:8b
 docker exec ollama ollama pull qwen3-embedding:8b
 ```
 
@@ -428,7 +428,7 @@ If you see "model not found" errors in Cipher logs:
 
 2. **Install missing models:**
    ```bash
-   docker exec ollama ollama pull nemotron-3-nano:30b
+   docker exec ollama ollama pull qwen3:8b
    docker exec ollama ollama pull qwen3-embedding:8b
    ```
 
@@ -530,7 +530,7 @@ docker compose -p localai -f docker-compose.local.yml up -d cipher
 | Rebuild | `docker compose -p localai -f docker-compose.local.yml build --no-cache cipher` |
 | Check Health | `curl http://SERVER_IP:3001/api/health` |
 | Check Qdrant | `curl http://SERVER_IP:8026/collections/cipher_knowledge` |
-| Pull LLM Model | `docker exec ollama ollama pull nemotron-3-nano:30b` |
+| Pull LLM Model | `docker exec ollama ollama pull qwen3:8b` |
 | Pull Embedding Model | `docker exec ollama ollama pull qwen3-embedding:8b` |
 | List Ollama Models | `docker exec ollama ollama list` |
 

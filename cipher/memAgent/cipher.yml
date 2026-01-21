@@ -10,10 +10,10 @@ mcpServers: {}
 # LLM Configuration - Ollama (Local)
 # ==============================================================================
 # Using Ollama as the LLM provider (local, no API key required)
-# nemotron-3-nano:30b - NVIDIA's powerful 30B parameter model
+# qwen3:8b - Alibaba's Qwen3 8B model, optimized for tool calling
 llm:
   provider: ollama
-  model: nemotron-3-nano:30b
+  model: qwen3:8b
   maxIterations: 50
   baseURL: $OLLAMA_BASE_URL
 
