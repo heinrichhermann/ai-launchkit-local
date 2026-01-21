@@ -2028,13 +2028,13 @@ services:
     profiles: ["cipher"]
     restart: unless-stopped
     ports:
-      - "3000:3000"   # API + MCP SSE endpoint (standard --port)
-      - "3001:3001"   # Web UI (standard --ui-port)
+      - "3000:3000"   # Web UI (standard --ui-port default)
+      - "3001:3001"   # API + MCP SSE endpoint (standard --port default)
     command:
       [
         'sh',
         '-c',
-        'node dist/src/app/index.cjs --mode ui --port 3000 --ui-port 3001 --host 0.0.0.0 --mcp-transport-type sse --agent /app/memAgent/cipher.yml',
+        'node dist/src/app/index.cjs --mode ui --host 0.0.0.0 --mcp-transport-type sse --agent /app/memAgent/cipher.yml',
       ]
     environment:
       # ====================
