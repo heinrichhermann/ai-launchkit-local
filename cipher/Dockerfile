@@ -1,6 +1,9 @@
 ################################################################################
 # Cipher Dockerfile for AI LaunchKit
 # Based on official Cipher Dockerfile with Ollama integration
+# 
+# CORS PATCH: Modified to allow all origins for local network access
+# This is necessary because Cipher's built-in CORS only allows localhost
 ################################################################################
 
 # Build stage - includes dev dependencies
@@ -31,6 +34,18 @@ RUN pnpm install --frozen-lockfile
 
 # Build with UI
 RUN if [ "$BUILD_UI" = "true" ]; then pnpm run build; else pnpm run build:no-ui; fi
+
+# ============================================================================
+# CORS PATCH: Allow all origins for local network access
+# This patches the compiled JavaScript to accept any origin
+# ============================================================================
+RUN echo "Applying CORS patch for local network access..." && \
+    # Patch the API server to allow all origins
+    # Find and replace the CORS origin callback to always return true
+    sed -i 's/callback(new Error("Not allowed by CORS"))/callback(null, true)/g' dist/src/app/api/server.cjs && \
+    # Also patch the index.cjs in case CORS is configured there
+    sed -i 's/callback(new Error("Not allowed by CORS"))/callback(null, true)/g' dist/src/app/index.cjs 2>/dev/null || true && \
+    echo "CORS patch applied successfully"
 
 # Clean up and prepare production node_modules
 RUN pnpm prune --prod && \

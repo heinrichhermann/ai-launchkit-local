@@ -2017,27 +2017,10 @@ services:
   # CIPHER - Memory-Powered AI Agent (Ports 3000-3001)
   # External port range - uses standard Cipher ports for compatibility
   # Documentation: docs/CIPHER_SETUP.md
+  #
+  # NOTE: CORS is patched in the Dockerfile to allow all origins
+  # This eliminates the need for an nginx reverse proxy
   # ============================================================================
-
-  # Cipher Reverse Proxy - Handles CORS for external IP access
-  # Required because Cipher's built-in CORS only allows localhost origins
-  cipher-proxy:
-    image: nginx:alpine
-    container_name: cipher-proxy
-    profiles: ["cipher"]
-    restart: unless-stopped
-    ports:
-      - "3000:3000"   # Web UI (proxied)
-      - "3001:3001"   # API + MCP SSE (proxied)
-    volumes:
-      - ./cipher/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - cipher
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   cipher:
     build:
@@ -2047,10 +2030,9 @@ services:
     container_name: cipher
     profiles: ["cipher"]
     restart: unless-stopped
-    # Ports are now handled by cipher-proxy
-    expose:
-      - "3000"   # Web UI (internal)
-      - "3001"   # API + MCP SSE (internal)
+    ports:
+      - "3000:3000"   # Web UI
+      - "3001:3001"   # API + MCP SSE
     command:
       [
         'sh',
