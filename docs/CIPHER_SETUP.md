@@ -63,6 +63,39 @@ Replace `SERVER_IP` with your server's actual IP address (e.g., `192.168.178.151
 
 ---
 
+## ⚠️ Required Ollama Models
+
+Cipher requires two Ollama models to function. These models are **automatically downloaded** during AI LaunchKit installation, but if you're setting up manually or the models are missing, you must install them first.
+
+### Required Models
+
+| Model | Purpose | Size | Download Command |
+|-------|---------|------|------------------|
+| `nemotron-mini:4b-instruct-q4_K_M` | LLM (Chat/Reasoning) | ~2.5 GB | `ollama pull nemotron-mini:4b-instruct-q4_K_M` |
+| `qwen3-embedding:8b` | Embeddings (Vector Search) | ~4.5 GB | `ollama pull qwen3-embedding:8b` |
+
+### Installing Models Manually
+
+If Cipher fails to start or shows model errors, install the models manually:
+
+```bash
+# Connect to the Ollama container
+docker exec -it ollama ollama pull nemotron-mini:4b-instruct-q4_K_M
+docker exec -it ollama ollama pull qwen3-embedding:8b
+
+# Verify models are installed
+docker exec -it ollama ollama list
+```
+
+### What Happens Without Models?
+
+If the models are not installed:
+- **Cipher will start** but fail on first request
+- **Error message**: "model not found" or "failed to load model"
+- **Solution**: Install the models using the commands above
+
+---
+
 ## Integration with AI LaunchKit
 
 Cipher is pre-configured to use existing AI LaunchKit services:
@@ -70,14 +103,14 @@ Cipher is pre-configured to use existing AI LaunchKit services:
 ### Ollama (Local LLM + Embeddings)
 - **Internal URL**: `http://ollama:11434` (Docker network)
 - **External URL**: `http://SERVER_IP:8021`
-- **LLM Model**: `qwen2.5:7b-instruct-q4_K_M`
-- **Embedding Model**: `nomic-embed-text` (768 dimensions)
+- **LLM Model**: `nemotron-mini:4b-instruct-q4_K_M` (fast, efficient instruction-following)
+- **Embedding Model**: `qwen3-embedding:8b` (4096 dimensions, state-of-the-art)
 
 ### Qdrant (Vector Store)
 - **Internal URL**: `http://qdrant:6333` (Docker network)
 - **External URL**: `http://SERVER_IP:8026`
 - **Collection**: `cipher_knowledge` (auto-created)
-- **Vector Size**: 768 (matches nomic-embed-text)
+- **Vector Size**: 4096 (matches qwen3-embedding:8b)
 - **Distance Metric**: Cosine
 
 ### PostgreSQL (Chat History)
@@ -99,15 +132,15 @@ description: "Memory-powered AI assistant with persistent knowledge"
 
 llm:
   provider: ollama
-  model: qwen2.5:7b-instruct-q4_K_M
+  model: nemotron-mini:4b-instruct-q4_K_M
   maxIterations: 50
   baseURL: $OLLAMA_BASE_URL
 
 embedding:
   type: ollama
-  model: nomic-embed-text
+  model: qwen3-embedding:8b
   baseUrl: $OLLAMA_BASE_URL
-  dimensions: 768
+  dimensions: 4096
 
 vectorStore:
   type: qdrant
@@ -319,7 +352,7 @@ Expected output:
     "config": {
       "params": {
         "vectors": {
-          "size": 768,
+          "size": 4096,
           "distance": "Cosine"
         }
       }
@@ -330,7 +363,7 @@ Expected output:
 
 **Key indicators:**
 - `vectors_count` > 0 means data is being stored
-- `size: 768` matches nomic-embed-text dimensions
+- `size: 4096` matches qwen3-embedding:8b dimensions
 - `distance: Cosine` is the correct metric
 
 ---
@@ -374,14 +407,46 @@ curl http://SERVER_IP:8021/api/tags
 
 **Check model availability:**
 ```bash
-# Should list qwen2.5:7b-instruct-q4_K_M and nomic-embed-text
+# Should list nemotron-mini:4b-instruct-q4_K_M and qwen3-embedding:8b
 curl http://SERVER_IP:8021/api/tags | jq '.models[].name'
 ```
 
 **Pull models if missing:**
 ```bash
-docker exec ollama ollama pull qwen2.5:7b-instruct-q4_K_M
-docker exec ollama ollama pull nomic-embed-text
+docker exec ollama ollama pull nemotron-mini:4b-instruct-q4_K_M
+docker exec ollama ollama pull qwen3-embedding:8b
+```
+
+### Model Not Found Errors
+
+If you see "model not found" errors in Cipher logs:
+
+1. **Check if models are installed:**
+   ```bash
+   docker exec ollama ollama list
+   ```
+
+2. **Install missing models:**
+   ```bash
+   docker exec ollama ollama pull nemotron-mini:4b-instruct-q4_K_M
+   docker exec ollama ollama pull qwen3-embedding:8b
+   ```
+
+3. **Restart Cipher:**
+   ```bash
+   docker compose -p localai -f docker-compose.local.yml restart cipher
+   ```
+
+### Changing Embedding Dimension (Migration)
+
+If you're upgrading from an older version with different embedding dimensions (e.g., 768 → 4096), you must delete the existing Qdrant collection:
+
+```bash
+# Delete the old collection (WARNING: This deletes all stored memories!)
+curl -X DELETE http://SERVER_IP:8026/collections/cipher_knowledge
+
+# Restart Cipher to recreate the collection with new dimensions
+docker compose -p localai -f docker-compose.local.yml restart cipher
 ```
 
 ### MCP Connection Issues
@@ -465,6 +530,9 @@ docker compose -p localai -f docker-compose.local.yml up -d cipher
 | Rebuild | `docker compose -p localai -f docker-compose.local.yml build --no-cache cipher` |
 | Check Health | `curl http://SERVER_IP:3001/api/health` |
 | Check Qdrant | `curl http://SERVER_IP:8026/collections/cipher_knowledge` |
+| Pull LLM Model | `docker exec ollama ollama pull nemotron-mini:4b-instruct-q4_K_M` |
+| Pull Embedding Model | `docker exec ollama ollama pull qwen3-embedding:8b` |
+| List Ollama Models | `docker exec ollama ollama list` |
 
 ---
 

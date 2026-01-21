@@ -10,22 +10,24 @@ mcpServers: {}
 # LLM Configuration - Ollama (Local)
 # ==============================================================================
 # Using Ollama as the LLM provider (local, no API key required)
+# nemotron-mini:4b-instruct-q4_K_M - Fast, efficient instruction-following model
 llm:
   provider: ollama
-  model: qwen2.5:7b-instruct-q4_K_M
+  model: nemotron-mini:4b-instruct-q4_K_M
   maxIterations: 50
   baseURL: $OLLAMA_BASE_URL
 
 # ==============================================================================
-# Embedding Configuration - Ollama with nomic-embed-text
+# Embedding Configuration - Ollama with qwen3-embedding:8b
 # ==============================================================================
 # Using Ollama for embeddings (local, no API key required)
-# nomic-embed-text produces 768-dimensional vectors
+# qwen3-embedding:8b produces 4096-dimensional vectors (state-of-the-art)
+# Supports 100+ languages including code
 embedding:
   type: ollama
-  model: nomic-embed-text
+  model: qwen3-embedding:8b
   baseUrl: $OLLAMA_BASE_URL
-  dimensions: 768
+  dimensions: 4096
 
 # ==============================================================================
 # System Prompt - AI LaunchKit Assistant

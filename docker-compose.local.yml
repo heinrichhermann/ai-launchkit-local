@@ -118,7 +118,7 @@ x-init-ollama: &init-ollama
   entrypoint: /bin/sh
   command:
     - "-c"
-    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
+    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull nemotron-mini:4b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull qwen3-embedding:8b"
 
 services:
   # ============================================================================
@@ -2072,9 +2072,9 @@ services:
       # ====================
       # Embedding Configuration
       # ====================
-      # Use Ollama with nomic-embed-text (768 dimensions)
+      # Use Ollama with qwen3-embedding:8b (4096 dimensions)
       - OLLAMA_EMBEDDING=true
-      - EMBEDDING_MODEL=nomic-embed-text
+      - EMBEDDING_MODEL=qwen3-embedding:8b
       
       # ====================
       # Vector Store Configuration (Qdrant)
@@ -2083,7 +2083,7 @@ services:
       - VECTOR_STORE_URL=http://qdrant:6333
       - VECTOR_STORE_API_KEY=${QDRANT_API_KEY}
       - VECTOR_STORE_COLLECTION=cipher_knowledge
-      - VECTOR_STORE_DIMENSION=768
+      - VECTOR_STORE_DIMENSION=4096
       - VECTOR_STORE_DISTANCE=Cosine
       
       # ====================
