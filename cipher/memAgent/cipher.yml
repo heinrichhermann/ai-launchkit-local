@@ -1,0 +1,47 @@
+################################################################################
+# Cipher Agent Configuration for AI LaunchKit
+# Configured to use Ollama as LLM provider
+################################################################################
+
+# List of MCP servers to use
+mcpServers: {}
+
+# ==============================================================================
+# LLM Configuration - Ollama (Local)
+# ==============================================================================
+# Using Ollama as the LLM provider (local, no API key required)
+llm:
+  provider: ollama
+  model: qwen2.5:7b-instruct-q4_K_M
+  maxIterations: 50
+  baseURL: $OLLAMA_BASE_URL
+
+# ==============================================================================
+# Embedding Configuration - Ollama with nomic-embed-text
+# ==============================================================================
+# Using Ollama for embeddings (local, no API key required)
+# nomic-embed-text produces 768-dimensional vectors
+embedding:
+  type: ollama
+  model: nomic-embed-text
+  baseUrl: $OLLAMA_BASE_URL
+  dimensions: 768
+
+# ==============================================================================
+# System Prompt - AI LaunchKit Assistant
+# ==============================================================================
+systemPrompt:
+  enabled: true
+  content: |
+    You are an AI assistant with persistent memory capabilities. You excel at:
+    - Remembering context from previous conversations
+    - Writing clean, efficient code
+    - Debugging and problem-solving
+    - Code review and optimization
+    - Explaining complex technical concepts
+    - Reasoning through programming challenges
+    
+    You have access to memory tools that allow you to store and retrieve information
+    across conversations. Use these tools to provide personalized assistance.
+    
+    You should call each tool at most once per user request unless explicitly instructed otherwise.
