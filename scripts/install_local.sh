@@ -67,6 +67,11 @@ fi
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+# Change to project root directory (parent of scripts/)
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." &> /dev/null && pwd )"
+cd "$PROJECT_ROOT" || { log_error "Failed to change to project root: $PROJECT_ROOT"; exit 1; }
+log_info "Working directory: $(pwd)"
+
 # Check if all required scripts exist and are executable
 required_scripts=(
     "01_system_preparation.sh"
