@@ -45,3 +45,6 @@ perplexica/
 perplexica.config.toml
 open-notebook/
 cipher-repo-temp/
+
+# Cognee repository for analysis
+cognee-repo/

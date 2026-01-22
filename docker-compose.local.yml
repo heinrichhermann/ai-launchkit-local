@@ -2163,11 +2163,18 @@ services:
     restart: unless-stopped
     ports:
       - "8120:8000"
+    # Custom entrypoint with setup.py fallback (fixes GitHub Issue #2007)
+    entrypoint: ["/bin/bash", "/app/custom-entrypoint.sh"]
     environment:
       # ====================
       # Transport Mode
       # ====================
       - TRANSPORT_MODE=sse
+      
+      # ====================
+      # Extras (for Ollama support)
+      # ====================
+      - EXTRAS=ollama
       
       # ====================
       # LLM Configuration (Ollama with Qwen3)
@@ -2226,6 +2233,7 @@ services:
     volumes:
       - cognee_data:/app/.cognee_data
       - cognee_system:/app/.cognee_system
+      - ./cognee/entrypoint.sh:/app/custom-entrypoint.sh:ro
       - ./shared:/data/shared
     depends_on:
       cognee-init:
