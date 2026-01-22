@@ -130,6 +130,26 @@ if [[ "$COMPOSE_PROFILES" == *"ragapp"* ]]; then
     test_port 8030 "RAGApp"
 fi
 
+# Cognee AI Memory & Knowledge Graph
+if [[ "$COMPOSE_PROFILES" == *"cognee"* ]]; then
+    echo "Cognee MCP Server: $(is_service_running "cognee-mcp")"
+    test_port 8120 "Cognee MCP"
+fi
+
+if [[ "$COMPOSE_PROFILES" == *"cognee-ui"* ]]; then
+    echo "Cognee Frontend: $(is_service_running "cognee-frontend")"
+    test_port 8122 "Cognee Frontend"
+    echo "Cognee CORS Proxy: $(is_service_running "cognee-nginx")"
+    test_port 8123 "Cognee CORS Proxy"
+fi
+
+# Cipher Memory AI
+if [[ "$COMPOSE_PROFILES" == *"cipher"* ]]; then
+    echo "Cipher Memory AI: $(is_service_running "cipher")"
+    test_port 3000 "Cipher API"
+    test_port 3001 "Cipher Web UI"
+fi
+
 echo ""
 
 # Learning Tools Status
@@ -466,6 +486,13 @@ $([ "$COMPOSE_PROFILES" == *"comfyui"* ] && echo "ComfyUI: http://$SERVER_IP:802
 # Vector Database APIs:
 $([ "$COMPOSE_PROFILES" == *"weaviate"* ] && echo "Weaviate API: http://$SERVER_IP:8027")
 $([ "$COMPOSE_PROFILES" == *"qdrant"* ] && echo "Qdrant API: http://$SERVER_IP:8026")
+
+# AI Memory Services:
+$([ "$COMPOSE_PROFILES" == *"cognee"* ] && echo "Cognee MCP: http://$SERVER_IP:8120/sse")
+$([ "$COMPOSE_PROFILES" == *"cognee-ui"* ] && echo "Cognee Frontend: http://$SERVER_IP:8122")
+$([ "$COMPOSE_PROFILES" == *"cognee-ui"* ] && echo "Cognee CORS Proxy: http://$SERVER_IP:8123")
+$([ "$COMPOSE_PROFILES" == *"cipher"* ] && echo "Cipher API: http://$SERVER_IP:3000")
+$([ "$COMPOSE_PROFILES" == *"cipher"* ] && echo "Cipher Web UI: http://$SERVER_IP:3001")
 
 # Learning Tools:
 $([ "$COMPOSE_PROFILES" == *"calcom"* ] && echo "Cal.com: http://$SERVER_IP:8040")
