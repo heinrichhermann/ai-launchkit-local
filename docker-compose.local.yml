@@ -2184,6 +2184,7 @@ services:
       - EMBEDDING_MODEL=qwen3-embedding:8b
       - EMBEDDING_ENDPOINT=http://ollama:11434/api/embed
       - EMBEDDING_DIMENSIONS=4096
+      - HUGGINGFACE_TOKENIZER=Qwen/Qwen3-Embedding-8B
       
       # ====================
       # Database Configuration (PostgreSQL)
