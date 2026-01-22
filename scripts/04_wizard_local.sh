@@ -45,6 +45,8 @@ base_services_data=(
     "bolt" "bolt.diy (AI Web Development) - Port 8023"
     "openui" "OpenUI (AI Frontend/UI Generator) - Port 8025"
     "cipher" "Cipher (Memory-Powered AI Agent) - Ports 3000, 3001"
+    "cognee" "Cognee (AI Memory & Knowledge Graph - MCP) - Port 8120"
+    "cognee-ui" "Cognee UI (Knowledge Graph Visualization) - Ports 8122, 8123"
     "monitoring" "Monitoring Suite (Prometheus: 8004, Grafana: 8003)"
     "portainer" "Portainer (Docker Management UI) - Port 8007"
     "postiz" "Postiz (Social Publishing Platform) - Port 8060"
@@ -332,6 +334,35 @@ if [[ " ${selected_profiles[@]} " =~ " cipher " ]]; then
         echo
         log_warning "⚠️ Cipher requires Ollama for local LLM"
         log_info "   Please also select 'ollama' to enable local AI capabilities"
+        sleep 2
+    fi
+fi
+
+# Auto-enable Qdrant when Cognee is selected (required for vector storage)
+if [[ " ${selected_profiles[@]} " =~ " cognee " ]]; then
+    if [[ ! " ${selected_profiles[@]} " =~ " qdrant " ]]; then
+        selected_profiles+=("qdrant")
+        echo
+        log_info "📦 Qdrant will be installed automatically for Cognee"
+        log_info "   Cognee uses Qdrant for vector storage"
+        sleep 2
+    fi
+    # Also recommend Ollama if not selected
+    if [[ ! " ${selected_profiles[@]} " =~ " cpu " ]] && [[ ! " ${selected_profiles[@]} " =~ " gpu-nvidia " ]] && [[ ! " ${selected_profiles[@]} " =~ " gpu-amd " ]]; then
+        echo
+        log_warning "⚠️ Cognee requires Ollama for local LLM and embeddings"
+        log_info "   Please also select 'ollama' to enable local AI capabilities"
+        sleep 2
+    fi
+fi
+
+# Auto-enable Cognee when Cognee-UI is selected (UI requires MCP server)
+if [[ " ${selected_profiles[@]} " =~ " cognee-ui " ]]; then
+    if [[ ! " ${selected_profiles[@]} " =~ " cognee " ]]; then
+        selected_profiles+=("cognee")
+        echo
+        log_info "📦 Cognee MCP Server will be installed automatically for Cognee UI"
+        log_info "   The UI requires the MCP server to function"
         sleep 2
     fi
 fi

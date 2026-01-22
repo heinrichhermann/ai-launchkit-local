@@ -55,6 +55,8 @@ volumes:
   chatterbox_models:
   penpot_assets:
   cipher_data:
+  cognee_data:
+  cognee_system:
 
 # Penpot Configuration - Using YAML anchors for consistent flags across all services
 x-penpot-flags: &penpot-flags
@@ -2143,3 +2145,159 @@ services:
       echo 'Cipher database ready'
       "
     restart: "no"
+
+  # ============================================================================
+  # COGNEE - AI Memory & Knowledge Graph (Ports 8120-8123)
+  # GraphRAG-powered memory system with MCP integration
+  # Documentation: docs/COGNEE_SETUP.md
+  #
+  # Profiles:
+  #   - cognee: MCP Server only (for IDE integration)
+  #   - cognee-ui: Web UI + Nginx CORS proxy (requires cognee profile)
+  # ============================================================================
+
+  cognee-mcp:
+    image: cognee/cognee-mcp:main
+    container_name: cognee-mcp
+    profiles: ["cognee"]
+    restart: unless-stopped
+    ports:
+      - "8120:8000"
+    environment:
+      # ====================
+      # Transport Mode
+      # ====================
+      - TRANSPORT_MODE=sse
+      
+      # ====================
+      # LLM Configuration (Ollama with Qwen3)
+      # ====================
+      - LLM_API_KEY=ollama
+      - LLM_MODEL=qwen3:8b
+      - LLM_PROVIDER=ollama
+      - LLM_ENDPOINT=http://ollama:11434/v1
+      
+      # ====================
+      # Embedding Configuration (Ollama with Qwen3-Embedding)
+      # ====================
+      - EMBEDDING_PROVIDER=ollama
+      - EMBEDDING_MODEL=qwen3-embedding:8b
+      - EMBEDDING_ENDPOINT=http://ollama:11434/api/embed
+      - EMBEDDING_DIMENSIONS=4096
+      
+      # ====================
+      # Database Configuration (PostgreSQL)
+      # ====================
+      - DB_PROVIDER=postgres
+      - DB_NAME=cognee
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      
+      # ====================
+      # Vector Database (Qdrant)
+      # ====================
+      - VECTOR_DB_PROVIDER=qdrant
+      - VECTOR_DB_URL=http://qdrant:6333
+      - VECTOR_DB_KEY=${QDRANT_API_KEY}
+      
+      # ====================
+      # Graph Database (Kuzu default, Neo4j optional)
+      # ====================
+      - GRAPH_DATABASE_PROVIDER=${COGNEE_GRAPH_PROVIDER:-kuzu}
+      - GRAPH_DATABASE_URL=${COGNEE_GRAPH_URL:-}
+      - GRAPH_DATABASE_USERNAME=${NEO4J_AUTH_USERNAME:-}
+      - GRAPH_DATABASE_PASSWORD=${NEO4J_AUTH_PASSWORD:-}
+      
+      # ====================
+      # Security
+      # ====================
+      - ACCEPT_LOCAL_FILE_PATH=True
+      - ALLOW_HTTP_REQUESTS=True
+      - REQUIRE_AUTHENTICATION=False
+      
+      # ====================
+      # Telemetry
+      # ====================
+      - TELEMETRY_DISABLED=1
+      
+    volumes:
+      - cognee_data:/app/.cognee_data
+      - cognee_system:/app/.cognee_system
+      - ./shared:/data/shared
+    depends_on:
+      cognee-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+        required: false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  cognee-init:
+    image: postgres:${POSTGRES_VERSION:-17-alpine}
+    container_name: cognee-init
+    profiles: ["cognee"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command: >
+      sh -c "
+      psql -h postgres -U postgres -c \"CREATE DATABASE cognee\" || true &&
+      echo 'Cognee database ready'
+      "
+    restart: "no"
+
+  # Cognee Frontend (Web UI for Knowledge Graph Visualization)
+  # NOTE: This is a "Work in Progress" per official Cognee docs
+  # Recommended: Use MCP integration (VS Code/Claude Desktop) for full functionality
+  cognee-frontend:
+    build:
+      context: https://github.com/topoteretes/cognee.git#main:cognee-frontend
+      dockerfile: Dockerfile
+    container_name: cognee-frontend
+    profiles: ["cognee-ui"]
+    restart: unless-stopped
+    ports:
+      - "8122:3000"
+    environment:
+      # API URL goes through Nginx proxy for CORS fix
+      - NEXT_PUBLIC_BACKEND_API_URL=http://cognee-nginx:80/api
+    depends_on:
+      - cognee-mcp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Nginx Reverse Proxy for CORS fix (Frontend -> MCP API)
+  # Required because cognee-mcp has CORS hardcoded to localhost:3000
+  cognee-nginx:
+    image: nginx:alpine
+    container_name: cognee-nginx
+    profiles: ["cognee-ui"]
+    restart: unless-stopped
+    ports:
+      - "8123:80"
+    volumes:
+      - ./cognee/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - cognee-mcp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

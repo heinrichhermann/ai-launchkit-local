@@ -424,6 +424,30 @@ if [[ "$COMPOSE_PROFILES" == *"cipher"* ]]; then
     fi
 fi
 
+# Check Cognee (AI Memory & Knowledge Graph)
+if [[ "$COMPOSE_PROFILES" == *"cognee"* ]]; then
+    if docker ps | grep -q "cognee-mcp"; then
+        log_success "✅ Cognee MCP is running (Port 8120)"
+    else
+        FAILED_SERVICES+=("cognee-mcp")
+    fi
+fi
+
+# Check Cognee UI (Knowledge Graph Visualization)
+if [[ "$COMPOSE_PROFILES" == *"cognee-ui"* ]]; then
+    if docker ps | grep -q "cognee-frontend"; then
+        log_success "✅ Cognee Frontend is running (Port 8122)"
+    else
+        FAILED_SERVICES+=("cognee-frontend")
+    fi
+    
+    if docker ps | grep -q "cognee-nginx"; then
+        log_success "✅ Cognee CORS Proxy is running (Port 8123)"
+    else
+        FAILED_SERVICES+=("cognee-nginx")
+    fi
+fi
+
 # Check business tools
 if [[ "$COMPOSE_PROFILES" == *"calcom"* ]]; then
     if docker ps | grep -q "calcom"; then
