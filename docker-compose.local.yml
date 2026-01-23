@@ -2281,7 +2281,9 @@ services:
     #   start_period: 90s
 
   # Cognee MCP Server - Model Context Protocol for IDE integration
-  # Runs in API Mode - connects to cognee-api for all operations
+  # Runs in DIRECT MODE - uses cognee library directly for full functionality
+  # This enables: cognify_status, prune, codify, get_developer_rules
+  # Data is shared with cognee-api via PostgreSQL/Neo4j databases
   # Use this for Claude Desktop, Cursor, VS Code MCP integration
   cognee-mcp:
     image: cognee/cognee-mcp:main
@@ -2297,14 +2299,18 @@ services:
       - TRANSPORT_MODE=sse
       
       # ====================
-      # API Mode - Connect to cognee-api instead of using cognee directly
-      # This allows MCP server to share data with the Frontend
+      # Direct Mode - Uses cognee library directly (not API)
+      # This enables ALL features including:
+      # - cognify_status (pipeline monitoring)
+      # - prune (reset knowledge graph)
+      # - codify (code analysis)
+      # - get_developer_rules
+      # Data is shared with cognee-api via same PostgreSQL/Neo4j databases
       # ====================
-      - API_URL=http://cognee-api:8000
-      # API_TOKEN not needed since REQUIRE_AUTHENTICATION=False
+      # API_URL removed to enable Direct Mode
       
       # ====================
-      # Extras (for Ollama support - needed for direct mode fallback)
+      # Extras (for Ollama support in Direct Mode)
       # ====================
       - EXTRAS=ollama
       
