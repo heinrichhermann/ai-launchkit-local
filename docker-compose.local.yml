@@ -2261,12 +2261,13 @@ services:
         condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
+    # Healthcheck disabled - causes dependency issues with cognee-mcp
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 90s
 
   # Cognee MCP Server - Model Context Protocol for IDE integration
   # Runs in API Mode - connects to cognee-api for all operations
@@ -2321,15 +2322,16 @@ services:
       
     depends_on:
       cognee-api:
-        condition: service_healthy
+        condition: service_started
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+    # Healthcheck disabled - cognee-mcp doesn't have a /health endpoint
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 60s
 
   cognee-init:
     image: postgres:${POSTGRES_VERSION:-17-alpine}
@@ -2371,11 +2373,12 @@ services:
       - NEXT_PUBLIC_BACKEND_API_URL=http://${SERVER_IP}:8120
     depends_on:
       cognee-api:
-        condition: service_healthy
+        condition: service_started
         required: false
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    # Healthcheck disabled - Next.js dev server doesn't need health monitoring
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:3000"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 60s
