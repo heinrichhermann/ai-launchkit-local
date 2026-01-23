@@ -2240,6 +2240,12 @@ services:
       - UI_APP_URL=http://${SERVER_IP}:8122
       
       # ====================
+      # Cloud Sync (disabled - we use local Ollama)
+      # ====================
+      - COGNEE_CLOUD_API_URL=
+      - COGNEE_CLOUD_AUTH_TOKEN=
+      
+      # ====================
       # Telemetry
       # ====================
       - TELEMETRY_DISABLED=1
