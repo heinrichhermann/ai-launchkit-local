@@ -2227,6 +2227,9 @@ services:
       - ACCEPT_LOCAL_FILE_PATH=True
       - ALLOW_HTTP_REQUESTS=True
       - REQUIRE_AUTHENTICATION=False
+      # Cognee 0.5.0+ has multi-user access control enabled by default
+      # Disable it for simpler local setup
+      - ENABLE_BACKEND_ACCESS_CONTROL=false
       
       # ====================
       # CORS Configuration (for Frontend access)
@@ -2297,11 +2300,13 @@ services:
       
       # ====================
       # Embedding Configuration (fallback if API mode fails)
+      # IMPORTANT: All 4 embedding vars must be set together or validation fails
       # ====================
       - EMBEDDING_PROVIDER=ollama
       - EMBEDDING_MODEL=qwen3-embedding:8b
       - EMBEDDING_ENDPOINT=http://ollama:11434/api/embed
       - EMBEDDING_DIMENSIONS=4096
+      - HUGGINGFACE_TOKENIZER=Qwen/Qwen3-Embedding-8B
       
       # ====================
       # Telemetry
