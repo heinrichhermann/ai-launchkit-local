@@ -564,6 +564,13 @@ services:
       - ./neo4j/plugins:/plugins
     environment:
       - NEO4J_AUTH=${NEO4J_AUTH_USERNAME}/${NEO4J_AUTH_PASSWORD}
+      # ====================
+      # APOC Plugin Configuration (required for Cognee)
+      # Cognee uses apoc.create.addLabels for dynamic label creation
+      # ====================
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
     healthcheck:
       test:
         [

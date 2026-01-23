@@ -185,11 +185,14 @@ Cognee uses existing AI LaunchKit services:
 - **Browser**: `http://SERVER_IP:8028`
 - **Bolt URL**: `bolt://neo4j:7687`
 - **Requires**: `neo4j` profile enabled
+- **APOC Plugin**: Automatically installed (required for Cognee)
 
 Neo4j is the **default** graph database for Cognee, enabling:
 - 🔍 **Visual Knowledge Graph Exploration** in Neo4j Browser
 - 📊 **Cypher Queries** for advanced graph analysis
 - 🔗 **Entity Relationship Visualization**
+
+> **Note**: Cognee requires the APOC plugin for dynamic label creation. This is automatically configured in the docker-compose.local.yml.
 
 ### Kuzu (Alternative Graph Database)
 - **File-based** - No extra service needed
