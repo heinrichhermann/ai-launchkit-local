@@ -2327,10 +2327,40 @@ services:
       - HUGGINGFACE_TOKENIZER=Qwen/Qwen3-Embedding-8B
       
       # ====================
+      # Database Configuration (required for cognify_status)
+      # Must match cognee-api settings for shared data access
+      # ====================
+      - DB_PROVIDER=postgres
+      - DB_NAME=cognee
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      
+      # ====================
+      # Vector Database (must match cognee-api)
+      # ====================
+      - VECTOR_DB_PROVIDER=lancedb
+      
+      # ====================
+      # Graph Database (must match cognee-api)
+      # ====================
+      - GRAPH_DATABASE_PROVIDER=${COGNEE_GRAPH_PROVIDER:-neo4j}
+      - GRAPH_DATABASE_URL=${COGNEE_GRAPH_URL:-bolt://neo4j:7687}
+      - GRAPH_DATABASE_USERNAME=${NEO4J_AUTH_USERNAME:-neo4j}
+      - GRAPH_DATABASE_PASSWORD=${NEO4J_AUTH_PASSWORD}
+      
+      # ====================
       # Telemetry
       # ====================
       - TELEMETRY_DISABLED=1
       
+    volumes:
+      # Share the same data volumes with cognee-api
+      # This allows cognify_status to access the SQLite database
+      # that tracks pipeline status (stored in .cognee_system)
+      - cognee_data:/app/.cognee_data
+      - cognee_system:/app/.cognee_system
     depends_on:
       cognee-api:
         condition: service_started
