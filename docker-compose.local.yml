@@ -2157,14 +2157,14 @@ services:
   # ============================================================================
 
   cognee-mcp:
-    image: cognee/cognee-mcp:main
+    build:
+      context: ./cognee
+      dockerfile: Dockerfile
     container_name: cognee-mcp
     profiles: ["cognee"]
     restart: unless-stopped
     ports:
       - "8120:8000"
-    # Custom entrypoint with setup.py fallback (fixes GitHub Issue #2007)
-    entrypoint: ["/bin/bash", "/app/custom-entrypoint.sh"]
     environment:
       # ====================
       # Transport Mode
@@ -2227,6 +2227,14 @@ services:
       - REQUIRE_AUTHENTICATION=False
       
       # ====================
+      # CORS Configuration (for Frontend access)
+      # ====================
+      # Allow frontend to access the API from external IP
+      # The cognee backend (cognee/api/client.py) reads this env var
+      - CORS_ALLOWED_ORIGINS=http://${SERVER_IP}:8122,http://localhost:8122,http://localhost:3000
+      - UI_APP_URL=http://${SERVER_IP}:8122
+      
+      # ====================
       # Telemetry
       # ====================
       - TELEMETRY_DISABLED=1
@@ -2234,8 +2242,6 @@ services:
     volumes:
       - cognee_data:/app/.cognee_data
       - cognee_system:/app/.cognee_system
-      - ./cognee/entrypoint.sh:/app/custom-entrypoint.sh:ro
-      - ./cognee/.env:/app/.env:ro
       - ./shared:/data/shared
     depends_on:
       cognee-init:
@@ -2280,9 +2286,10 @@ services:
     ports:
       - "8122:3000"
     environment:
-      # API URL goes through Nginx proxy for CORS fix
+      # API URL - points directly to cognee-mcp backend
       # IMPORTANT: Must use external IP because this runs in the browser!
-      - NEXT_PUBLIC_BACKEND_API_URL=http://${SERVER_IP}:8123/api
+      # Note: Frontend adds /api/v1/... so we just need the base URL
+      - NEXT_PUBLIC_BACKEND_API_URL=http://${SERVER_IP}:8120
     # Note: cognee-mcp must be started separately with --profile cognee
     # depends_on removed to allow independent profile activation
     healthcheck:
