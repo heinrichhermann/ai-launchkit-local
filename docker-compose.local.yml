@@ -2357,6 +2357,13 @@ services:
       - GRAPH_DATABASE_PASSWORD=${NEO4J_AUTH_PASSWORD}
       
       # ====================
+      # Security (must match cognee-api)
+      # CRITICAL: Required to disable multi-user access control
+      # Without this, Direct Mode fails with "graph dataset to database handler" error
+      # ====================
+      - ENABLE_BACKEND_ACCESS_CONTROL=false
+      
+      # ====================
       # Telemetry
       # ====================
       - TELEMETRY_DISABLED=1
