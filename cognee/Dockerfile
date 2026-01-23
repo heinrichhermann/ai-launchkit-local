@@ -16,38 +16,33 @@ FROM cognee/cognee-mcp:main
 USER root
 
 # Patch CORS in server.py to read from environment variable
+# The server.py is in /app/src/server.py
 # The original code in run_sse_with_cors() and run_http_with_cors() has:
 #   allow_origins=["http://localhost:3000"],
 # We change it to:
 #   allow_origins=os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(","),
 #
 # This allows the frontend to connect from any origin specified in CORS_ALLOWED_ORIGINS
-RUN find /app -name "server.py" -type f | while read f; do \
-        echo "Patching CORS in: $f"; \
-        # Check if file contains the hardcoded localhost:3000
-        if grep -q 'allow_origins=\["http://localhost:3000"\]' "$f"; then \
-            echo "Found hardcoded CORS in: $f"; \
-            # Replace hardcoded origins with env var reading
-            # Use Python to do the replacement more reliably
-            python3 -c " \
-import re; \
-content = open('$f').read(); \
-# Pattern matches: allow_origins=[\"http://localhost:3000\"] \
-pattern = r'allow_origins=\[\"http://localhost:3000\"\]'; \
-replacement = 'allow_origins=os.environ.get(\"CORS_ALLOWED_ORIGINS\", \"http://localhost:3000\").split(\",\")'; \
-new_content = re.sub(pattern, replacement, content); \
-open('$f', 'w').write(new_content); \
-print('Patched CORS in: $f'); \
-"; \
-        else \
-            echo "No hardcoded CORS found in: $f"; \
-        fi; \
-    done || echo "No server.py files found to patch"
+RUN echo "=== Patching CORS in server.py ===" && \
+    SERVER_PY="/app/src/server.py" && \
+    if [ -f "$SERVER_PY" ]; then \
+        echo "Found server.py at: $SERVER_PY"; \
+        echo "Before patch:"; \
+        grep 'allow_origins' "$SERVER_PY"; \
+        # Use sed to replace the hardcoded origins
+        sed -i 's/allow_origins=\["http:\/\/localhost:3000"\]/allow_origins=os.environ.get("CORS_ALLOWED_ORIGINS", "http:\/\/localhost:3000").split(",")/g' "$SERVER_PY"; \
+        echo "After patch:"; \
+        grep 'allow_origins' "$SERVER_PY"; \
+    else \
+        echo "ERROR: server.py not found at $SERVER_PY"; \
+        find /app -name "server.py" -type f 2>/dev/null; \
+    fi
 
 # Verify the patch was applied
 RUN echo "=== Verifying CORS patch ===" && \
-    find /app -name "server.py" -type f -exec grep -l "CORS_ALLOWED_ORIGINS" {} \; || \
-    echo "WARNING: CORS patch may not have been applied!"
+    grep -l "CORS_ALLOWED_ORIGINS" /app/src/server.py && \
+    echo "CORS patch verified!" || \
+    (echo "ERROR: CORS patch was NOT applied!" && exit 1)
 
 # Copy our custom entrypoint with setup.py fallback (fixes GitHub Issue #2007)
 COPY entrypoint.sh /app/custom-entrypoint.sh
