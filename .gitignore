@@ -2,6 +2,8 @@
 .env
 .env.bak
 .env.test
+# Exception: cognee/.env is part of the configuration (not secrets)
+!cognee/.env
 neo4j/
 searxng/settings.yml
 searxng/uwsgi*

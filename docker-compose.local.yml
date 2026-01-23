@@ -2204,11 +2204,12 @@ services:
       - DB_PASSWORD=${POSTGRES_PASSWORD}
       
       # ====================
-      # Vector Database (Qdrant)
+      # Vector Database (LanceDB - embedded, no extra service needed)
+      # NOTE: Cognee 0.5.0 dropped Qdrant support!
+      # Supported: LanceDB (default), PGVector, neptune_analytics, ChromaDB
+      # LanceDB stores vectors in /app/.cognee_system/databases
       # ====================
-      - VECTOR_DB_PROVIDER=qdrant
-      - VECTOR_DB_URL=http://qdrant:6333
-      - VECTOR_DB_KEY=${QDRANT_API_KEY}
+      - VECTOR_DB_PROVIDER=lancedb
       
       # ====================
       # Graph Database (Kuzu default, Neo4j optional)
@@ -2234,15 +2235,13 @@ services:
       - cognee_data:/app/.cognee_data
       - cognee_system:/app/.cognee_system
       - ./cognee/entrypoint.sh:/app/custom-entrypoint.sh:ro
+      - ./cognee/.env:/app/.env:ro
       - ./shared:/data/shared
     depends_on:
       cognee-init:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
-      qdrant:
-        condition: service_started
-        required: false
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
@@ -2283,8 +2282,8 @@ services:
     environment:
       # API URL goes through Nginx proxy for CORS fix
       - NEXT_PUBLIC_BACKEND_API_URL=http://cognee-nginx:80/api
-    depends_on:
-      - cognee-mcp
+    # Note: cognee-mcp must be started separately with --profile cognee
+    # depends_on removed to allow independent profile activation
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
@@ -2303,8 +2302,8 @@ services:
       - "8123:80"
     volumes:
       - ./cognee/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - cognee-mcp
+    # Note: cognee-mcp must be started separately with --profile cognee
+    # depends_on removed to allow independent profile activation
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 30s
