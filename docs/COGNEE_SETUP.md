@@ -346,6 +346,28 @@ The Frontend connects directly to `cognee-api` (Port 8120) for all API calls. Ma
 
 ## Troubleshooting
 
+### cognify_status Error: "unable to open database file"
+
+This is a **known limitation** in the cognee-mcp server when running in **API Mode**. The `cognify_status` tool tries to access a local SQLite database that doesn't exist in API mode.
+
+**Workaround**: Check the cognee-api logs instead:
+
+```bash
+# Check cognify progress in API logs
+docker logs cognee-api 2>&1 | tail -50
+
+# Look for:
+# - "Cognify process starting" - cognify started
+# - "Cognify process finished" - cognify completed
+# - Error messages if something failed
+```
+
+**Alternative**: Use the `search` tool to verify data was processed:
+```
+# If search returns results, cognify completed successfully
+search(search_query="your topic", search_type="CHUNKS")
+```
+
 ### Cognee Not Starting
 
 ```bash
