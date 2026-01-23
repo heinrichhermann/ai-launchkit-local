@@ -28,11 +28,13 @@ RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'set -e' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \
     echo '# Generate .env.local from environment variables' >> /entrypoint.sh && \
-    echo 'echo "Generating .env.local with backend URL: $NEXT_PUBLIC_BACKEND_API_URL"' >> /entrypoint.sh && \
+    echo 'echo "Generating .env.local with:"' >> /entrypoint.sh && \
+    echo 'echo "  Backend API URL: $NEXT_PUBLIC_BACKEND_API_URL"' >> /entrypoint.sh && \
+    echo 'echo "  MCP API URL: $NEXT_PUBLIC_MCP_API_URL"' >> /entrypoint.sh && \
     echo 'cat > /app/.env.local << EOF' >> /entrypoint.sh && \
     echo 'NEXT_PUBLIC_BACKEND_API_URL=${NEXT_PUBLIC_BACKEND_API_URL:-http://localhost:8000}' >> /entrypoint.sh && \
     echo 'NEXT_PUBLIC_CLOUD_API_URL=${NEXT_PUBLIC_CLOUD_API_URL:-}' >> /entrypoint.sh && \
-    echo 'NEXT_PUBLIC_MCP_API_URL=${NEXT_PUBLIC_MCP_API_URL:-}' >> /entrypoint.sh && \
+    echo 'NEXT_PUBLIC_MCP_API_URL=${NEXT_PUBLIC_MCP_API_URL:-http://localhost:8121}' >> /entrypoint.sh && \
     echo 'USE_AUTH0_AUTHORIZATION=${USE_AUTH0_AUTHORIZATION:-false}' >> /entrypoint.sh && \
     echo 'EOF' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \

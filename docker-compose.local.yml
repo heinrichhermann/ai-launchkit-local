@@ -2371,6 +2371,9 @@ services:
       # IMPORTANT: Must use external IP because this runs in the browser!
       # Note: Frontend adds /api/v1/... so we just need the base URL
       - NEXT_PUBLIC_BACKEND_API_URL=http://${SERVER_IP}:8120
+      # MCP API URL - for MCP connection status check in the header
+      # Points to cognee-mcp server (Port 8121)
+      - NEXT_PUBLIC_MCP_API_URL=http://${SERVER_IP}:8121
     depends_on:
       cognee-api:
         condition: service_started
