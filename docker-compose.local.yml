@@ -2214,12 +2214,13 @@ services:
       - VECTOR_DB_PROVIDER=lancedb
       
       # ====================
-      # Graph Database (Kuzu default, Neo4j optional)
+      # Graph Database (Neo4j for visualization, Kuzu as fallback)
+      # Neo4j Browser: http://SERVER_IP:8028 (Bolt: 7687)
       # ====================
-      - GRAPH_DATABASE_PROVIDER=${COGNEE_GRAPH_PROVIDER:-kuzu}
-      - GRAPH_DATABASE_URL=${COGNEE_GRAPH_URL:-}
-      - GRAPH_DATABASE_USERNAME=${NEO4J_AUTH_USERNAME:-}
-      - GRAPH_DATABASE_PASSWORD=${NEO4J_AUTH_PASSWORD:-}
+      - GRAPH_DATABASE_PROVIDER=${COGNEE_GRAPH_PROVIDER:-neo4j}
+      - GRAPH_DATABASE_URL=${COGNEE_GRAPH_URL:-bolt://neo4j:7687}
+      - GRAPH_DATABASE_USERNAME=${NEO4J_AUTH_USERNAME:-neo4j}
+      - GRAPH_DATABASE_PASSWORD=${NEO4J_AUTH_PASSWORD}
       
       # ====================
       # Security
@@ -2259,6 +2260,9 @@ services:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
+      neo4j:
+        condition: service_healthy
+        required: false
     extra_hosts:
       - "host.docker.internal:host-gateway"
     # Healthcheck disabled - causes dependency issues with cognee-mcp

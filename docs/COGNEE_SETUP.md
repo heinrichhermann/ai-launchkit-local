@@ -41,7 +41,7 @@ Cognee in AI LaunchKit besteht aus **drei Services**:
 │  └─────────────────────────────────────────────────────────────┘│
 │                                                                  │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │
-│  │ Ollama   │  │PostgreSQL│  │ LanceDB  │  │ Kuzu (Graph DB)  │ │
+│  │ Ollama   │  │PostgreSQL│  │ LanceDB  │  │ Neo4j (Graph DB) │ │
 │  │ (LLM)    │  │ (Data)   │  │ (Vectors)│  │ (Knowledge Graph)│ │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
@@ -180,9 +180,82 @@ Cognee uses existing AI LaunchKit services:
 ### PostgreSQL (Relational Data)
 - **Database**: `cognee` (auto-created)
 
-### Graph Database (Knowledge Graph)
-- **Default**: Kuzu (file-based, no setup needed)
-- **Optional**: Neo4j (requires neo4j profile)
+### Neo4j (Knowledge Graph) - Default
+- **Port**: 8028 (HTTP Browser), 7687 (Bolt)
+- **Browser**: `http://SERVER_IP:8028`
+- **Bolt URL**: `bolt://neo4j:7687`
+- **Requires**: `neo4j` profile enabled
+
+Neo4j is the **default** graph database for Cognee, enabling:
+- 🔍 **Visual Knowledge Graph Exploration** in Neo4j Browser
+- 📊 **Cypher Queries** for advanced graph analysis
+- 🔗 **Entity Relationship Visualization**
+
+### Kuzu (Alternative Graph Database)
+- **File-based** - No extra service needed
+- **Storage**: `/app/.cognee_system/databases`
+- Set `COGNEE_GRAPH_PROVIDER=kuzu` to use instead of Neo4j
+
+---
+
+## Neo4j Knowledge Graph Visualization
+
+### Prerequisites
+
+1. **Enable neo4j profile** in your `.env`:
+   ```bash
+   COMPOSE_PROFILES="...,neo4j,cognee"
+   ```
+
+2. **Set Neo4j password** in `.env`:
+   ```bash
+   NEO4J_AUTH_PASSWORD=your_secure_password
+   ```
+
+### Start Neo4j + Cognee
+
+```bash
+docker compose -p localai -f docker-compose.local.yml up -d neo4j cognee-api cognee-mcp
+```
+
+### Access Neo4j Browser
+
+1. Open `http://SERVER_IP:8028` in your browser
+2. Connect with:
+   - **Connect URL**: `bolt://localhost:7687`
+   - **Username**: `neo4j`
+   - **Password**: Your `NEO4J_AUTH_PASSWORD`
+
+### Explore Knowledge Graph
+
+After adding data to Cognee and running `cognify`, you can explore the Knowledge Graph:
+
+```cypher
+// Show all nodes
+MATCH (n) RETURN n LIMIT 100
+
+// Show all relationships
+MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 100
+
+// Find specific entities
+MATCH (n) WHERE n.name CONTAINS 'AI' RETURN n
+
+// Show entity connections
+MATCH (n)-[r]->(m)
+WHERE n.name CONTAINS 'Cognee'
+RETURN n, r, m
+```
+
+### Verify Neo4j Connection
+
+```bash
+# Check if Cognee is using Neo4j
+docker logs cognee-api | grep -i neo4j
+
+# Should show:
+# GRAPH_DATABASE_PROVIDER=neo4j
+# GRAPH_DATABASE_URL=bolt://neo4j:7687
+```
 
 ---
 
@@ -329,13 +402,16 @@ docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee
 
 ## Service Dependencies
 
-| Service | Profile | Required |
-|---------|---------|----------|
-| PostgreSQL | (always on) | ✅ Yes |
-| Ollama | `cpu`/`gpu-*` | ✅ Yes |
-| Neo4j | `neo4j` | ❌ Optional |
+| Service | Profile | Required | Description |
+|---------|---------|----------|-------------|
+| PostgreSQL | (always on) | ✅ Yes | Relational data storage |
+| Ollama | `cpu`/`gpu-*` | ✅ Yes | LLM + Embeddings |
+| Neo4j | `neo4j` | ✅ Recommended | Knowledge Graph visualization |
 
-**Note**: LanceDB is embedded in Cognee - no separate service needed!
+**Notes**:
+- LanceDB is embedded in Cognee - no separate service needed!
+- Neo4j is the **default** graph database for Knowledge Graph visualization
+- If Neo4j is not available, Cognee falls back to Kuzu (file-based)
 
 ---
 
@@ -346,8 +422,10 @@ docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee
 | `COGNEE_API_PORT` | 8120 | API Server port |
 | `COGNEE_MCP_PORT` | 8121 | MCP Server port |
 | `COGNEE_FRONTEND_PORT` | 8122 | Web UI port |
-| `COGNEE_GRAPH_PROVIDER` | kuzu | Graph DB (kuzu or neo4j) |
-| `COGNEE_GRAPH_URL` | - | Neo4j URL (if using neo4j) |
+| `COGNEE_GRAPH_PROVIDER` | neo4j | Graph DB (neo4j or kuzu) |
+| `COGNEE_GRAPH_URL` | bolt://neo4j:7687 | Neo4j Bolt URL |
+| `NEO4J_AUTH_USERNAME` | neo4j | Neo4j username |
+| `NEO4J_AUTH_PASSWORD` | - | Neo4j password (required!) |
 
 ---
 
@@ -371,8 +449,9 @@ docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee
 | Feature | Cognee | Cipher |
 |---------|--------|--------|
 | **Focus** | Knowledge Graph + RAG | Agent Memory |
-| **Graph DB** | Kuzu/Neo4j | - |
+| **Graph DB** | Neo4j (default) / Kuzu | - |
 | **Vector DB** | LanceDB (embedded) | Qdrant |
+| **Graph Visualization** | ✅ Neo4j Browser | ❌ |
 | **MCP Tools** | cognify, search, codify, etc. | ask_cipher |
 | **Code Analysis** | ✅ codify | ❌ |
 | **Multi-Format** | ✅ PDFs, Images, Audio | ❌ Text only |
