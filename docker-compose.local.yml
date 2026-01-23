@@ -2286,7 +2286,9 @@ services:
   # Data is shared with cognee-api via PostgreSQL/Neo4j databases
   # Use this for Claude Desktop, Cursor, VS Code MCP integration
   cognee-mcp:
-    image: cognee/cognee-mcp:main
+    build:
+      context: ./cognee
+      dockerfile: mcp.Dockerfile
     container_name: cognee-mcp
     profiles: ["cognee"]
     restart: unless-stopped
