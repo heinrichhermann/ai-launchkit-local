@@ -16,30 +16,38 @@ FROM cognee/cognee-mcp:main
 USER root
 
 # Patch CORS in server.py to read from environment variable
-# The original code has:
-#   allow_origins=["http://localhost:3000"]
-#   allow_credentials=True
+# The original code in run_sse_with_cors() and run_http_with_cors() has:
+#   allow_origins=["http://localhost:3000"],
 # We change it to:
-#   allow_origins=os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
-#   allow_credentials=True  (keep True for cookie/auth support)
+#   allow_origins=os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(","),
 #
-# This allows the frontend to connect with credentials: "include"
+# This allows the frontend to connect from any origin specified in CORS_ALLOWED_ORIGINS
 RUN find /app -name "server.py" -type f | while read f; do \
         echo "Patching CORS in: $f"; \
-        # Add os import at the top if not present
-        grep -q "^import os" "$f" || sed -i '1i import os' "$f"; \
-        # Replace hardcoded origins with env var reading
-        sed -i 's/allow_origins=\["http:\/\/localhost:3000"\]/allow_origins=os.environ.get("CORS_ALLOWED_ORIGINS", "http:\/\/localhost:3000").split(",")/g' "$f"; \
-        # Keep allow_credentials=True (don't change it)
+        # Check if file contains the hardcoded localhost:3000
+        if grep -q 'allow_origins=\["http://localhost:3000"\]' "$f"; then \
+            echo "Found hardcoded CORS in: $f"; \
+            # Replace hardcoded origins with env var reading
+            # Use Python to do the replacement more reliably
+            python3 -c " \
+import re; \
+content = open('$f').read(); \
+# Pattern matches: allow_origins=[\"http://localhost:3000\"] \
+pattern = r'allow_origins=\[\"http://localhost:3000\"\]'; \
+replacement = 'allow_origins=os.environ.get(\"CORS_ALLOWED_ORIGINS\", \"http://localhost:3000\").split(\",\")'; \
+new_content = re.sub(pattern, replacement, content); \
+open('$f', 'w').write(new_content); \
+print('Patched CORS in: $f'); \
+"; \
+        else \
+            echo "No hardcoded CORS found in: $f"; \
+        fi; \
     done || echo "No server.py files found to patch"
 
-# Also patch any other files that might have hardcoded localhost:3000
-# But be careful not to break things - only patch CORS-related lines
-RUN find /app -name "*.py" -type f -exec grep -l "allow_origins.*localhost:3000" {} \; | while read f; do \
-        echo "Patching allow_origins in: $f"; \
-        grep -q "^import os" "$f" || sed -i '1i import os' "$f"; \
-        sed -i 's/allow_origins=\["http:\/\/localhost:3000"\]/allow_origins=os.environ.get("CORS_ALLOWED_ORIGINS", "http:\/\/localhost:3000").split(",")/g' "$f"; \
-    done || echo "No additional files with allow_origins found"
+# Verify the patch was applied
+RUN echo "=== Verifying CORS patch ===" && \
+    find /app -name "server.py" -type f -exec grep -l "CORS_ALLOWED_ORIGINS" {} \; || \
+    echo "WARNING: CORS patch may not have been applied!"
 
 # Copy our custom entrypoint with setup.py fallback (fixes GitHub Issue #2007)
 COPY entrypoint.sh /app/custom-entrypoint.sh
