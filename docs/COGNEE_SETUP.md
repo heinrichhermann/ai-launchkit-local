@@ -16,15 +16,54 @@ GraphRAG (Graph + Retrieval Augmented Generation) für präzisere AI-Antworten.
 
 ---
 
+## Architecture
+
+Cognee in AI LaunchKit besteht aus **drei Services**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        AI LaunchKit                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
+│  │  cognee-api     │    │  cognee-mcp     │    │ cognee-      │ │
+│  │  (Port 8120)    │◄───│  (Port 8121)    │    │ frontend     │ │
+│  │                 │    │                 │    │ (Port 8122)  │ │
+│  │  FastAPI REST   │    │  MCP Server     │    │              │ │
+│  │  Server         │    │  (API Mode)     │    │  Web UI      │ │
+│  └────────┬────────┘    └─────────────────┘    └──────┬───────┘ │
+│           │                                           │         │
+│           │                                           │         │
+│           ▼                                           ▼         │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    cognee-api:8120                          ││
+│  │              (Frontend connects here)                       ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                                                                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │
+│  │ Ollama   │  │PostgreSQL│  │ LanceDB  │  │ Kuzu (Graph DB)  │ │
+│  │ (LLM)    │  │ (Data)   │  │ (Vectors)│  │ (Knowledge Graph)│ │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Service | Port | Image | Description |
+|---------|------|-------|-------------|
+| **cognee-api** | 8120 | `cognee/cognee:main` | FastAPI REST Server - für Frontend & API |
+| **cognee-mcp** | 8121 | `cognee/cognee-mcp:main` | MCP Server - für IDE Integration |
+| **cognee-frontend** | 8122 | Custom Build | Web UI - Knowledge Graph Visualization |
+
+---
+
 ## Access URLs
 
 | Port | Endpoint | URL | Description |
 |------|----------|-----|-------------|
-| 8120 | **MCP SSE** | `http://SERVER_IP:8120/sse` | MCP Server (SSE Transport) |
-| 8120 | **MCP HTTP** | `http://SERVER_IP:8120/mcp` | MCP Server (HTTP Transport) |
-| 8120 | **Health** | `http://SERVER_IP:8120/health` | Health Check |
+| 8120 | **REST API** | `http://SERVER_IP:8120` | FastAPI Server (Swagger: /docs) |
+| 8120 | **Health** | `http://SERVER_IP:8120/health` | API Health Check |
+| 8121 | **MCP SSE** | `http://SERVER_IP:8121/sse` | MCP Server (SSE Transport) |
+| 8121 | **MCP HTTP** | `http://SERVER_IP:8121/mcp` | MCP Server (HTTP Transport) |
 | 8122 | **Frontend** | `http://SERVER_IP:8122` | Web UI (optional, cognee-ui profile) |
-| 8123 | **CORS Proxy** | `http://SERVER_IP:8123` | Nginx CORS Proxy (optional) |
 
 ---
 
@@ -52,11 +91,14 @@ docker compose -p localai -f docker-compose.local.yml up -d
 ### 3. Verify Installation
 
 ```bash
-# Check if Cognee MCP is running
+# Check if Cognee API is running
 curl http://SERVER_IP:8120/health
 
+# Check if MCP Server is running
+curl http://SERVER_IP:8121/health
+
 # Test SSE endpoint
-curl -N http://SERVER_IP:8120/sse
+curl -N http://SERVER_IP:8121/sse
 ```
 
 ---
@@ -71,7 +113,7 @@ Add to your MCP settings (`~/.config/Code/User/globalStorage/kilocode.kilo-code/
 {
   "mcpServers": {
     "cognee": {
-      "url": "http://SERVER_IP:8120/sse",
+      "url": "http://SERVER_IP:8121/sse",
       "transport": "sse"
     }
   }
@@ -87,7 +129,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
   "mcpServers": {
     "cognee": {
       "type": "sse",
-      "url": "http://SERVER_IP:8120/sse"
+      "url": "http://SERVER_IP:8121/sse"
     }
   }
 }
@@ -101,7 +143,7 @@ Add to your Cursor MCP configuration:
 {
   "mcpServers": {
     "cognee-sse": {
-      "url": "http://SERVER_IP:8120/sse"
+      "url": "http://SERVER_IP:8121/sse"
     }
   }
 }
@@ -123,7 +165,7 @@ Add to your Cursor MCP configuration:
 
 ---
 
-## Architecture
+## Backend Services
 
 Cognee uses existing AI LaunchKit services:
 
@@ -131,9 +173,9 @@ Cognee uses existing AI LaunchKit services:
 - **LLM Model**: `qwen3:8b` (same as Cipher)
 - **Embedding Model**: `qwen3-embedding:8b` (4096 dimensions)
 
-### Qdrant (Vector Store)
-- **Collection**: Auto-created by Cognee
-- **Distance**: Cosine
+### LanceDB (Vector Store)
+- **Embedded** - No extra service needed
+- **Storage**: `/app/.cognee_system/databases`
 
 ### PostgreSQL (Relational Data)
 - **Database**: `cognee` (auto-created)
@@ -159,20 +201,47 @@ Use search tool: "What do you know about X?"
 Use list_data tool
 ```
 
+### Via REST API
+
+```bash
+# Add data
+curl -X POST http://SERVER_IP:8120/api/v1/add \
+  -H "Content-Type: application/json" \
+  -d '{"data": "Your text here"}'
+
+# Cognify (process into knowledge graph)
+curl -X POST http://SERVER_IP:8120/api/v1/cognify
+
+# Search
+curl -X POST http://SERVER_IP:8120/api/v1/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Your query"}'
+```
+
 ### Via CLI (inside container)
 
 ```bash
 # Add data
-docker exec -it cognee-mcp cognee-cli add "Your text here"
+docker exec -it cognee-api python -c "
+import cognee
+import asyncio
+asyncio.run(cognee.add('Your text here'))
+"
 
 # Process data into knowledge graph
-docker exec -it cognee-mcp cognee-cli cognify
+docker exec -it cognee-api python -c "
+import cognee
+import asyncio
+asyncio.run(cognee.cognify())
+"
 
 # Search
-docker exec -it cognee-mcp cognee-cli search "Your query"
-
-# Reset all data
-docker exec -it cognee-mcp cognee-cli delete --all
+docker exec -it cognee-api python -c "
+import cognee
+import asyncio
+results = asyncio.run(cognee.search('Your query'))
+print(results)
+"
 ```
 
 ---
@@ -192,11 +261,10 @@ COMPOSE_PROFILES="...,cognee,cognee-ui"
 ### Access
 
 - **Frontend**: `http://SERVER_IP:8122`
-- **CORS Proxy**: `http://SERVER_IP:8123` (for API access)
 
-### Note on CORS
+### Note
 
-The Cognee MCP server has CORS hardcoded to `localhost:3000`. The included Nginx proxy (`cognee-nginx`) adds proper CORS headers for remote access.
+The Frontend connects directly to `cognee-api` (Port 8120) for all API calls. Make sure the API server is running before starting the frontend.
 
 ---
 
@@ -205,7 +273,10 @@ The Cognee MCP server has CORS hardcoded to `localhost:3000`. The included Nginx
 ### Cognee Not Starting
 
 ```bash
-# Check logs
+# Check API logs
+docker logs cognee-api
+
+# Check MCP logs
 docker logs cognee-mcp
 
 # Common issues:
@@ -224,22 +295,34 @@ docker exec ollama ollama pull qwen3:8b
 ### MCP Connection Issues
 
 ```bash
-# Test SSE endpoint
-curl -N http://SERVER_IP:8120/sse
+# Test SSE endpoint (MCP Server on port 8121!)
+curl -N http://SERVER_IP:8121/sse
 
 # Check if port is accessible
-nc -zv SERVER_IP 8120
+nc -zv SERVER_IP 8121
+```
+
+### Frontend CORS Errors
+
+The `cognee-api` server reads `CORS_ALLOWED_ORIGINS` from environment. If you see CORS errors:
+
+```bash
+# Check the CORS configuration
+docker exec cognee-api env | grep CORS
+
+# Should show:
+# CORS_ALLOWED_ORIGINS=http://SERVER_IP:8122,http://localhost:8122,http://localhost:3000
 ```
 
 ### Database Migration Errors
 
 ```bash
 # Check migration logs
-docker logs cognee-mcp | grep -i migration
+docker logs cognee-api | grep -i migration
 
 # If needed, reset database
 docker exec -it postgres psql -U postgres -c "DROP DATABASE cognee;"
-docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee-mcp
+docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee-api
 ```
 
 ---
@@ -249,9 +332,10 @@ docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee
 | Service | Profile | Required |
 |---------|---------|----------|
 | PostgreSQL | (always on) | ✅ Yes |
-| Qdrant | `qdrant` | ✅ Yes (auto-enabled) |
 | Ollama | `cpu`/`gpu-*` | ✅ Yes |
 | Neo4j | `neo4j` | ❌ Optional |
+
+**Note**: LanceDB is embedded in Cognee - no separate service needed!
 
 ---
 
@@ -259,9 +343,9 @@ docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `COGNEE_MCP_PORT` | 8120 | MCP Server port |
+| `COGNEE_API_PORT` | 8120 | API Server port |
+| `COGNEE_MCP_PORT` | 8121 | MCP Server port |
 | `COGNEE_FRONTEND_PORT` | 8122 | Web UI port |
-| `COGNEE_NGINX_PORT` | 8123 | CORS Proxy port |
 | `COGNEE_GRAPH_PROVIDER` | kuzu | Graph DB (kuzu or neo4j) |
 | `COGNEE_GRAPH_URL` | - | Neo4j URL (if using neo4j) |
 
@@ -271,11 +355,14 @@ docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee
 
 | Action | Command |
 |--------|---------|
-| Start | `docker compose -p localai -f docker-compose.local.yml up -d cognee-mcp` |
-| Stop | `docker compose -p localai -f docker-compose.local.yml stop cognee-mcp` |
-| Logs | `docker logs cognee-mcp -f` |
-| Restart | `docker compose -p localai -f docker-compose.local.yml restart cognee-mcp` |
-| Health | `curl http://SERVER_IP:8120/health` |
+| Start API | `docker compose -p localai -f docker-compose.local.yml up -d cognee-api` |
+| Start MCP | `docker compose -p localai -f docker-compose.local.yml up -d cognee-mcp` |
+| Stop | `docker compose -p localai -f docker-compose.local.yml stop cognee-api cognee-mcp` |
+| Logs API | `docker logs cognee-api -f` |
+| Logs MCP | `docker logs cognee-mcp -f` |
+| Restart | `docker compose -p localai -f docker-compose.local.yml restart cognee-api cognee-mcp` |
+| Health API | `curl http://SERVER_IP:8120/health` |
+| Health MCP | `curl http://SERVER_IP:8121/health` |
 
 ---
 
@@ -285,7 +372,7 @@ docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee
 |---------|--------|--------|
 | **Focus** | Knowledge Graph + RAG | Agent Memory |
 | **Graph DB** | Kuzu/Neo4j | - |
-| **Vector DB** | Qdrant | Qdrant |
+| **Vector DB** | LanceDB (embedded) | Qdrant |
 | **MCP Tools** | cognify, search, codify, etc. | ask_cipher |
 | **Code Analysis** | ✅ codify | ❌ |
 | **Multi-Format** | ✅ PDFs, Images, Audio | ❌ Text only |
@@ -305,4 +392,4 @@ docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee
 
 ---
 
-*Last updated: 2026-01-22*
+*Last updated: 2026-01-23*
