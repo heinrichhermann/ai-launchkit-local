@@ -2281,7 +2281,8 @@ services:
       - "8122:3000"
     environment:
       # API URL goes through Nginx proxy for CORS fix
-      - NEXT_PUBLIC_BACKEND_API_URL=http://cognee-nginx:80/api
+      # IMPORTANT: Must use external IP because this runs in the browser!
+      - NEXT_PUBLIC_BACKEND_API_URL=http://${SERVER_IP}:8123/api
     # Note: cognee-mcp must be started separately with --profile cognee
     # depends_on removed to allow independent profile activation
     healthcheck:
