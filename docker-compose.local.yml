@@ -2276,10 +2276,15 @@ services:
   # Cognee Frontend (Web UI for Knowledge Graph Visualization)
   # NOTE: This is a "Work in Progress" per official Cognee docs
   # Recommended: Use MCP integration (VS Code/Claude Desktop) for full functionality
+  #
+  # IMPORTANT: Uses custom Dockerfile (cognee/frontend.Dockerfile) that:
+  # 1. Generates .env.local at container startup
+  # 2. Properly injects NEXT_PUBLIC_* variables into Next.js dev mode
+  # This is necessary because Next.js reads these at compile/startup time, not runtime
   cognee-frontend:
     build:
-      context: https://github.com/topoteretes/cognee.git#main:cognee-frontend
-      dockerfile: Dockerfile
+      context: ./cognee-repo/cognee-frontend
+      dockerfile: ../../cognee/frontend.Dockerfile
     container_name: cognee-frontend
     profiles: ["cognee-ui"]
     restart: unless-stopped

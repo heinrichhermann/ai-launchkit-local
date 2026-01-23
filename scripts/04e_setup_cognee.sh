@@ -5,8 +5,8 @@
 #
 # This script:
 # 1. Checks if Cognee profile is enabled
-# 2. Ensures required Ollama models are available
-# 3. Enables Qdrant if not already enabled (required for Cognee)
+# 2. Clones Cognee repository for frontend (if cognee-ui profile enabled)
+# 3. Ensures required Ollama models are available
 #
 # Documentation: docs/COGNEE_SETUP.md
 
@@ -14,6 +14,8 @@ set -e
 
 # Source utilities if available
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 if [ -f "$SCRIPT_DIR/utils.sh" ]; then
     source "$SCRIPT_DIR/utils.sh"
 else
@@ -39,6 +41,26 @@ if ! grep -q "cognee" .env 2>/dev/null; then
 fi
 
 log_info "Cognee profile detected, preparing setup..."
+
+# Clone Cognee repository if cognee-ui profile is enabled
+if grep -q "cognee-ui" .env 2>/dev/null; then
+    log_info "Cognee UI profile detected, checking repository..."
+    
+    COGNEE_REPO_DIR="$PROJECT_ROOT/cognee-repo"
+    
+    if [ ! -d "$COGNEE_REPO_DIR" ]; then
+        log_info "Cloning Cognee repository for frontend build..."
+        git clone --depth 1 --single-branch --branch main \
+            https://github.com/topoteretes/cognee.git "$COGNEE_REPO_DIR"
+        log_success "Cognee repository cloned to $COGNEE_REPO_DIR"
+    else
+        log_info "Cognee repository already exists at $COGNEE_REPO_DIR"
+        # Update to latest
+        log_info "Updating Cognee repository..."
+        cd "$COGNEE_REPO_DIR" && git pull origin main && cd "$PROJECT_ROOT"
+        log_success "Cognee repository updated"
+    fi
+fi
 
 # Ensure required Ollama models are available
 log_info "Checking Ollama models for Cognee..."
