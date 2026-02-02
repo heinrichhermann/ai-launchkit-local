@@ -36,6 +36,8 @@ RUN echo '#!/bin/sh' > /entrypoint.sh && \
     echo 'NEXT_PUBLIC_CLOUD_API_URL=${NEXT_PUBLIC_CLOUD_API_URL:-}' >> /entrypoint.sh && \
     echo 'NEXT_PUBLIC_MCP_API_URL=${NEXT_PUBLIC_MCP_API_URL:-http://localhost:8121}' >> /entrypoint.sh && \
     echo 'USE_AUTH0_AUTHORIZATION=${USE_AUTH0_AUTHORIZATION:-false}' >> /entrypoint.sh && \
+    echo 'NEXT_PUBLIC_IS_CLOUD_ENVIRONMENT=${NEXT_PUBLIC_IS_CLOUD_ENVIRONMENT:-false}' >> /entrypoint.sh && \
+    echo 'NEXT_PUBLIC_COGWIT_API_KEY=${NEXT_PUBLIC_COGWIT_API_KEY:-dummy-local-key}' >> /entrypoint.sh && \
     echo 'EOF' >> /entrypoint.sh && \
     echo '' >> /entrypoint.sh && \
     echo 'echo "Generated .env.local:"' >> /entrypoint.sh && \
