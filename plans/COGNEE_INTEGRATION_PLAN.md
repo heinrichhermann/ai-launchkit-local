@@ -400,7 +400,7 @@ if curl -s http://localhost:8021/api/tags > /dev/null 2>&1; then
         log_warning "Failed to pull qwen3-embedding:8b, will retry on first use"
     }
     
-    # LLM model (same as Cipher)
+    # LLM model
     log_info "Verifying LLM model..."
     docker exec ollama ollama pull qwen3:8b || {
         log_warning "Failed to pull qwen3:8b, will retry on first use"
@@ -549,7 +549,7 @@ Add to your MCP settings (`mcp_settings.json`):
 Cognee uses existing AI LaunchKit services:
 
 ### Ollama (LLM + Embeddings)
-- **LLM Model**: qwen3:8b (same as Cipher)
+- **LLM Model**: qwen3:8b
 - **Embedding Model**: qwen3-embedding:8b (4096 dimensions)
 
 ### Qdrant (Vector Store)
@@ -710,25 +710,7 @@ graph TB
 
 ---
 
-## 7. Vergleich: Cognee vs. Cipher
-
-| Feature | Cognee | Cipher |
-|---------|--------|--------|
-| **Fokus** | Knowledge Graph + RAG | Agent Memory |
-| **Graph DB** | Kuzu/Neo4j | - |
-| **Vector DB** | Qdrant/LanceDB/etc. | Qdrant |
-| **MCP Tools** | cognify, search, codify, etc. | ask_cipher |
-| **Code Analysis** | ✅ codify | ❌ |
-| **Multi-Format** | ✅ PDFs, Images, Audio | ❌ Text only |
-| **Use Case** | Document Intelligence | Conversation Memory |
-
-**Empfehlung**: Beide Services können parallel laufen und ergänzen sich:
-- **Cipher** für Konversations-Memory
-- **Cognee** für Dokumenten-Intelligence und Code-Analyse
-
----
-
-## 8. Nächste Schritte
+## 7. Nächste Schritte
 
 1. **Plan Review** - Diesen Plan mit dir besprechen
 2. **Implementation** - In Code-Mode wechseln und implementieren
@@ -737,7 +719,7 @@ graph TB
 
 ---
 
-## 9. Kritischer Audit
+## 8. Kritischer Audit
 
 ### ⚠️ Potenzielle Probleme & Lösungen
 
@@ -782,15 +764,11 @@ Falls nicht verfügbar, Alternativen:
 - `mxbai-embed-large` (1024 Dimensionen)
 - `bge-large` (1024 Dimensionen)
 
-#### 4. **Qdrant Collection Dimension Mismatch** - KRITISCH
+#### 4. **Qdrant Collection Dimension** - OK ✅
 
-**Problem:** Wenn Cognee und Cipher beide Qdrant nutzen aber unterschiedliche Embedding-Dimensionen haben:
-- Cipher: 4096 (qwen3-embedding:8b)
-- Cognee: 4096 (qwen3-embedding:8b) ✅
+**Status:** Cognee verwendet qwen3-embedding:8b mit 4096 Dimensionen.
 
-**Status:** OK - Beide nutzen das gleiche Embedding-Modell
-
-**Aber:** Cognee erstellt eigene Collections, kein Konflikt mit Cipher.
+**Hinweis:** Cognee erstellt eigene Collections in Qdrant, kein Konflikt mit anderen Services.
 
 #### 5. **Database Migration** - WICHTIG
 

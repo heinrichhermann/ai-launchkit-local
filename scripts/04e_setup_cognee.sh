@@ -88,7 +88,7 @@ if curl -s "http://localhost:${OLLAMA_PORT}/api/tags" > /dev/null 2>&1; then
         log_info "Alternative: Try 'nomic-embed-text:latest' if qwen3-embedding is unavailable"
     }
     
-    # LLM model (same as Cipher)
+    # LLM model
     log_info "Verifying LLM model (qwen3:8b)..."
     docker exec ollama ollama pull qwen3:8b || {
         log_warning "Failed to pull qwen3:8b, will retry on first use"
