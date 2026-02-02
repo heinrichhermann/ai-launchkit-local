@@ -170,7 +170,7 @@ Add to your Cursor MCP configuration:
 Cognee uses existing AI LaunchKit services:
 
 ### Ollama (LLM + Embeddings)
-- **LLM Model**: `qwen3:8b` (same as Cipher)
+- **LLM Model**: `qwen3:8b`
 - **Embedding Model**: `qwen3-embedding:8b` (4096 dimensions)
 
 ### LanceDB (Vector Store)
@@ -466,25 +466,6 @@ docker compose -p localai -f docker-compose.local.yml restart cognee-init cognee
 | Restart | `docker compose -p localai -f docker-compose.local.yml restart cognee-api cognee-mcp` |
 | Health API | `curl http://SERVER_IP:8120/health` |
 | Health MCP | `curl http://SERVER_IP:8121/health` |
-
----
-
-## Comparison: Cognee vs. Cipher
-
-| Feature | Cognee | Cipher |
-|---------|--------|--------|
-| **Focus** | Knowledge Graph + RAG | Agent Memory |
-| **Graph DB** | Neo4j (default) / Kuzu | - |
-| **Vector DB** | LanceDB (embedded) | Qdrant |
-| **Graph Visualization** | ✅ Neo4j Browser | ❌ |
-| **MCP Tools** | cognify, search, codify, etc. | ask_cipher |
-| **Code Analysis** | ✅ codify | ❌ |
-| **Multi-Format** | ✅ PDFs, Images, Audio | ❌ Text only |
-| **Use Case** | Document Intelligence | Conversation Memory |
-
-**Recommendation**: Both services can run in parallel and complement each other:
-- **Cipher** for conversation memory
-- **Cognee** for document intelligence and code analysis
 
 ---
 

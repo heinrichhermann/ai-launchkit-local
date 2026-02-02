@@ -143,13 +143,6 @@ if [[ "$COMPOSE_PROFILES" == *"cognee-ui"* ]]; then
     test_port 8123 "Cognee CORS Proxy"
 fi
 
-# Cipher Memory AI
-if [[ "$COMPOSE_PROFILES" == *"cipher"* ]]; then
-    echo "Cipher Memory AI: $(is_service_running "cipher")"
-    test_port 3000 "Cipher API"
-    test_port 3001 "Cipher Web UI"
-fi
-
 echo ""
 
 # Learning Tools Status
@@ -491,8 +484,6 @@ $([ "$COMPOSE_PROFILES" == *"qdrant"* ] && echo "Qdrant API: http://$SERVER_IP:8
 $([ "$COMPOSE_PROFILES" == *"cognee"* ] && echo "Cognee MCP: http://$SERVER_IP:8120/sse")
 $([ "$COMPOSE_PROFILES" == *"cognee-ui"* ] && echo "Cognee Frontend: http://$SERVER_IP:8122")
 $([ "$COMPOSE_PROFILES" == *"cognee-ui"* ] && echo "Cognee CORS Proxy: http://$SERVER_IP:8123")
-$([ "$COMPOSE_PROFILES" == *"cipher"* ] && echo "Cipher API: http://$SERVER_IP:3000")
-$([ "$COMPOSE_PROFILES" == *"cipher"* ] && echo "Cipher Web UI: http://$SERVER_IP:3001")
 
 # Learning Tools:
 $([ "$COMPOSE_PROFILES" == *"calcom"* ] && echo "Cal.com: http://$SERVER_IP:8040")

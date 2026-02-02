@@ -41,13 +41,10 @@ read -p "Configure LAN access now? (Y/n): " fw_lan_config
 if [[ ! "$fw_lan_config" =~ ^[Nn]$ ]]; then
     ufw allow from 192.168.0.0/16 to any port 8000:8099 proto tcp comment 'AI LaunchKit LAN'
     ufw allow from 10.0.0.0/8 to any port 8000:8099 proto tcp comment 'AI LaunchKit LAN'
-    # Cipher memory AI uses standard ports 3000-3001 (outside 8xxx schema)
-    ufw allow from 192.168.0.0/16 to any port 3000:3001 proto tcp comment 'Cipher Memory AI'
-    ufw allow from 10.0.0.0/8 to any port 3000:3001 proto tcp comment 'Cipher Memory AI'
     # Cognee AI Memory uses ports 8120-8123 (outside main 8xxx range)
     ufw allow from 192.168.0.0/16 to any port 8120:8123 proto tcp comment 'Cognee AI Memory'
     ufw allow from 10.0.0.0/8 to any port 8120:8123 proto tcp comment 'Cognee AI Memory'
-    log_success "✅ Firewall configured for LAN access (ports 8000-8099, 8120-8123, 3000-3001)"
+    log_success "✅ Firewall configured for LAN access (ports 8000-8099, 8120-8123)"
 else
     log_warning "⚠️ LAN access not configured - you can add it later with:"
     log_info "   sudo ufw allow from 192.168.0.0/16 to any port 8000:8099 proto tcp"

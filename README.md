@@ -806,18 +806,6 @@ All services are accessible via `http://SERVER_IP:PORT`:
 | 8030 | RAGApp | RAG Interface |
 | 8031 | Letta | Agent Server |
 
-### Memory AI Services
-| Port | Service | Description | Setup Guide |
-|------|---------|-------------|-------------|
-| 3000 | Cipher UI | Memory-Powered AI Agent Web Interface | [→ Setup](docs/CIPHER_SETUP.md) |
-| 3001 | Cipher API | Memory-Powered AI Agent REST API + MCP | [→ Setup](docs/CIPHER_SETUP.md) |
-
-**Cipher Endpoints:**
-- **Web UI**: `http://SERVER_IP:3000` - Interactive chat interface with memory
-- **REST API**: `http://SERVER_IP:3001/api/` - Programmatic API access
-- **MCP SSE**: `http://SERVER_IP:3001/api/mcp/sse` - Model Context Protocol for AI tools
-- **Health**: `http://SERVER_IP:3001/api/health` - Service health check
-
 ### Learning Tools (8040-8050)
 | Port | Service | Description | Setup Guide |
 |------|---------|-------------|-------------|
