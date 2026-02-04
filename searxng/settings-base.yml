@@ -53,22 +53,23 @@ redis:
 search:
   # Safe search level: 0=off, 1=moderate, 2=strict
   safe_search: 0
-  # Autocomplete provider
-  autocomplete: "google"
+  # Autocomplete provider - use DuckDuckGo to avoid Google rate limits
+  autocomplete: "duckduckgo"
   # Default language
   default_lang: "auto"
-  # Ban time for failing engines (seconds)
-  ban_time_on_fail: 5
-  # Max ban time
-  max_ban_time_on_fail: 120
-  # Suspended times - how many times an engine can fail before being suspended
+  # Ban time for failing engines (seconds) - reduced for faster recovery
+  ban_time_on_fail: 3
+  # Max ban time - reduced to allow faster retry
+  max_ban_time_on_fail: 60
+  # Suspended times - reduced to allow faster recovery from rate limits
+  # These values determine how long an engine is suspended after errors
   suspended_times:
-    SearxEngineAccessDenied: 86400
-    SearxEngineCaptcha: 86400
-    SearxEngineTooManyRequests: 3600
-    cf_SearxEngineCaptcha: 1296000
-    cf_SearxEngineAccessDenied: 86400
-    recaptcha_SearxEngineCaptcha: 604800
+    SearxEngineAccessDenied: 600      # 10 minutes (was 24h)
+    SearxEngineCaptcha: 1800          # 30 minutes (was 24h)
+    SearxEngineTooManyRequests: 300   # 5 minutes (was 1h)
+    cf_SearxEngineCaptcha: 3600       # 1 hour (was 15 days)
+    cf_SearxEngineAccessDenied: 1800  # 30 minutes (was 24h)
+    recaptcha_SearxEngineCaptcha: 3600 # 1 hour (was 7 days)
   # Output formats - JSON is REQUIRED for Open WebUI integration!
   formats:
     - html
@@ -91,26 +92,37 @@ outgoing:
   enable_http2: true
 
 # Engine configuration - optimized for AI/LLM use cases
+# IMPORTANT: Google and Bing are DISABLED by default to avoid rate limiting!
+# They aggressively block automated requests. Use DuckDuckGo, Brave, Qwant instead.
 engines:
-  # Google - primary search engine
-  - name: google
-    engine: google
-    shortcut: g
-    disabled: false
-    
-  # DuckDuckGo - privacy-focused alternative
+  # DuckDuckGo - PRIMARY search engine (privacy-focused, no rate limits)
   - name: duckduckgo
     engine: duckduckgo
     shortcut: ddg
     disabled: false
+    weight: 2  # Higher weight = more results from this engine
     
-  # Bing - Microsoft search
-  - name: bing
-    engine: bing
-    shortcut: b
+  # Brave - privacy-focused search (good alternative)
+  - name: brave
+    engine: brave
+    shortcut: br
+    disabled: false
+    weight: 1.5
+    
+  # Qwant - European search engine (no tracking)
+  - name: qwant
+    engine: qwant
+    shortcut: qw
+    disabled: false
+    weight: 1.5
+    
+  # Mojeek - Independent search engine
+  - name: mojeek
+    engine: mojeek
+    shortcut: mj
     disabled: false
     
-  # Wikipedia - knowledge base
+  # Wikipedia - knowledge base (very reliable)
   - name: wikipedia
     engine: wikipedia
     shortcut: w
@@ -140,23 +152,24 @@ engines:
     shortcut: ar
     disabled: false
     
-  # Google Scholar - academic search
+  # Google - DISABLED by default (aggressive rate limiting!)
+  # Enable only if you have a proxy or accept frequent blocks
+  - name: google
+    engine: google
+    shortcut: g
+    disabled: true  # DISABLED - causes "Too many requests" errors
+    
+  # Bing - DISABLED by default (aggressive rate limiting!)
+  - name: bing
+    engine: bing
+    shortcut: b
+    disabled: true  # DISABLED - causes "Too many requests" errors
+    
+  # Google Scholar - DISABLED (uses Google, same rate limits)
   - name: google scholar
     engine: google_scholar
     shortcut: gs
-    disabled: false
-    
-  # Brave - privacy-focused search
-  - name: brave
-    engine: brave
-    shortcut: br
-    disabled: false
-    
-  # Qwant - European search engine
-  - name: qwant
-    engine: qwant
-    shortcut: qw
-    disabled: false
+    disabled: true  # DISABLED - causes "Too many requests" errors
 
 # Categories configuration
 categories_as_tabs:
