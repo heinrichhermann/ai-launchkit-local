@@ -104,10 +104,19 @@ x-ollama: &service-ollama
   container_name: ollama
   restart: unless-stopped
   environment:
+    # === Performance Optimizations ===
     - OLLAMA_CONTEXT_LENGTH=131072
     - OLLAMA_FLASH_ATTENTION=1
     - OLLAMA_KV_CACHE_TYPE=q8_0
     - OLLAMA_MAX_LOADED_MODELS=2
+    # === Multi-GPU Optimizations (2x RTX 3090) ===
+    - OLLAMA_SCHED_SPREAD=true
+    - OLLAMA_GPU_OVERHEAD=536870912
+    # === Parallelization ===
+    - OLLAMA_NUM_PARALLEL=4
+    # === Cache & Memory ===
+    - OLLAMA_MULTIUSER_CACHE=true
+    - OLLAMA_KEEP_ALIVE=10m
   volumes:
     - ollama_storage:/root/.ollama
 
