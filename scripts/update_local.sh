@@ -169,7 +169,7 @@ log_info "========== Step 3: Updating Docker Images =========="
 log_info "Pulling latest versions (this may take a few minutes)..."
 
 # Force pull floating-tag images that don't auto-update
-log_info "Force pulling floating-tag images (open-notebook, n8n base, scriberr-cuda)..."
+log_info "Force pulling floating-tag images (open-notebook, n8n base, scriberr-cuda, penpot)..."
 docker pull lfnovo/open_notebook:1.2.4-single 2>/dev/null || {
     log_warning "Failed to pull open-notebook (continuing...)"
 }
@@ -179,6 +179,21 @@ docker pull n8nio/n8n:latest 2>/dev/null || {
 docker pull ghcr.io/rishikanthc/scriberr-cuda:v1.2.0 2>/dev/null || {
     log_warning "Failed to pull scriberr-cuda (continuing...)"
 }
+
+# Force pull Penpot images (latest tag may be cached)
+if [[ "$COMPOSE_PROFILES" == *"penpot"* ]]; then
+    log_info "Force pulling Penpot images..."
+    docker rmi penpotapp/backend:latest penpotapp/exporter:latest penpotapp/frontend:latest 2>/dev/null || true
+    docker pull penpotapp/backend:latest 2>/dev/null || {
+        log_warning "Failed to pull penpot-backend (continuing...)"
+    }
+    docker pull penpotapp/exporter:latest 2>/dev/null || {
+        log_warning "Failed to pull penpot-exporter (continuing...)"
+    }
+    docker pull penpotapp/frontend:latest 2>/dev/null || {
+        log_warning "Failed to pull penpot-frontend (continuing...)"
+    }
+fi
 
 # Pull all pre-built images (ignore buildable services)
 log_info "Pulling standard images..."
