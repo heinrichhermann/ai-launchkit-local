@@ -169,16 +169,35 @@ log_info "========== Step 3: Updating Docker Images =========="
 log_info "Pulling latest versions (this may take a few minutes)..."
 
 # Force pull floating-tag images that don't auto-update
-log_info "Force pulling floating-tag images (open-notebook, n8n base, scriberr-cuda, penpot)..."
-docker pull lfnovo/open_notebook:1.2.4-single 2>/dev/null || {
-    log_warning "Failed to pull open-notebook (continuing...)"
-}
+log_info "Force pulling floating-tag images..."
+
+# Open Notebook uses v1-latest-single tag (floating tag that needs cache clearing)
+if [[ "$COMPOSE_PROFILES" == *"open-notebook"* ]]; then
+    log_info "Force pulling Open Notebook..."
+    docker rmi lfnovo/open_notebook:v1-latest-single 2>/dev/null || true
+    docker pull lfnovo/open_notebook:v1-latest-single 2>/dev/null || {
+        log_warning "Failed to pull open-notebook (continuing...)"
+    }
+fi
+
+# n8n base image (needed for rebuild)
 docker pull n8nio/n8n:latest 2>/dev/null || {
     log_warning "Failed to pull n8n base image (continuing...)"
 }
-docker pull ghcr.io/rishikanthc/scriberr-cuda:v1.2.0 2>/dev/null || {
-    log_warning "Failed to pull scriberr-cuda (continuing...)"
-}
+
+# Scriberr - both CUDA and non-CUDA variants
+if [[ "$COMPOSE_PROFILES" == *"scriberr"* ]]; then
+    log_info "Force pulling Scriberr images..."
+    # CUDA variant (fixed version)
+    docker pull ghcr.io/rishikanthc/scriberr-cuda:v1.2.0 2>/dev/null || {
+        log_warning "Failed to pull scriberr-cuda (continuing...)"
+    }
+    # Non-CUDA variant (latest tag - needs cache clearing)
+    docker rmi ghcr.io/rishikanthc/scriberr:latest 2>/dev/null || true
+    docker pull ghcr.io/rishikanthc/scriberr:latest 2>/dev/null || {
+        log_warning "Failed to pull scriberr (continuing...)"
+    }
+fi
 
 # Force pull Penpot images (latest tag may be cached)
 if [[ "$COMPOSE_PROFILES" == *"penpot"* ]]; then
@@ -192,6 +211,69 @@ if [[ "$COMPOSE_PROFILES" == *"penpot"* ]]; then
     }
     docker pull penpotapp/frontend:latest 2>/dev/null || {
         log_warning "Failed to pull penpot-frontend (continuing...)"
+    }
+fi
+
+# Ollama (latest tag - critical AI service)
+if [[ "$COMPOSE_PROFILES" == *"cpu"* ]] || [[ "$COMPOSE_PROFILES" == *"gpu-nvidia"* ]]; then
+    log_info "Force pulling Ollama..."
+    docker rmi ollama/ollama:latest 2>/dev/null || true
+    docker pull ollama/ollama:latest 2>/dev/null || {
+        log_warning "Failed to pull ollama (continuing...)"
+    }
+fi
+
+# Open WebUI (main branch - floating tag)
+if [[ "$COMPOSE_PROFILES" == *"open-webui"* ]]; then
+    log_info "Force pulling Open WebUI..."
+    docker rmi ghcr.io/open-webui/open-webui:main 2>/dev/null || true
+    docker pull ghcr.io/open-webui/open-webui:main 2>/dev/null || {
+        log_warning "Failed to pull open-webui (continuing...)"
+    }
+fi
+
+# Neo4j (latest tag - graph database)
+if [[ "$COMPOSE_PROFILES" == *"neo4j"* ]]; then
+    log_info "Force pulling Neo4j..."
+    docker rmi neo4j:latest 2>/dev/null || true
+    docker pull neo4j:latest 2>/dev/null || {
+        log_warning "Failed to pull neo4j (continuing...)"
+    }
+fi
+
+# Monitoring stack (latest tags)
+if [[ "$COMPOSE_PROFILES" == *"monitoring"* ]]; then
+    log_info "Force pulling monitoring images..."
+    docker rmi grafana/grafana:latest prom/prometheus:latest prom/node-exporter:latest gcr.io/cadvisor/cadvisor:latest 2>/dev/null || true
+    docker pull grafana/grafana:latest 2>/dev/null || {
+        log_warning "Failed to pull grafana (continuing...)"
+    }
+    docker pull prom/prometheus:latest 2>/dev/null || {
+        log_warning "Failed to pull prometheus (continuing...)"
+    }
+    docker pull prom/node-exporter:latest 2>/dev/null || {
+        log_warning "Failed to pull node-exporter (continuing...)"
+    }
+    docker pull gcr.io/cadvisor/cadvisor:latest 2>/dev/null || {
+        log_warning "Failed to pull cadvisor (continuing...)"
+    }
+fi
+
+# Cognee (main branch - floating tag)
+if [[ "$COMPOSE_PROFILES" == *"cognee"* ]]; then
+    log_info "Force pulling Cognee..."
+    docker rmi cognee/cognee:main 2>/dev/null || true
+    docker pull cognee/cognee:main 2>/dev/null || {
+        log_warning "Failed to pull cognee (continuing...)"
+    }
+fi
+
+# Perplexica (slim-latest - floating tag)
+if [[ "$COMPOSE_PROFILES" == *"perplexica"* ]]; then
+    log_info "Force pulling Perplexica..."
+    docker rmi itzcrazykns1337/perplexica:slim-latest 2>/dev/null || true
+    docker pull itzcrazykns1337/perplexica:slim-latest 2>/dev/null || {
+        log_warning "Failed to pull perplexica (continuing...)"
     }
 fi
 
