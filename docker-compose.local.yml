@@ -344,14 +344,27 @@ services:
       - RAG_WEB_SEARCH_CONCURRENT_REQUESTS=${RAG_WEB_SEARCH_CONCURRENT_REQUESTS:-10}
       # Search engine bypass (optional - for direct URL fetching)
       - BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL=${BYPASS_WEB_SEARCH_EMBEDDING:-false}
+      
+      # ============================================================
+      # Crawl4AI Tool Server Integration (OpenAPI)
+      # Enables AI-powered web crawling and scraping in Open WebUI
+      # Requires: crawl4ai profile to be active
+      # Note: This is a PersistentConfig - only applied on first startup
+      # For existing installations, add via Admin Panel > Settings > Connections
+      # ============================================================
+      - ENABLE_DIRECT_CONNECTIONS=true
+      - TOOL_SERVER_CONNECTIONS=${TOOL_SERVER_CONNECTIONS:-[{"type":"openapi","url":"http://crawl4ai:11235","spec_type":"url","spec":"","path":"openapi.json","auth_type":"none","key":"","config":{"enable":true},"info":{"id":"crawl4ai","name":"Crawl4AI","description":"AI-powered web crawler and scraper for extracting content from websites"}}]}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - open-webui:/app/backend/data
-    # Soft dependency on searxng - Open WebUI starts even if searxng is not running
-    # Web search will gracefully fail if searxng is unavailable
+    # Soft dependencies - Open WebUI starts even if these services are not running
+    # Web search and crawling will gracefully fail if services are unavailable
     depends_on:
       searxng:
+        condition: service_started
+        required: false
+      crawl4ai:
         condition: service_started
         required: false
 
