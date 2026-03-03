@@ -42,9 +42,6 @@ VLLM_MAX_MODEL_LEN=32768
 
 # Data type (bfloat16 for best quality)
 VLLM_DTYPE=bfloat16
-
-# Required for GLM models
-VLLM_EXTRA_ARGS=--trust-remote-code
 ```
 
 ### 3. Alternative: Gated Models (Llama)
@@ -70,7 +67,7 @@ VLLM_MAX_MODEL_LEN=8192
 COMPOSE_PROFILES="vllm" docker compose up -d
 ```
 
-> **Note**: Das Docker Image `vllm/vllm-openai:nightly` enthält bereits alle Abhängigkeiten (transformers, torch, etc.). Du musst nichts manuell installieren!
+> **Note**: AI LaunchKit verwendet ein Custom Dockerfile das automatisch die neueste transformers Version für GLM-4.7-Flash Support installiert. Der erste Build dauert ca. 5-10 Minuten.
 
 ## Configuration Options
 

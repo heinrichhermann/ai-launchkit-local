@@ -661,10 +661,13 @@ services:
   # - OpenAI-compatible API (drop-in replacement)
   # - Default: GLM-4.7-Flash (30B MoE, 3B active) - optimized for 2x RTX 3090
   # - GPU-only (requires NVIDIA GPU with CUDA)
-  # - Uses nightly image for GLM-4.7-Flash support (includes transformers)
+  # - Custom build with latest transformers for GLM-4.7-Flash support
   # Documentation: docs/VLLM_SETUP.md
   vllm:
-    image: vllm/vllm-openai:nightly
+    build:
+      context: ./docker/vllm
+      dockerfile: Dockerfile
+    image: ai-launchkit/vllm:latest
     container_name: vllm
     profiles: ["vllm"]
     restart: unless-stopped
@@ -681,7 +684,6 @@ services:
       - VLLM_API_KEY=${VLLM_API_KEY:-}
     # Command to start vLLM with configurable model
     # Default: GLM-4.7-Flash optimized for 2x RTX 3090 (48GB total)
-    # Override with: docker compose run vllm --model <model-name>
     command: >
       --model ${VLLM_MODEL:-zai-org/GLM-4.7-Flash}
       --host 0.0.0.0
