@@ -9,6 +9,7 @@ vLLM is a high-performance LLM inference and serving engine that provides an **O
 | **Port** | 8032 |
 | **Profile** | `vllm` |
 | **GPU Required** | Yes (NVIDIA CUDA) |
+| **Default Model** | GLM-4.7-Flash (30B MoE, 3B active) |
 | **API Compatibility** | OpenAI API v1 |
 | **Documentation** | [vLLM Docs](https://docs.vllm.ai) |
 
@@ -16,32 +17,49 @@ vLLM is a high-performance LLM inference and serving engine that provides an **O
 
 ### 1. Prerequisites
 
-- **NVIDIA GPU** with CUDA support (minimum 8GB VRAM recommended)
+- **NVIDIA GPU** with CUDA support
+  - Single GPU: 24GB+ VRAM (RTX 3090, RTX 4090, A100)
+  - Dual GPU: 2x 24GB (recommended for GLM-4.7-Flash)
 - **NVIDIA Container Toolkit** installed
-- **HuggingFace Token** (for gated models like Llama)
+- **HuggingFace Token** (optional, only for gated models like Llama)
 
-### 2. Get HuggingFace Token
+### 2. Default Configuration (GLM-4.7-Flash)
+
+The default configuration is optimized for **2x RTX 3090** (48GB total VRAM):
+
+```bash
+# Default model: GLM-4.7-Flash (no HF token required!)
+VLLM_MODEL=zai-org/GLM-4.7-Flash
+
+# Tensor parallelism for 2 GPUs
+VLLM_TENSOR_PARALLEL_SIZE=2
+
+# GPU memory utilization
+VLLM_GPU_MEMORY_UTILIZATION=0.9
+
+# Context length (32K tokens)
+VLLM_MAX_MODEL_LEN=32768
+
+# Data type (bfloat16 for best quality)
+VLLM_DTYPE=bfloat16
+
+# Required for GLM models
+VLLM_EXTRA_ARGS=--trust-remote-code
+```
+
+### 3. Alternative: Gated Models (Llama)
+
+For gated models like Llama, you need a HuggingFace token:
 
 1. Create an account at [huggingface.co](https://huggingface.co)
 2. Go to [Settings → Access Tokens](https://huggingface.co/settings/tokens)
 3. Create a new token with "Read" permissions
 4. Accept the model license (e.g., [Llama 3.1](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct))
 
-### 3. Configure Environment
-
-Add to your `.env` file:
-
 ```bash
-# Required for gated models
 HF_TOKEN=hf_your_token_here
-
-# Model selection (default: Llama 3.1 8B)
 VLLM_MODEL=meta-llama/Llama-3.1-8B-Instruct
-
-# GPU memory utilization (0.0-1.0)
-VLLM_GPU_MEMORY_UTILIZATION=0.9
-
-# Maximum context length
+VLLM_TENSOR_PARALLEL_SIZE=1
 VLLM_MAX_MODEL_LEN=8192
 ```
 
@@ -59,31 +77,41 @@ COMPOSE_PROFILES="n8n,vllm,gpu-nvidia" docker compose up -d
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `HF_TOKEN` | - | HuggingFace token for gated models |
-| `VLLM_MODEL` | `meta-llama/Llama-3.1-8B-Instruct` | HuggingFace model ID |
+| `VLLM_MODEL` | `zai-org/GLM-4.7-Flash` | HuggingFace model ID |
 | `VLLM_GPU_MEMORY_UTILIZATION` | `0.9` | GPU memory fraction (0.0-1.0) |
-| `VLLM_MAX_MODEL_LEN` | `8192` | Maximum context length |
-| `VLLM_TENSOR_PARALLEL_SIZE` | `1` | Number of GPUs for tensor parallelism |
-| `VLLM_DTYPE` | `auto` | Data type (auto, float16, bfloat16) |
+| `VLLM_MAX_MODEL_LEN` | `32768` | Maximum context length |
+| `VLLM_TENSOR_PARALLEL_SIZE` | `2` | Number of GPUs for tensor parallelism |
+| `VLLM_DTYPE` | `bfloat16` | Data type (auto, float16, bfloat16) |
 | `VLLM_API_KEY` | - | Optional API key for authentication |
-| `VLLM_EXTRA_ARGS` | - | Additional vLLM server arguments |
+| `VLLM_EXTRA_ARGS` | `--trust-remote-code` | Additional vLLM server arguments |
 
 ### Recommended Models
 
-| Model | VRAM Required | Description |
-|-------|---------------|-------------|
-| `meta-llama/Llama-3.1-8B-Instruct` | ~16GB | Best balance of quality and speed |
-| `mistralai/Mistral-7B-Instruct-v0.3` | ~14GB | Fast, good for general tasks |
-| `Qwen/Qwen2.5-7B-Instruct` | ~14GB | Excellent multilingual support |
-| `meta-llama/Llama-3.1-70B-Instruct` | ~140GB | Best quality, requires multi-GPU |
+| Model | VRAM Required | GPUs | Description |
+|-------|---------------|------|-------------|
+| `zai-org/GLM-4.7-Flash` | ~40GB | 2x 24GB | **Default** - 30B MoE, only 3B active, excellent reasoning |
+| `meta-llama/Llama-3.1-8B-Instruct` | ~16GB | 1x 24GB | Good balance, requires HF token |
+| `Qwen/Qwen2.5-7B-Instruct` | ~14GB | 1x 24GB | Excellent multilingual support |
+| `cyankiwi/GLM-4.7-Flash-AWQ-4bit` | ~12GB | 1x 24GB | Quantized GLM-4.7-Flash for single GPU |
 
-### Quantized Models (Lower VRAM)
+### GLM-4.7-Flash Benchmarks
 
-For GPUs with limited VRAM, use quantized models:
+| Benchmark | GLM-4.7-Flash | Qwen3-30B-A3B | GPT-OSS-20B |
+|-----------|---------------|---------------|-------------|
+| AIME 25 (Math) | **91.6** | 85.0 | 91.7 |
+| GPQA (Science) | **75.2** | 73.4 | 71.5 |
+| SWE-bench (Coding) | **59.2** | 22.0 | 34.0 |
+| τ²-Bench (Agentic) | **79.5** | 49.0 | 47.7 |
+
+### Quantized Models (Single GPU)
+
+For single GPU setups, use the AWQ quantized version:
 
 ```bash
-# AWQ quantized (4-bit)
-VLLM_MODEL=TheBloke/Llama-2-7B-Chat-AWQ
-VLLM_EXTRA_ARGS=--quantization awq
+# AWQ quantized GLM-4.7-Flash (4-bit) - fits on single 24GB GPU
+VLLM_MODEL=cyankiwi/GLM-4.7-Flash-AWQ-4bit
+VLLM_TENSOR_PARALLEL_SIZE=1
+VLLM_EXTRA_ARGS=--quantization awq --trust-remote-code
 ```
 
 ## OpenAI-Compatible API

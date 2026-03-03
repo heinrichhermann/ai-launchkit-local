@@ -659,7 +659,7 @@ services:
   # vLLM - High-Performance LLM Inference Server (OpenAI-compatible API)
   # - State-of-the-art serving throughput with PagedAttention
   # - OpenAI-compatible API (drop-in replacement)
-  # - Supports HuggingFace models (Llama, Mistral, Qwen, etc.)
+  # - Default: GLM-4.7-Flash (30B MoE, 3B active) - optimized for 2x RTX 3090
   # - GPU-only (requires NVIDIA GPU with CUDA)
   # Documentation: docs/VLLM_SETUP.md
   vllm:
@@ -679,15 +679,16 @@ services:
       # vLLM Configuration
       - VLLM_API_KEY=${VLLM_API_KEY:-}
     # Command to start vLLM with configurable model
+    # Default: GLM-4.7-Flash optimized for 2x RTX 3090 (48GB total)
     # Override with: docker compose run vllm --model <model-name>
     command: >
-      --model ${VLLM_MODEL:-meta-llama/Llama-3.1-8B-Instruct}
+      --model ${VLLM_MODEL:-zai-org/GLM-4.7-Flash}
       --host 0.0.0.0
       --port 8000
       --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION:-0.9}
-      --max-model-len ${VLLM_MAX_MODEL_LEN:-8192}
-      --tensor-parallel-size ${VLLM_TENSOR_PARALLEL_SIZE:-1}
-      --dtype ${VLLM_DTYPE:-auto}
+      --max-model-len ${VLLM_MAX_MODEL_LEN:-32768}
+      --tensor-parallel-size ${VLLM_TENSOR_PARALLEL_SIZE:-2}
+      --dtype ${VLLM_DTYPE:-bfloat16}
       --trust-remote-code
       ${VLLM_EXTRA_ARGS:-}
     deploy:
