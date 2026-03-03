@@ -64,6 +64,7 @@ base_services_data=(
     "lightrag" "LightRAG (Graph-based RAG) - Port 8029"
     "neo4j" "Neo4j (Graph Database) - Port 8028"
     "letta" "Letta (Agent Server & SDK) - Port 8031"
+    "vllm" "vLLM (High-Performance LLM Server - GPU only) - Port 8032"
     "gotenberg" "Gotenberg (Document Conversion API) - Port 8094"
     "stirling-pdf" "Stirling-PDF (100+ PDF Tools) - Port 8086"
     "crawl4ai" "Crawl4ai (Web Crawler for AI) - Port 8093"

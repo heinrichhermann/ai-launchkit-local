@@ -505,6 +505,14 @@ if [[ "$COMPOSE_PROFILES" == *"letta"* ]]; then
     fi
 fi
 
+if [[ "$COMPOSE_PROFILES" == *"vllm"* ]]; then
+    if docker ps | grep -q "vllm"; then
+        log_success "✅ vLLM is running (Port 8032)"
+    else
+        FAILED_SERVICES+=("vllm")
+    fi
+fi
+
 # Check research & notebooks
 if [[ "$COMPOSE_PROFILES" == *"open-notebook"* ]]; then
     if docker ps | grep -q "open-notebook"; then
