@@ -679,6 +679,8 @@ services:
     shm_size: '16gb'
     # IPC mode for better GPU communication (alternative to shm_size)
     ipc: host
+    # Privileged mode may help with GPU access in worker processes
+    privileged: true
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
       - ./shared:/data/shared
@@ -692,6 +694,13 @@ services:
       - NCCL_DEBUG=WARN
       - NCCL_IB_DISABLE=1
       - NCCL_P2P_DISABLE=0
+      # CRITICAL: Force V0 engine to avoid multiprocessing issues
+      # V1 engine has bugs with CUDA initialization in worker processes
+      - VLLM_USE_V1=0
+      # CUDA visibility - ensure all GPUs are visible
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=0,1
     # Command to start vLLM with configurable model
     # Default: GLM-4.7-Flash optimized for 2x RTX 3090 (48GB total)
     command: >
