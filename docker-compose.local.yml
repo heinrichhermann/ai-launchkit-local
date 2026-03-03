@@ -673,6 +673,12 @@ services:
     restart: unless-stopped
     ports:
       - "8032:8000"
+    # CRITICAL: Shared memory for multi-GPU tensor parallelism
+    # vLLM uses shared memory for inter-process communication between GPUs
+    # Without sufficient shm_size, worker initialization will fail
+    shm_size: '16gb'
+    # IPC mode for better GPU communication (alternative to shm_size)
+    ipc: host
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
       - ./shared:/data/shared
@@ -682,6 +688,10 @@ services:
       - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
       # vLLM Configuration
       - VLLM_API_KEY=${VLLM_API_KEY:-}
+      # NCCL Configuration for multi-GPU
+      - NCCL_DEBUG=WARN
+      - NCCL_IB_DISABLE=1
+      - NCCL_P2P_DISABLE=0
     # Command to start vLLM with configurable model
     # Default: GLM-4.7-Flash optimized for 2x RTX 3090 (48GB total)
     command: >
