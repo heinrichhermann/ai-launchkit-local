@@ -661,9 +661,10 @@ services:
   # - OpenAI-compatible API (drop-in replacement)
   # - Default: GLM-4.7-Flash (30B MoE, 3B active) - optimized for 2x RTX 3090
   # - GPU-only (requires NVIDIA GPU with CUDA)
+  # - Uses nightly image for GLM-4.7-Flash support (includes transformers)
   # Documentation: docs/VLLM_SETUP.md
   vllm:
-    image: vllm/vllm-openai:latest
+    image: vllm/vllm-openai:nightly
     container_name: vllm
     profiles: ["vllm"]
     restart: unless-stopped

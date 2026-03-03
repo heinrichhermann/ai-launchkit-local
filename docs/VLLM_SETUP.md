@@ -67,8 +67,10 @@ VLLM_MAX_MODEL_LEN=8192
 
 ```bash
 # Add vllm to your profiles
-COMPOSE_PROFILES="n8n,vllm,gpu-nvidia" docker compose up -d
+COMPOSE_PROFILES="vllm" docker compose up -d
 ```
+
+> **Note**: Das Docker Image `vllm/vllm-openai:nightly` enthält bereits alle Abhängigkeiten (transformers, torch, etc.). Du musst nichts manuell installieren!
 
 ## Configuration Options
 
