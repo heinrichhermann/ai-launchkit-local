@@ -687,6 +687,10 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
       
+      # Encryption key for storing API credentials securely in the database
+      # Required for secure credential storage (minimum 16 characters)
+      - OPEN_NOTEBOOK_ENCRYPTION_KEY=${OPEN_NOTEBOOK_ENCRYPTION_KEY:-change-me-to-a-secret-string}
+      
       # Optional: Ollama Integration for local/offline models
       # Works automatically if Ollama is running (cpu/gpu-nvidia/gpu-amd profiles)
       # Note: Use OLLAMA_API_BASE (not OLLAMA_API_BASE_URL) per official docs
