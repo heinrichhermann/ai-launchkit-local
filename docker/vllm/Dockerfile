@@ -1,7 +1,12 @@
 # vLLM with latest transformers for GLM-4.7-Flash support
 # Based on official vllm-openai image with updated transformers
+#
+# IMPORTANT: Using v0.8.5 for stability
+# - vLLM v0.16.0 has issues with V1 engine multiprocessing on some systems
+# - v0.8.5 uses the stable V0 engine
+# - Still supports tensor parallelism for multi-GPU
 
-FROM vllm/vllm-openai:latest
+FROM vllm/vllm-openai:v0.8.5
 
 # Install latest transformers for GLM-4.7-Flash support
 # GLM-4.7-Flash uses model type 'glm4_moe_lite' which requires transformers from main branch
