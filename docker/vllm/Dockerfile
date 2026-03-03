@@ -1,4 +1,4 @@
-# vLLM with compatible transformers for GLM-4.7-Flash support
+# vLLM with transformers from main branch for GLM-4.7-Flash support
 # Based on official vllm-openai image
 #
 # IMPORTANT: CUDA/Driver Compatibility
@@ -6,16 +6,23 @@
 # - Using cu130-nightly tag for CUDA 13.0 compatibility
 # - This fixes "Error 803: unsupported display driver / cuda driver combination"
 #
-# NOTE: vLLM 0.16.x requires transformers<5, so we use the latest 4.x release
-# GLM-4.7-Flash is supported in transformers 4.57+
+# NOTE: GLM-4.7-Flash uses model type 'glm4_moe_lite' which is only in
+# transformers main branch (not yet released in 4.x or 5.x stable)
 
 FROM vllm/vllm-openai:cu130-nightly
 
-# Upgrade transformers to latest 4.x for GLM-4.7-Flash support
-# - vLLM requires transformers<5,>=4.56.0
-# - GLM-4.7-Flash (glm4_moe_lite) is supported in transformers 4.57+
-# - Using --upgrade to get latest compatible version
-RUN pip install --no-cache-dir --upgrade "transformers>=4.57,<5" && \
+# Install transformers from main branch for GLM-4.7-Flash support
+# - GLM-4.7-Flash (glm4_moe_lite) requires unreleased transformers
+# - Pin numpy to avoid lmcache/numba compatibility issues
+# - Install git temporarily for pip install from GitHub
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git && \
+    pip install --no-cache-dir "numpy>=1.24,<2.3" && \
+    pip install --no-cache-dir git+https://github.com/huggingface/transformers.git@main && \
+    apt-get purge -y git && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
     python3 -c "import transformers; print(f'Transformers {transformers.__version__} installed successfully')"
 
 # Set default environment variables
