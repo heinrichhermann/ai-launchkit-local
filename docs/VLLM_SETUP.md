@@ -9,7 +9,7 @@ vLLM is a high-performance LLM inference and serving engine that provides an **O
 | **Port** | 8032 |
 | **Profile** | `vllm` |
 | **GPU Required** | Yes (NVIDIA CUDA) |
-| **Default Model** | GLM-4.7-Flash (30B MoE, 3B active) |
+| **Default Model** | QuantTrio/GLM-4.7-Flash-AWQ (19GB AWQ quantized) |
 | **API Compatibility** | OpenAI API v1 |
 | **Documentation** | [vLLM Docs](https://docs.vllm.ai) |
 
@@ -19,17 +19,17 @@ vLLM is a high-performance LLM inference and serving engine that provides an **O
 
 - **NVIDIA GPU** with CUDA support
   - Single GPU: 24GB+ VRAM (RTX 3090, RTX 4090, A100)
-  - Dual GPU: 2x 24GB (recommended for GLM-4.7-Flash)
+  - Dual GPU: 2x 24GB (recommended for GLM-4.7-Flash-AWQ)
 - **NVIDIA Container Toolkit** installed
 - **HuggingFace Token** (optional, only for gated models like Llama)
 
-### 2. Default Configuration (GLM-4.7-Flash)
+### 2. Default Configuration (GLM-4.7-Flash-AWQ)
 
 The default configuration is optimized for **2x RTX 3090** (48GB total VRAM):
 
 ```bash
-# Default model: GLM-4.7-Flash (no HF token required!)
-VLLM_MODEL=zai-org/GLM-4.7-Flash
+# Default model: QuantTrio/GLM-4.7-Flash-AWQ (19GB, no HF token required!)
+VLLM_MODEL=QuantTrio/GLM-4.7-Flash-AWQ
 
 # Tensor parallelism for 2 GPUs
 VLLM_TENSOR_PARALLEL_SIZE=2
@@ -42,6 +42,12 @@ VLLM_MAX_MODEL_LEN=32768
 
 # Data type (bfloat16 for best quality)
 VLLM_DTYPE=bfloat16
+
+# Swap space for KV cache overflow
+VLLM_SWAP_SPACE=4
+
+# Extra args for MoE optimization and tool calling
+VLLM_EXTRA_ARGS=--enable-expert-parallel --enable-auto-tool-choice --tool-call-parser glm47 --reasoning-parser glm45 --speculative-config.method mtp --speculative-config.num_speculative_tokens 1 --trust-remote-code
 ```
 
 ### 3. Alternative: Gated Models (Llama)
@@ -88,10 +94,10 @@ COMPOSE_PROFILES="vllm" docker compose up -d
 
 | Model | VRAM Required | GPUs | Description |
 |-------|---------------|------|-------------|
-| `zai-org/GLM-4.7-Flash` | ~40GB | 2x 24GB | **Default** - 30B MoE, only 3B active, excellent reasoning |
+| `QuantTrio/GLM-4.7-Flash-AWQ` | ~19GB | 2x 24GB | **Default** - AWQ quantized, fits 2x RTX 3090 |
+| `zai-org/GLM-4.7-Flash` | ~60GB | 4x 24GB | Original BF16, needs 4 GPUs |
 | `meta-llama/Llama-3.1-8B-Instruct` | ~16GB | 1x 24GB | Good balance, requires HF token |
 | `Qwen/Qwen2.5-7B-Instruct` | ~14GB | 1x 24GB | Excellent multilingual support |
-| `cyankiwi/GLM-4.7-Flash-AWQ-4bit` | ~12GB | 1x 24GB | Quantized GLM-4.7-Flash for single GPU |
 
 ### GLM-4.7-Flash Benchmarks
 
@@ -102,15 +108,28 @@ COMPOSE_PROFILES="vllm" docker compose up -d
 | SWE-bench (Coding) | **59.2** | 22.0 | 34.0 |
 | τ²-Bench (Agentic) | **79.5** | 49.0 | 47.7 |
 
-### Quantized Models (Single GPU)
+### Quantized Models (Recommended for 2x RTX 3090)
 
-For single GPU setups, use the AWQ quantized version:
+The default AWQ quantized version is optimized for 2x RTX 3090:
 
 ```bash
-# AWQ quantized GLM-4.7-Flash (4-bit) - fits on single 24GB GPU
-VLLM_MODEL=cyankiwi/GLM-4.7-Flash-AWQ-4bit
-VLLM_TENSOR_PARALLEL_SIZE=1
-VLLM_EXTRA_ARGS=--quantization awq --trust-remote-code
+# AWQ quantized GLM-4.7-Flash (19GB) - fits on 2x 24GB GPUs
+VLLM_MODEL=QuantTrio/GLM-4.7-Flash-AWQ
+VLLM_TENSOR_PARALLEL_SIZE=2
+VLLM_SWAP_SPACE=4
+VLLM_EXTRA_ARGS=--enable-expert-parallel --enable-auto-tool-choice --tool-call-parser glm47 --reasoning-parser glm45 --speculative-config.method mtp --speculative-config.num_speculative_tokens 1 --trust-remote-code
+```
+
+### Environment Variables for GLM-4.7-Flash-AWQ
+
+The docker-compose.local.yml automatically sets these optimization flags:
+
+```bash
+# Required for optimal MoE performance with FlashInfer
+VLLM_USE_DEEP_GEMM=0
+VLLM_USE_FLASHINFER_MOE_FP16=1
+VLLM_USE_FLASHINFER_SAMPLER=0
+OMP_NUM_THREADS=4
 ```
 
 ## OpenAI-Compatible API
