@@ -309,7 +309,15 @@ if [[ "$COMPOSE_PROFILES" == *"bolt"* ]]; then
     }
 fi
 
-# Build chatterbox if in profile  
+# Build vLLM if in profile (requires latest transformers for GLM-4.7-Flash)
+if [[ "$COMPOSE_PROFILES" == *"vllm"* ]]; then
+    log_info "Building vLLM with latest transformers..."
+    docker compose -p localai -f docker-compose.local.yml --profile vllm build --no-cache vllm || {
+        log_warning "vLLM rebuild failed (non-critical)"
+    }
+fi
+
+# Build chatterbox if in profile
 if [[ "$COMPOSE_PROFILES" == *"tts-chatterbox"* ]]; then
     log_info "Building chatterbox..."
     docker compose -p localai -f docker-compose.local.yml build --pull chatterbox-tts chatterbox-frontend || {

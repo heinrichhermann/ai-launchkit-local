@@ -151,6 +151,13 @@ if [[ "$COMPOSE_PROFILES" == *"dify"* ]]; then
 fi
 
 # Build services that need local compilation
+if [[ "$COMPOSE_PROFILES" == *"vllm"* ]]; then
+    log_info "Building vLLM with latest transformers for GLM-4.7-Flash support..."
+    docker compose -p localai -f docker-compose.local.yml --profile vllm build --no-cache vllm || {
+        log_warning "vLLM build failed - will try to use pre-built image"
+    }
+fi
+
 if [[ "$COMPOSE_PROFILES" == *"tts-chatterbox"* ]]; then
     log_info "Preparing Chatterbox TTS services..."
     if [ ! -d "./chatterbox-frontend/frontend" ]; then
