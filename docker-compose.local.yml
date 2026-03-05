@@ -664,8 +664,20 @@ services:
   # - Custom build with latest transformers
   # Documentation: docs/VLLM_SETUP.md
   #
-  # NOTE: GLM-4.7-Flash with MLA attention requires Hopper GPUs (H100)
-  # On Ampere GPUs (RTX 3090), use Qwen2.5 or other standard models
+  # GPU COMPATIBILITY NOTES:
+  # - Ampere GPUs (RTX 3090, A100): Use Qwen2.5 or AWQ-quantized models
+  # - GLM-4.7-Flash AWQ 4-bit: Works on 2x or 3x RTX 3090 (vLLM v0.15.1+)
+  # - For single GPU, use Qwen2.5-7B-Instruct
+  #
+  # GLM-4.7-Flash on 2x/3x RTX 3090 (AWQ 4-bit, ~17.2GB, TP=2):
+  # Note: num_attention_heads=20 → TP must divide evenly (1,2,4,5,10,20)
+  #       TP=3 does NOT work. Use TP=2 (uses 2 GPUs, 3rd available for other tasks)
+  # VLLM_MODEL=cyankiwi/GLM-4.7-Flash-AWQ-4bit
+  # VLLM_SERVED_MODEL_NAME=GLM-4.7-Flash
+  # VLLM_TENSOR_PARALLEL_SIZE=2
+  # VLLM_GPU_MEMORY_UTILIZATION=0.90
+  # VLLM_DTYPE=bfloat16
+  # VLLM_EXTRA_ARGS=--tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice
   vllm:
     build:
       context: ./docker/vllm
@@ -674,16 +686,12 @@ services:
     container_name: vllm
     profiles: ["vllm"]
     restart: unless-stopped
+    ipc: host
     ports:
       - "8032:8000"
-    # CRITICAL: Shared memory for multi-GPU tensor parallelism
+    # Shared memory for multi-GPU tensor parallelism
     # vLLM uses shared memory for inter-process communication between GPUs
-    # Without sufficient shm_size, worker initialization will fail
     shm_size: '16gb'
-    # IPC mode for better GPU communication (alternative to shm_size)
-    ipc: host
-    # Privileged mode may help with GPU access in worker processes
-    privileged: true
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
       - ./shared:/data/shared
@@ -697,19 +705,28 @@ services:
       - NCCL_DEBUG=WARN
       - NCCL_IB_DISABLE=1
       - NCCL_P2P_DISABLE=0
-      # CRITICAL: Force V0 engine to avoid multiprocessing issues
-      # V1 engine has bugs with CUDA initialization in worker processes
-      - VLLM_USE_V1=0
       # CUDA visibility - ensure all GPUs are visible
-      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_VISIBLE_DEVICES=${VLLM_CUDA_VISIBLE_DEVICES:-all}
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - CUDA_VISIBLE_DEVICES=0,1
+      # vLLM Performance Optimizations
+      - VLLM_DO_NOT_TRACK=1
+      - VLLM_CPU_KVCACHE_SPACE=8
+      - FLASH_ATTN=1
+      - VLLM_TARGET_DEVICE=cuda
+      - PYTORCH_ALLOC_CONF=expandable_segments:False
+      - VLLM_MARLIN_USE_ATOMIC_ADD=1
+      - OMP_NUM_THREADS=${VLLM_OMP_NUM_THREADS:-6}
+      - VLLM_USE_PRECOMPILED=1
+      - NVIDIA_DISABLE_REQUIRE=1
+      - VLLM_SLEEP_WHEN_IDLE=1
+      # FlashInfer MoE Backend (for GLM-4.7-Flash on Ampere GPUs)
+      - VLLM_USE_DEEP_GEMM=0
+      - VLLM_USE_FLASHINFER_MOE_FP16=${VLLM_USE_FLASHINFER_MOE:-0}
+      - VLLM_FLASHINFER_MOE_BACKEND=${VLLM_FLASHINFER_MOE_BACKEND:-throughput}
+      - VLLM_ATTENTION_BACKEND=${VLLM_ATTENTION_BACKEND:-}
+      - VLLM_USE_FLASHINFER_SAMPLER=${VLLM_USE_FLASHINFER_SAMPLER:-0}
     # Command to start vLLM with configurable model
     # Default: Qwen/Qwen2.5-7B-Instruct (reliable, works on all GPUs)
-    #
-    # For GLM-4.7-Flash on Hopper GPUs (H100), use:
-    # VLLM_MODEL=zai-org/GLM-4.7-Flash
-    # VLLM_EXTRA_ARGS=--tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice --kv-cache-dtype fp8
     command: >
       --model ${VLLM_MODEL:-Qwen/Qwen2.5-7B-Instruct}
       --served-model-name ${VLLM_SERVED_MODEL_NAME:-Qwen2.5-7B-Instruct}
@@ -720,6 +737,8 @@ services:
       --tensor-parallel-size ${VLLM_TENSOR_PARALLEL_SIZE:-1}
       --dtype ${VLLM_DTYPE:-auto}
       --trust-remote-code
+      --enable-prefix-caching
+      --enable-chunked-prefill
       ${VLLM_EXTRA_ARGS:-}
     deploy:
       resources:

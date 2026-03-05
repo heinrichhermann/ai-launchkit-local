@@ -9,10 +9,47 @@ vLLM is a high-performance LLM inference and serving engine that provides an **O
 | **Port** | 8032 |
 | **Profile** | `vllm` |
 | **GPU Required** | Yes (NVIDIA CUDA) |
-| **Default Model** | unsloth/GLM-4.7-Flash-FP8-Dynamic (official Unsloth FP8) |
+| **Default Model** | Qwen/Qwen2.5-7B-Instruct (works on all GPUs) |
 | **API Compatibility** | OpenAI API v1 |
 | **Documentation** | [vLLM Docs](https://docs.vllm.ai) |
-| **Reference** | [Unsloth GLM-4.7-Flash Guide](https://unsloth.ai/docs/de/modelle/glm-4.7-flash) |
+
+## GPU Compatibility
+
+> ⚠️ **IMPORTANT**: Model selection depends on your GPU architecture and vLLM version!
+
+| GPU Architecture | Examples | Recommended Models |
+|------------------|----------|-------------------|
+| **Ampere 1x** | RTX 3090, A100 | Qwen2.5-7B-Instruct, GLM-4.7-Flash-AWQ-4bit |
+| **Ampere 2x/3x** | 2-3x RTX 3090 | GLM-4.7-Flash-AWQ-4bit (TP=2), Qwen2.5-14B |
+| **Ampere 4x+** | 4x RTX 3090 | zai-org/GLM-4.7-Flash BF16 (TP=4) |
+| **Ada Lovelace** | RTX 4090 | Qwen2.5-7B-Instruct, GLM-4.7-Flash-AWQ-4bit |
+| **Hopper** | H100 | zai-org/GLM-4.7-Flash BF16 (TP=4+) |
+
+### GLM-4.7-Flash on RTX 3090 (AWQ 4-bit)
+
+Use `cyankiwi/GLM-4.7-Flash-AWQ-4bit` — the **AWQ 4-bit quantized** version fits on a single RTX 3090 (17.2GB):
+
+```bash
+VLLM_MODEL=cyankiwi/GLM-4.7-Flash-AWQ-4bit
+VLLM_SERVED_MODEL_NAME=GLM-4.7-Flash
+VLLM_TENSOR_PARALLEL_SIZE=2          # TP=2 for 2x/3x RTX 3090 (20 heads → TP must be 1,2,4,5...)
+VLLM_GPU_MEMORY_UTILIZATION=0.90
+VLLM_DTYPE=bfloat16
+VLLM_EXTRA_ARGS=--tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice
+```
+
+> **Note on TP**: GLM-4.7-Flash has `num_attention_heads=20`. TP must divide 20 evenly.
+> **TP=3 does NOT work** on 3x RTX 3090. Use TP=2 (2 GPUs, 3rd GPU free for other tasks).
+
+### vLLM Version Requirement
+
+The Dockerfile uses `v0.15.1-cu130` (stable). **Do not use the nightly/0.16.x builds** — they have a bug where `DeepSeekV2FusedQkvAProj` (the new fused QKV layer) breaks compressed-tensors AWQ quantization matching:
+
+```
+ValueError: Unable to find matching target for model.layers.X.self_attn.fused_qkv_a_proj
+```
+
+vLLM 0.15.1 uses `MergedColumnParallelLinear` for the same layer, which works correctly with AWQ.
 
 ## Quick Start
 
@@ -20,39 +57,33 @@ vLLM is a high-performance LLM inference and serving engine that provides an **O
 
 - **NVIDIA GPU** with CUDA support
   - Single GPU: 24GB+ VRAM (RTX 3090, RTX 4090, A100)
-  - Dual GPU: 2x 24GB (recommended for GLM-4.7-Flash-FP8-Dynamic)
-  - Quad GPU: 4x 24GB (for full 200K context)
+  - Multi-GPU: For larger models
 - **NVIDIA Container Toolkit** installed
 - **HuggingFace Token** (optional, only for gated models like Llama)
 
-### 2. Default Configuration (GLM-4.7-Flash-FP8-Dynamic)
+### 2. Default Configuration (Qwen2.5-7B-Instruct)
 
-The default configuration is optimized for **2x RTX 3090** (48GB total VRAM):
+The default configuration works on **any NVIDIA GPU with 24GB+ VRAM**:
 
 ```bash
-# Default model: unsloth/GLM-4.7-Flash-FP8-Dynamic (official Unsloth FP8)
-VLLM_MODEL=unsloth/GLM-4.7-Flash-FP8-Dynamic
+# Default model: Qwen2.5-7B-Instruct (works on all GPUs)
+VLLM_MODEL=Qwen/Qwen2.5-7B-Instruct
 
 # Served model name (how it appears in API)
-VLLM_SERVED_MODEL_NAME=unsloth/GLM-4.7-Flash
+VLLM_SERVED_MODEL_NAME=Qwen2.5-7B-Instruct
 
-# Tensor parallelism for 2 GPUs
-VLLM_TENSOR_PARALLEL_SIZE=2
+# Single GPU is sufficient
+VLLM_TENSOR_PARALLEL_SIZE=1
 
-# GPU memory utilization (95% per Unsloth docs)
-VLLM_GPU_MEMORY_UTILIZATION=0.95
+# GPU memory utilization
+VLLM_GPU_MEMORY_UTILIZATION=0.9
 
-# Context length (32K tokens for 2x 3090, up to 200K for 4x GPUs)
+# Context length (32K tokens)
 VLLM_MAX_MODEL_LEN=32768
 
-# Data type (bfloat16 for best quality)
-VLLM_DTYPE=bfloat16
+# Data type (auto for best compatibility)
+VLLM_DTYPE=auto
 ```
-
-### Key Features (automatically configured):
-- **FP8 KV-Cache**: `--kv-cache-dtype fp8` reduces memory by 50%
-- **Tool Calling**: `--tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice`
-- **Seed**: `--seed 3407` for reproducibility
 
 ### 3. Alternative: Gated Models (Llama)
 
@@ -77,7 +108,7 @@ VLLM_MAX_MODEL_LEN=8192
 COMPOSE_PROFILES="vllm" docker compose up -d
 ```
 
-> **Note**: AI LaunchKit verwendet ein Custom Dockerfile das automatisch die neueste transformers Version für GLM-4.7-Flash Support installiert. Der erste Build dauert ca. 5-10 Minuten.
+> **Note**: AI LaunchKit uses a custom Dockerfile that installs the latest transformers version. First build takes ~5-10 minutes.
 
 ## Configuration Options
 
@@ -86,72 +117,140 @@ COMPOSE_PROFILES="vllm" docker compose up -d
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `HF_TOKEN` | - | HuggingFace token for gated models |
-| `VLLM_MODEL` | `zai-org/GLM-4.7-Flash` | HuggingFace model ID |
+| `VLLM_MODEL` | `Qwen/Qwen2.5-7B-Instruct` | HuggingFace model ID |
 | `VLLM_GPU_MEMORY_UTILIZATION` | `0.9` | GPU memory fraction (0.0-1.0) |
 | `VLLM_MAX_MODEL_LEN` | `32768` | Maximum context length |
-| `VLLM_TENSOR_PARALLEL_SIZE` | `2` | Number of GPUs for tensor parallelism |
-| `VLLM_DTYPE` | `bfloat16` | Data type (auto, float16, bfloat16) |
+| `VLLM_TENSOR_PARALLEL_SIZE` | `1` | Number of GPUs for tensor parallelism |
+| `VLLM_DTYPE` | `auto` | Data type (auto, float16, bfloat16) |
 | `VLLM_API_KEY` | - | Optional API key for authentication |
-| `VLLM_EXTRA_ARGS` | `--trust-remote-code` | Additional vLLM server arguments |
+| `VLLM_EXTRA_ARGS` | - | Additional vLLM server arguments |
 
-### Recommended Models
+### Recommended Models by GPU Setup
 
-| Model | VRAM Required | GPUs | Description |
-|-------|---------------|------|-------------|
-| `unsloth/GLM-4.7-Flash-FP8-Dynamic` | ~30GB | 2x 24GB | **Default** - Official Unsloth FP8, best quality |
-| `zai-org/GLM-4.7-Flash` | ~60GB | 4x 24GB | Original BF16, needs 4 GPUs |
+| Model | VRAM Required | GPUs | Best For |
+|-------|---------------|------|----------|
+| `Qwen/Qwen2.5-7B-Instruct` | ~14GB | 1x 24GB | **Default** - Works on all GPUs |
 | `meta-llama/Llama-3.1-8B-Instruct` | ~16GB | 1x 24GB | Good balance, requires HF token |
-| `Qwen/Qwen2.5-7B-Instruct` | ~14GB | 1x 24GB | Excellent multilingual support |
+| `Qwen/Qwen2.5-14B-Instruct` | ~28GB | 2x 24GB | Better quality, needs 2 GPUs |
+| `cyankiwi/GLM-4.7-Flash-REAP-23B-A3B-AWQ-4bit` | ~24GB | 2x 24GB | **GLM-4.7 on 2x RTX 3090** |
+| `unsloth/GLM-4.7-Flash-FP8-Dynamic` | ~30GB | 4x 24GB | FP8 quantized, best for 4 GPUs |
+| `zai-org/GLM-4.7-Flash` | ~60GB | 4x 24GB | Original BF16, Hopper GPUs only |
 
-### GLM-4.7-Flash Benchmarks
+### GLM-4.7-Flash Configuration
 
-| Benchmark | GLM-4.7-Flash | Qwen3-30B-A3B | GPT-OSS-20B |
-|-----------|---------------|---------------|-------------|
-| AIME 25 (Math) | **91.6** | 85.0 | 91.7 |
-| GPQA (Science) | **75.2** | 73.4 | 71.5 |
-| SWE-bench (Coding) | **59.2** | 22.0 | 34.0 |
-| τ²-Bench (Agentic) | **79.5** | 49.0 | 47.7 |
+GLM-4.7-Flash is a powerful 30B MoE reasoning model with excellent benchmarks. However, it has specific hardware requirements:
 
-### FP8 Dynamic Quantization (Recommended)
+#### Option 1: AWQ 4-bit Quantized (Works on 2x RTX 3090!) ✅
 
-The default FP8 Dynamic version from Unsloth is optimized for quality and speed:
+Use the [AWQ 4-bit quantized version](https://huggingface.co/cyankiwi/GLM-4.7-Flash-REAP-23B-A3B-AWQ-4bit) with FlashInfer backend:
 
 ```bash
-# Official Unsloth FP8 Dynamic - best quality
-VLLM_MODEL=unsloth/GLM-4.7-Flash-FP8-Dynamic
+# AWQ 4-bit version - works on 2x RTX 3090!
+VLLM_MODEL=cyankiwi/GLM-4.7-Flash-REAP-23B-A3B-AWQ-4bit
+VLLM_SERVED_MODEL_NAME=GLM-4.7-Flash
 VLLM_TENSOR_PARALLEL_SIZE=2
-VLLM_GPU_MEMORY_UTILIZATION=0.95
+VLLM_MAX_MODEL_LEN=32768
+VLLM_GPU_MEMORY_UTILIZATION=0.85
+VLLM_DTYPE=bfloat16
+
+# FlashInfer backend for MoE optimization (required for Ampere GPUs)
+VLLM_USE_FLASHINFER_MOE=1
+VLLM_FLASHINFER_MOE_BACKEND=throughput
+VLLM_ATTENTION_BACKEND=FLASHINFER
+VLLM_USE_FLASHINFER_SAMPLER=1
+
+# GLM-4.7 specific arguments
+VLLM_EXTRA_ARGS=--tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice --enable-expert-parallel --max-num-batched-tokens 8192
 ```
 
-### Environment Variables for GLM-4.7-Flash
+**Key optimizations for RTX 3090:**
+- `--enable-expert-parallel`: Distributes MoE experts across GPUs
+- `--max-num-batched-tokens 8192`: Limits batch size to prevent OOM
+- `VLLM_ATTENTION_BACKEND=FLASHINFER`: Uses FlashInfer for better MoE performance
+- `VLLM_GPU_MEMORY_UTILIZATION=0.85`: Leaves headroom for KV cache
 
-The docker-compose.local.yml automatically sets these optimization flags:
+#### Option 2: FP8 Quantized (Recommended for 4x 24GB GPUs)
 
-```bash
-# Required for FP8 (from Unsloth docs)
-PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False
-```
-
-### Single GPU Configuration
-
-For single GPU setups (1x RTX 3090/4090):
+Use the [Unsloth FP8 Dynamic](https://huggingface.co/unsloth/GLM-4.7-Flash-FP8-Dynamic) version which reduces memory by ~50%:
 
 ```bash
-VLLM_MODEL=unsloth/GLM-4.7-Flash-FP8-Dynamic
-VLLM_TENSOR_PARALLEL_SIZE=1
-VLLM_MAX_MODEL_LEN=16384  # Reduce context for single GPU
-VLLM_GPU_MEMORY_UTILIZATION=0.95
-```
-
-### Quad GPU Configuration (Full 200K Context)
-
-For 4x GPU setups (4x RTX 3090/4090 or A100):
-
-```bash
+# FP8 quantized version - requires 4x 24GB GPUs
 VLLM_MODEL=unsloth/GLM-4.7-Flash-FP8-Dynamic
 VLLM_TENSOR_PARALLEL_SIZE=4
-VLLM_MAX_MODEL_LEN=200000  # Full 200K context
+VLLM_MAX_MODEL_LEN=32768
 VLLM_GPU_MEMORY_UTILIZATION=0.95
+VLLM_EXTRA_ARGS=--quantization fp8 --kv-cache-dtype fp8 --tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice
+```
+
+#### Option 3: Original BF16 (Hopper GPUs Only)
+
+> ⚠️ **Only for H100 or similar Hopper GPUs!**
+
+The original model uses MLA (Multi-head Latent Attention) which is optimized for Hopper architecture:
+
+```bash
+# Original BF16 - requires H100 or 4x 24GB Hopper GPUs
+VLLM_MODEL=zai-org/GLM-4.7-Flash
+VLLM_TENSOR_PARALLEL_SIZE=4
+VLLM_MAX_MODEL_LEN=32768
+VLLM_GPU_MEMORY_UTILIZATION=0.9
+VLLM_EXTRA_ARGS=--tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice
+```
+
+#### Why Original GLM-4.7-Flash Fails on 2x RTX 3090
+
+1. **Memory**: The original model requires ~60GB VRAM (BF16)
+2. **MoE Architecture**: Each expert layer needs to be loaded, causing OOM during initialization
+3. **MLA Attention**: Optimized for Hopper GPUs, has performance issues on Ampere
+
+**Solution**: Use the AWQ 4-bit quantized version with FlashInfer backend (Option 1).
+
+### Single GPU Configuration (RTX 3090/4090)
+
+```bash
+VLLM_MODEL=Qwen/Qwen2.5-7B-Instruct
+VLLM_TENSOR_PARALLEL_SIZE=1
+VLLM_MAX_MODEL_LEN=32768
+VLLM_GPU_MEMORY_UTILIZATION=0.9
+```
+
+### Dual GPU Configuration (2x RTX 3090)
+
+#### Standard Models
+
+```bash
+# Use a larger model with 2 GPUs
+VLLM_MODEL=Qwen/Qwen2.5-14B-Instruct
+VLLM_TENSOR_PARALLEL_SIZE=2
+VLLM_MAX_MODEL_LEN=32768
+VLLM_GPU_MEMORY_UTILIZATION=0.9
+```
+
+#### GLM-4.7-Flash AWQ (Recommended for Reasoning Tasks)
+
+```bash
+# GLM-4.7-Flash AWQ 4-bit for 2x RTX 3090
+VLLM_MODEL=cyankiwi/GLM-4.7-Flash-REAP-23B-A3B-AWQ-4bit
+VLLM_SERVED_MODEL_NAME=GLM-4.7-Flash
+VLLM_TENSOR_PARALLEL_SIZE=2
+VLLM_MAX_MODEL_LEN=32768
+VLLM_GPU_MEMORY_UTILIZATION=0.85
+VLLM_DTYPE=bfloat16
+VLLM_USE_FLASHINFER_MOE=1
+VLLM_ATTENTION_BACKEND=FLASHINFER
+VLLM_USE_FLASHINFER_SAMPLER=1
+VLLM_EXTRA_ARGS=--tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice --enable-expert-parallel --max-num-batched-tokens 8192
+```
+
+### Quad GPU Configuration (4x RTX 3090/4090)
+
+```bash
+# GLM-4.7-Flash FP8 for 4 GPUs
+VLLM_MODEL=unsloth/GLM-4.7-Flash-FP8-Dynamic
+VLLM_TENSOR_PARALLEL_SIZE=4
+VLLM_MAX_MODEL_LEN=32768
+VLLM_GPU_MEMORY_UTILIZATION=0.95
+VLLM_EXTRA_ARGS=--quantization fp8 --kv-cache-dtype fp8 --tool-call-parser glm47 --reasoning-parser glm45 --enable-auto-tool-choice
 ```
 
 ## OpenAI-Compatible API
