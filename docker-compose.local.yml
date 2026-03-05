@@ -659,10 +659,11 @@ services:
   # vLLM - High-Performance LLM Inference Server (OpenAI-compatible API)
   # - State-of-the-art serving throughput with PagedAttention
   # - OpenAI-compatible API (drop-in replacement)
-  # - Default: QuantTrio/GLM-4.7-Flash-AWQ (19GB AWQ quantized, fits 2x RTX 3090)
+  # - Default: unsloth/GLM-4.7-Flash-FP8-Dynamic (FP8 quantized, official Unsloth)
   # - GPU-only (requires NVIDIA GPU with CUDA)
   # - Custom build with latest transformers for GLM-4.7-Flash support
   # Documentation: docs/VLLM_SETUP.md
+  # Reference: https://unsloth.ai/docs/de/modelle/glm-4.7-flash
   vllm:
     build:
       context: ./docker/vllm
@@ -702,24 +703,27 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - CUDA_VISIBLE_DEVICES=0,1
       # ============================================================
-      # GLM-4.7-Flash AWQ Optimization Flags (from QuantTrio docs)
-      # Required for optimal MoE performance with FlashInfer
+      # GLM-4.7-Flash FP8 Optimization (from Unsloth docs)
+      # https://unsloth.ai/docs/de/modelle/glm-4.7-flash
       # ============================================================
-      - VLLM_USE_DEEP_GEMM=0
-      - VLLM_USE_FLASHINFER_MOE_FP16=1
-      - VLLM_USE_FLASHINFER_SAMPLER=0
-      - OMP_NUM_THREADS=4
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:False
     # Command to start vLLM with configurable model
-    # Default: QuantTrio/GLM-4.7-Flash-AWQ optimized for 2x RTX 3090 (48GB total)
+    # Default: unsloth/GLM-4.7-Flash-FP8-Dynamic optimized for 2x RTX 3090 (48GB total)
+    # Reference: https://unsloth.ai/docs/de/modelle/glm-4.7-flash#glm-4.7-flash-in-vllm
     command: >
-      --model ${VLLM_MODEL:-QuantTrio/GLM-4.7-Flash-AWQ}
+      --model ${VLLM_MODEL:-unsloth/GLM-4.7-Flash-FP8-Dynamic}
+      --served-model-name ${VLLM_SERVED_MODEL_NAME:-unsloth/GLM-4.7-Flash}
       --host 0.0.0.0
       --port 8000
-      --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION:-0.9}
+      --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION:-0.95}
       --max-model-len ${VLLM_MAX_MODEL_LEN:-32768}
       --tensor-parallel-size ${VLLM_TENSOR_PARALLEL_SIZE:-2}
       --dtype ${VLLM_DTYPE:-bfloat16}
-      --swap-space ${VLLM_SWAP_SPACE:-4}
+      --seed 3407
+      --kv-cache-dtype fp8
+      --tool-call-parser glm47
+      --reasoning-parser glm45
+      --enable-auto-tool-choice
       --trust-remote-code
       ${VLLM_EXTRA_ARGS:-}
     deploy:
