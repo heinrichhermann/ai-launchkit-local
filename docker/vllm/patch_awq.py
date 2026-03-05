@@ -10,6 +10,8 @@ original q_a_proj / kv_a_proj names — not the fused version — causing:
 
 Fix: wrap get_scheme() in a try/except so unmatched layers return None
 (= no quantization, runs in BF16). All other layers stay AWQ-quantized.
+
+Uses dynamic indentation detection to work across different vLLM versions.
 """
 import pathlib
 import sys
@@ -19,25 +21,34 @@ CT_FILE = pathlib.Path(
     "/layers/quantization/compressed_tensors/compressed_tensors.py"
 )
 
+NEEDLE = "quant_scheme = self.get_scheme(layer=layer, layer_name=prefix)"
+
 if not CT_FILE.exists():
     print(f"ERROR: {CT_FILE} not found", file=sys.stderr)
     sys.exit(1)
 
-code = CT_FILE.read_text()
+lines = CT_FILE.read_text().splitlines(keepends=True)
 
-OLD = "        quant_scheme = self.get_scheme(layer=layer, layer_name=prefix)"
-NEW = (
-    "        try:\n"
-    "            quant_scheme = self.get_scheme(layer=layer, layer_name=prefix)\n"
-    "        except ValueError:\n"
-    "            # fused_qkv_a_proj has no AWQ target -> run unquantized (BF16)\n"
-    "            return None"
-)
+patched = False
+for i, line in enumerate(lines):
+    if NEEDLE in line and "try:" not in lines[max(0, i - 1)]:
+        # Detect actual indentation from this line
+        indent = len(line) - len(line.lstrip())
+        pad = " " * indent
+        inner = " " * (indent + 4)
 
-if OLD not in code:
+        lines[i] = (
+            f"{pad}try:\n"
+            f"{inner}quant_scheme = self.get_scheme(layer=layer, layer_name=prefix)\n"
+            f"{pad}except ValueError:\n"
+            f"{inner}# fused_qkv_a_proj has no AWQ target -> run unquantized (BF16)\n"
+            f"{inner}return None\n"
+        )
+        patched = True
+        print(f"OK: patched line {i + 1} (indent={indent}) — "
+              "fused_qkv_a_proj runs unquantized (BF16)")
+        break
+
+if not patched:
     print("WARNING: patch target not found in compressed_tensors.py — "
-          "vLLM code may have changed. Skipping patch.")
-    sys.exit(0)
-
-CT_FILE.write_text(code.replace(OLD, NEW, 1))
-print("OK: patched compressed_tensors.py — fused_qkv_a_proj runs unquantized (BF16)")
+          "already patched or code changed. Skipping.")
