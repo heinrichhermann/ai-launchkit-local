@@ -1500,6 +1500,9 @@ services:
     environment:
       - TTS_HOME=voices
       - HF_HOME=voices
+      # Force CPU — GPU is fully occupied by vLLM
+      - CUDA_VISIBLE_DEVICES=
+      - XTTS_DEVICE=cpu
 
   # Speech Services - GPU Version (4-5x faster with NVIDIA GPU)
   faster-whisper-gpu:
