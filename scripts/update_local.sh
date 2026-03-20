@@ -309,7 +309,7 @@ if [[ "$COMPOSE_PROFILES" == *"bolt"* ]]; then
     }
 fi
 
-# Build vLLM if in profile (requires latest transformers for GLM-4.7-Flash)
+# Build vLLM if in profile (requires latest transformers for Qwen3.5 / GLM support)
 if [[ "$COMPOSE_PROFILES" == *"vllm"* ]]; then
     log_info "Building vLLM with latest transformers..."
     docker compose -p localai -f docker-compose.local.yml --profile vllm build --no-cache vllm || {
@@ -519,6 +519,14 @@ if [[ "$COMPOSE_PROFILES" == *"vllm"* ]]; then
         log_success "✅ vLLM is running (Port 8032)"
     else
         FAILED_SERVICES+=("vllm")
+    fi
+fi
+
+if [[ "$COMPOSE_PROFILES" == *"vllm-embed"* ]]; then
+    if docker ps | grep -q "vllm-embed"; then
+        log_success "✅ vLLM Embedding is running (Port 8033)"
+    else
+        FAILED_SERVICES+=("vllm-embed")
     fi
 fi
 

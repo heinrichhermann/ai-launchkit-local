@@ -130,6 +130,11 @@ if [[ "$COMPOSE_PROFILES" == *"vllm"* ]]; then
     test_port 8032 "vLLM"
 fi
 
+if [[ "$COMPOSE_PROFILES" == *"vllm-embed"* ]]; then
+    echo "vLLM Embedding:  $(is_service_running "vllm-embed")"
+    test_port 8033 "vLLM Embedding"
+fi
+
 if [[ "$COMPOSE_PROFILES" == *"ragapp"* ]]; then
     echo "RAGApp Open-source RAG UI: $(is_service_running "ragapp")"
     test_port 8030 "RAGApp"
