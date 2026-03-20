@@ -719,7 +719,6 @@ services:
       - OMP_NUM_THREADS=${VLLM_OMP_NUM_THREADS:-6}
       - VLLM_USE_PRECOMPILED=1
       - NVIDIA_DISABLE_REQUIRE=1
-      - VLLM_SLEEP_WHEN_IDLE=1
       # FlashInfer MoE Backend (for GLM-4.7-Flash on Ampere GPUs)
       - VLLM_USE_DEEP_GEMM=0
       - VLLM_USE_FLASHINFER_MOE_FP16=${VLLM_USE_FLASHINFER_MOE:-0}
@@ -741,6 +740,7 @@ services:
       --trust-remote-code
       --enable-prefix-caching
       --enable-chunked-prefill
+      --enable-sleep-mode
       ${VLLM_EXTRA_ARGS:-}
     deploy:
       resources:
