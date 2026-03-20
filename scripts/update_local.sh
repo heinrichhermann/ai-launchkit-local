@@ -360,8 +360,9 @@ log_info "Waiting for services to initialize..."
 sleep 10
 
 # Load COMPOSE_PROFILES from .env to check active services
+# Use grep instead of source to avoid executing unquoted multi-word values as commands
 if [ -f "$ENV_FILE" ]; then
-    source "$ENV_FILE"
+    COMPOSE_PROFILES=$(grep -E '^COMPOSE_PROFILES=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | tr -d "'")
 fi
 
 # Check service health

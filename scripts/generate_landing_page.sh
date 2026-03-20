@@ -16,7 +16,7 @@ if [ ! -f ".env" ]; then
 fi
 
 # Load SERVER_IP from .env
-source .env
+SERVER_IP=$(grep -E '^SERVER_IP=' .env | cut -d= -f2- | tr -d '"' | tr -d "'")
 
 if [ -z "$SERVER_IP" ]; then
   log_error "SERVER_IP not set in .env file"
