@@ -787,7 +787,7 @@ services:
       --served-model-name ${VLLM_EMBED_SERVED_MODEL_NAME:-Qwen3-Embedding}
       --host 0.0.0.0
       --port 8000
-      --task embed
+      --runner pooling
       --gpu-memory-utilization ${VLLM_EMBED_GPU_MEMORY_UTILIZATION:-0.3}
       --max-model-len ${VLLM_EMBED_MAX_MODEL_LEN:-8192}
       --dtype ${VLLM_EMBED_DTYPE:-auto}
