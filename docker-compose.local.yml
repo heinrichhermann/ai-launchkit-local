@@ -758,6 +758,56 @@ services:
       retries: 5
       start_period: 120s
 
+  vllm-embed:
+    # Qwen3-Embedding via vLLM — OpenAI-compatible /v1/embeddings endpoint
+    # Port 8033 | Profile: vllm-embed
+    # Default model: Qwen/Qwen3-Embedding-0.6B (~1.2GB, fits alongside main vllm)
+    # Larger option: Qwen/Qwen3-Embedding-8B (~16GB, needs dedicated GPU)
+    image: ai-launchkit/vllm:latest
+    container_name: vllm-embed
+    profiles: ["vllm-embed"]
+    restart: unless-stopped
+    ipc: host
+    ports:
+      - "8033:8000"
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+      - VLLM_API_KEY=${VLLM_API_KEY:-}
+      - NVIDIA_VISIBLE_DEVICES=${VLLM_EMBED_CUDA_VISIBLE_DEVICES:-0}
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - VLLM_DO_NOT_TRACK=1
+      - FLASH_ATTN=1
+      - VLLM_TARGET_DEVICE=cuda
+      - NVIDIA_DISABLE_REQUIRE=1
+    command: >
+      --model ${VLLM_EMBED_MODEL:-Qwen/Qwen3-Embedding-0.6B}
+      --served-model-name ${VLLM_EMBED_SERVED_MODEL_NAME:-Qwen3-Embedding}
+      --host 0.0.0.0
+      --port 8000
+      --task embed
+      --gpu-memory-utilization ${VLLM_EMBED_GPU_MEMORY_UTILIZATION:-0.3}
+      --max-model-len ${VLLM_EMBED_MAX_MODEL_LEN:-8192}
+      --dtype ${VLLM_EMBED_DTYPE:-auto}
+      --trust-remote-code
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   # ============================================================================
   # RESEARCH & NOTEBOOKS (8100-8110)
   # ============================================================================
