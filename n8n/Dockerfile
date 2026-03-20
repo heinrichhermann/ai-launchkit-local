@@ -29,5 +29,11 @@ RUN pip3 install --no-cache-dir --break-system-packages \
 RUN mkdir -p /data/media /data/temp && \
     chown -R 1000:1000 /data/media /data/temp && \
     chmod 775 /data/media /data/temp
+# Install community n8n nodes to /opt/custom-nodes (not under /home/node/.n8n
+# which is a volume mount and would shadow Dockerfile-installed packages)
+RUN mkdir -p /opt/custom-nodes && \
+    cd /opt/custom-nodes && \
+    npm install @endcycles/n8n-nodes-youtube-transcript && \
+    chown -R node:node /opt/custom-nodes
 USER node
 WORKDIR /data
