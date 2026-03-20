@@ -34,6 +34,11 @@ RUN uv pip install --system -U https://github.com/huggingface/transformers/archi
 COPY patch_awq.py /tmp/patch_awq.py
 RUN python3 /tmp/patch_awq.py && rm /tmp/patch_awq.py
 
+# Generation config: disable thinking by default (opt-in via /think in prompts)
+# Using a file avoids shell quoting issues with JSON in docker-compose commands
+RUN mkdir -p /opt/vllm-config && \
+    echo '{"enable_thinking": false}' > /opt/vllm-config/generation_config.json
+
 # Set default environment variables
 ENV HF_HOME=/root/.cache/huggingface
 
