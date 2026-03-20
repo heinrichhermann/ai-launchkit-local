@@ -8,8 +8,10 @@ original q_a_proj / kv_a_proj names — not the fused version — causing:
   ValueError: Unable to find matching target for
     model.layers.X.self_attn.fused_qkv_a_proj in the compressed-tensors config.
 
-Fix: wrap get_scheme() in a try/except so unmatched layers return None
-(= no quantization, runs in BF16). All other layers stay AWQ-quantized.
+Fix: wrap get_scheme() in a try/except so unmatched layers return
+UnquantizedLinearMethod() (= no quantization, runs in BF16).
+Returning None broke in vLLM 0.17.x which asserts quant_method is not None.
+All other layers stay AWQ-quantized.
 
 Also deletes the .pyc bytecode cache so Python uses the patched source.
 """
@@ -54,7 +56,9 @@ for i, line in enumerate(lines):
             f"{inner}quant_scheme = self.get_scheme(layer=layer, layer_name=prefix)\n"
             f"{pad}except ValueError:\n"
             f"{inner}# fused_qkv_a_proj has no AWQ target -> run unquantized (BF16)\n"
-            f"{inner}return None\n"
+            f"{inner}# Return UnquantizedLinearMethod (not None) — vLLM asserts quant_method is not None\n"
+            f"{inner}from vllm.model_executor.layers.linear import UnquantizedLinearMethod\n"
+            f"{inner}return UnquantizedLinearMethod()\n"
         )
         patched = True
         print(f"OK: patched line {i + 1} (indent={indent})")
