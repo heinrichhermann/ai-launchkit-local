@@ -13,7 +13,10 @@
 # - Fix: patch get_quant_method() to catch ValueError for unmatched layers
 #   and return None (layer runs unquantized in BF16 — small accuracy impact)
 
-FROM vllm/vllm-openai:cu130-nightly
+# Pinned to March 19, 2026 nightly — last version before Qwen3.5 VisionTransformer
+# breaking change in compressed_tensors.py (UnboundLocalError with AWQ quant).
+# Update carefully: test new nightlies before switching the pin.
+FROM vllm/vllm-openai:cu130-nightly-e3126cd107460444d7fd9a1445b8d4f4393a06b2
 
 # Set library paths for CUDA/cuDNN
 ENV LD_LIBRARY_PATH=/usr/lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nvidia/lib
