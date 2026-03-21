@@ -1,17 +1,24 @@
 """
-Patch vLLM compressed-tensors to handle unmatched AWQ layers.
+Robust state-aware patch for vLLM compressed_tensors.py AWQ quantization.
 
-In vLLM 0.17.2rc1+ nightly, Qwen3.5-35B-A3B is treated as a VL model.
-The VisionTransformer layers (e.g. visual.merger.linear_fc1) are not in
-the AWQ quant config, so get_scheme() raises ValueError.
+Problem: Qwen3.5-35B-A3B-AWQ has vision_config in config.json. vLLM's new
+qwen3_5.py initializes Qwen3_VisionTransformer unconditionally. Vision layers
+are not in AWQ quant config → get_quant_method() fails.
 
-Fix: wrap get_scheme() in try/except and return an unquantized method for
-unmatched layers. Vision layers run in BF16; all other layers stay AWQ-quantized.
+Root cause: get_scheme() raises ValueError for unmatched vision layer names.
+The fix: wrap get_scheme() in try/except and return unquantized method.
 
-IMPORTANT: Uses import alias '_ULM' to avoid Python 3.12 UnboundLocalError.
-The scoping bug occurs when 'UnquantizedLinearMethod' is imported inside an
-except block — Python treats it as local throughout the entire function,
-causing UnboundLocalError if the try block succeeds. The alias sidesteps this.
+Three states handled:
+  1. _VLLM_ULM in file      → new correct patch already applied → skip
+  2. Old broken patch found → local import inside function → REPLACE with correct patch
+  3. Clean file             → ADD correct patch
+
+The old broken patch added 'from ... import UnquantizedLinearMethod' INSIDE
+the except block, causing Python 3.12 to treat the name as local throughout
+the entire function → UnboundLocalError when try succeeds.
+
+The new patch uses 'UnquantizedLinearMethod as _VLLM_ULM' as import alias,
+which is a DIFFERENT name → no scoping conflict with module-level import.
 """
 import pathlib
 import py_compile
@@ -21,51 +28,112 @@ CT_FILE = pathlib.Path(
     "/usr/local/lib/python3.12/dist-packages/vllm/model_executor"
     "/layers/quantization/compressed_tensors/compressed_tensors.py"
 )
-
 NEEDLE = "quant_scheme = self.get_scheme(layer=layer, layer_name=prefix)"
+NEW_SENTINEL = "_VLLM_ULM"
+OLD_BROKEN_MARKER = "from vllm.model_executor.layers.linear import UnquantizedLinearMethod"
 
 if not CT_FILE.exists():
     print(f"ERROR: {CT_FILE} not found", file=sys.stderr)
     sys.exit(1)
 
-lines = CT_FILE.read_text().splitlines(keepends=True)
-print(f"File has {len(lines)} lines. Searching for NEEDLE...")
-found_at = [i for i, l in enumerate(lines) if NEEDLE in l]
-print(f"NEEDLE found at lines (0-indexed): {found_at}")
-for idx in found_at:
-    lo = max(0, idx - 2)
-    hi = min(len(lines), idx + 3)
-    for j in range(lo, hi):
-        marker = ">>>" if j == idx else "   "
-        print(f"  {marker} {j+1}: {repr(lines[j])}")
+content = CT_FILE.read_text()
+lines = content.splitlines(keepends=True)
+print(f"File has {len(lines)} lines.")
 
-patched = False
-for i, line in enumerate(lines):
-    if NEEDLE in line and "try:" not in lines[max(0, i - 1)]:
-        indent = len(line) - len(line.lstrip())
-        pad = " " * indent
-        inner = " " * (indent + 4)
+# ── State detection ──────────────────────────────────────────────────────────
 
-        lines[i] = (
-            f"{pad}from vllm.model_executor.layers.linear import UnquantizedLinearMethod as _ULM\n"
-            f"{pad}try:\n"
-            f"{inner}quant_scheme = self.get_scheme(layer=layer, layer_name=prefix)\n"
-            f"{pad}except ValueError:\n"
-            f"{inner}# Layer not in AWQ config (e.g. VisionTransformer) → run unquantized (BF16)\n"
-            f"{inner}return _ULM()\n"
-        )
-        patched = True
-        print(f"OK: patched line {i + 1} (indent={indent})")
+if NEW_SENTINEL in content:
+    print(f"State 1: New correct patch already applied (_VLLM_ULM found). Nothing to do.")
+    sys.exit(0)
+
+# Find where get_quant_method function starts (approx line 140+)
+func_start = 0
+for i, l in enumerate(lines):
+    if "def get_quant_method(" in l:
+        func_start = i
         break
 
-if not patched:
-    print("WARNING: patch target not found or already patched. Skipping.")
-    sys.exit(0)
+# Check if old broken patch is present: local import INSIDE the function
+old_patch_line = None
+for i in range(func_start, len(lines)):
+    if OLD_BROKEN_MARKER in lines[i] and i > func_start:
+        old_patch_line = i
+        print(f"State 2: Old broken patch found at line {i+1}. Will replace.")
+        break
+
+if old_patch_line is None:
+    print(f"State 3: Clean file. Will add new patch.")
+
+# ── Find NEEDLE ──────────────────────────────────────────────────────────────
+
+needle_idx = None
+for i, l in enumerate(lines):
+    if NEEDLE in l:
+        needle_idx = i
+        print(f"NEEDLE found at line {i+1}: {repr(l[:80])}")
+        break
+
+if needle_idx is None:
+    print("ERROR: NEEDLE not found in file!", file=sys.stderr)
+    sys.exit(1)
+
+needle_line = lines[needle_idx]
+indent = len(needle_line) - len(needle_line.lstrip())
+pad = " " * indent
+inner = " " * (indent + 4)
+
+NEW_BLOCK = (
+    f"{pad}from vllm.model_executor.layers.linear import UnquantizedLinearMethod as _VLLM_ULM\n"
+    f"{pad}try:\n"
+    f"{inner}{NEEDLE}\n"
+    f"{pad}except ValueError:\n"
+    f"{inner}# Layer not in AWQ config (e.g. VisionTransformer) → run unquantized (BF16)\n"
+    f"{inner}return _VLLM_ULM()\n"
+)
+
+# ── Apply patch based on state ───────────────────────────────────────────────
+
+if old_patch_line is not None:
+    # State 2: Remove old broken try/except block and replace with new one.
+    # The old block looks like:
+    #   try:
+    #       quant_scheme = self.get_scheme(...)
+    #   except ValueError:
+    #       from ... import UnquantizedLinearMethod
+    #       return UnquantizedLinearMethod()
+    # Find the start (the try: line before the needle)
+    try_start = needle_idx
+    for i in range(needle_idx - 1, max(0, needle_idx - 5), -1):
+        if lines[i].strip() == "try:":
+            try_start = i
+            break
+
+    # Find the end of the except block (next line with same or lower indent as try:)
+    try_indent = len(lines[try_start]) - len(lines[try_start].lstrip())
+    except_end = needle_idx + 1
+    found_except = False
+    for i in range(needle_idx + 1, min(len(lines), needle_idx + 10)):
+        stripped = lines[i].strip()
+        if stripped.startswith("except"):
+            found_except = True
+        if found_except:
+            line_indent = len(lines[i]) - len(lines[i].lstrip()) if lines[i].strip() else 999
+            if lines[i].strip() == "" or line_indent <= try_indent and not stripped.startswith("except") and not stripped.startswith("return") and not stripped.startswith("from"):
+                except_end = i
+                break
+            except_end = i + 1
+
+    print(f"Replacing old broken patch: lines {try_start+1}-{except_end}")
+    lines[try_start:except_end] = [NEW_BLOCK]
+else:
+    # State 3: Clean file — just replace the needle line
+    lines[needle_idx] = NEW_BLOCK
+    print(f"Added new patch at line {needle_idx+1}")
 
 CT_FILE.write_text("".join(lines))
 print("Written patched source.")
 
-# Invalidate .pyc bytecode cache
+# ── Invalidate .pyc cache ─────────────────────────────────────────────────────
 cache_dir = CT_FILE.parent / "__pycache__"
 if cache_dir.exists():
     removed = []
