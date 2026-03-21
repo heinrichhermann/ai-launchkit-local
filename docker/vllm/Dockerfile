@@ -34,13 +34,14 @@ RUN uv pip install --system -U https://github.com/huggingface/transformers/archi
 COPY patch_awq.py /tmp/patch_awq.py
 RUN python3 /tmp/patch_awq.py && rm /tmp/patch_awq.py
 
-# Generation config: disable thinking by default (opt-in via /think in prompts)
-# Using a file avoids shell quoting issues with JSON in docker-compose commands
-RUN mkdir -p /opt/vllm-config && \
-    echo '{"enable_thinking": false}' > /opt/vllm-config/generation_config.json
-
 # Set default environment variables
 ENV HF_HOME=/root/.cache/huggingface
 
+# Entrypoint wrapper: injects --override-generation-config '{"enable_thinking": false}'
+# before all other args. Single quotes in the shell script work correctly —
+# avoids docker-compose command string quoting issues entirely.
+COPY entrypoint.sh /opt/vllm-entrypoint.sh
+RUN chmod +x /opt/vllm-entrypoint.sh
+
 EXPOSE 8000
-ENTRYPOINT ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+ENTRYPOINT ["/opt/vllm-entrypoint.sh"]
