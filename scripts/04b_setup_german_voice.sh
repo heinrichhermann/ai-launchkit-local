@@ -126,6 +126,19 @@ EOFCONFIG
         fi
     fi
     
+    # Create speech.env to ensure Piper is used as default engine (not XTTS)
+    SPEECH_ENV="openedai-config/speech.env"
+    if [ ! -f "$SPEECH_ENV" ]; then
+        log_info "Creating speech.env (Piper as default TTS engine)..."
+        cat > "$SPEECH_ENV" << 'EOF'
+# Default TTS engine: piper (CPU-friendly, fast)
+# tts-1  → Piper (CPU, real-time speed)
+# tts-1-hd → XTTS (GPU/CPU, higher quality)
+TTS_ENGINE=auto
+EOF
+        log_success "speech.env created!"
+    fi
+
     # Detect which speech service variant is running
     SPEECH_SERVICE=""
     if [[ "$COMPOSE_PROFILES" == *"speech-gpu"* ]]; then
