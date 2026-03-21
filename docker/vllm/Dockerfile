@@ -28,11 +28,11 @@ RUN uv pip install --system -U https://github.com/huggingface/transformers/archi
     uv pip install --system --force-reinstall numba && \
     python3 -c "import transformers; print(f'Transformers {transformers.__version__} installed successfully')"
 
-# Patch compressed-tensors quantization to handle fused layers (fused_qkv_a_proj)
-# that don't have a matching target in AWQ quant configs.
-# Instead of raising ValueError, unmatched layers run without quantization (BF16).
-COPY patch_awq.py /tmp/patch_awq.py
-RUN python3 /tmp/patch_awq.py && rm /tmp/patch_awq.py
+# AWQ patch for fused_qkv_a_proj (GLM-4.7-Flash only) is NOT applied by default.
+# Qwen3.5 AWQ works natively without patching.
+# To use GLM-4.7-Flash, uncomment:
+# COPY patch_awq.py /tmp/patch_awq.py
+# RUN python3 /tmp/patch_awq.py && rm /tmp/patch_awq.py
 
 # Set default environment variables
 ENV HF_HOME=/root/.cache/huggingface
