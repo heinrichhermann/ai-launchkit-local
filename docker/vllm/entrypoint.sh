@@ -4,4 +4,5 @@
 # Single quotes here are handled by the shell correctly — no docker-compose quoting issues.
 exec python3 -m vllm.entrypoints.openai.api_server \
     --override-generation-config '{"enable_thinking": false}' \
+    --default-chat-template-kwargs '{"enable_thinking": false}' \
     "$@"
