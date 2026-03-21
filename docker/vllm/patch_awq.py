@@ -78,18 +78,10 @@ if needle_idx is None:
     sys.exit(1)
 
 needle_line = lines[needle_idx]
-indent = len(needle_line) - len(needle_line.lstrip())
-pad = " " * indent
-inner = " " * (indent + 4)
-
-NEW_BLOCK = (
-    f"{pad}from vllm.model_executor.layers.linear import UnquantizedLinearMethod as _VLLM_ULM\n"
-    f"{pad}try:\n"
-    f"{inner}{NEEDLE}\n"
-    f"{pad}except ValueError:\n"
-    f"{inner}# Layer not in AWQ config (e.g. VisionTransformer) → run unquantized (BF16)\n"
-    f"{inner}return _VLLM_ULM()\n"
-)
+# For State 3 (clean file): needle is at function body level (e.g. indent=8)
+# For State 2 (old patch):  needle is INSIDE old try block (e.g. indent=12)
+#   → we need try: at the OUTER indent (try_start indent), not the inner needle indent.
+# We compute the NEW_BLOCK lazily after we know try_start (if applicable).
 
 # ── Apply patch based on state ───────────────────────────────────────────────
 
@@ -123,12 +115,34 @@ if old_patch_line is not None:
                 break
             except_end = i + 1
 
-    print(f"Replacing old broken patch: lines {try_start+1}-{except_end}")
-    lines[try_start:except_end] = [NEW_BLOCK]
+    # For State 2: use try_start indent for pad (NOT needle indent which is deeper)
+    pad2 = " " * try_indent
+    inner2 = " " * (try_indent + 4)
+    NEW_BLOCK2 = (
+        f"{pad2}from vllm.model_executor.layers.linear import UnquantizedLinearMethod as _VLLM_ULM\n"
+        f"{pad2}try:\n"
+        f"{inner2}{NEEDLE}\n"
+        f"{pad2}except ValueError:\n"
+        f"{inner2}# Layer not in AWQ config (e.g. VisionTransformer) → run unquantized (BF16)\n"
+        f"{inner2}return _VLLM_ULM()\n"
+    )
+    print(f"Replacing old broken patch: lines {try_start+1}-{except_end} (try_indent={try_indent})")
+    lines[try_start:except_end] = [NEW_BLOCK2]
 else:
-    # State 3: Clean file — just replace the needle line
-    lines[needle_idx] = NEW_BLOCK
-    print(f"Added new patch at line {needle_idx+1}")
+    # State 3: Clean file — needle is at function body level, use its indent
+    needle_indent = len(needle_line) - len(needle_line.lstrip())
+    pad3 = " " * needle_indent
+    inner3 = " " * (needle_indent + 4)
+    NEW_BLOCK3 = (
+        f"{pad3}from vllm.model_executor.layers.linear import UnquantizedLinearMethod as _VLLM_ULM\n"
+        f"{pad3}try:\n"
+        f"{inner3}{NEEDLE}\n"
+        f"{pad3}except ValueError:\n"
+        f"{inner3}# Layer not in AWQ config (e.g. VisionTransformer) → run unquantized (BF16)\n"
+        f"{inner3}return _VLLM_ULM()\n"
+    )
+    lines[needle_idx] = NEW_BLOCK3
+    print(f"Added new patch at line {needle_idx+1} (needle_indent={needle_indent})")
 
 CT_FILE.write_text("".join(lines))
 print("Written patched source.")
