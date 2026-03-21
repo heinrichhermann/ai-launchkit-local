@@ -1,16 +1,17 @@
 """
-Patch vLLM compressed-tensors to fix UnboundLocalError for UnquantizedLinearMethod.
+Patch vLLM compressed-tensors to handle unmatched AWQ layers.
 
-vLLM 0.17.2rc1 nightly has a Python scoping bug in compressed_tensors.py where
-UnquantizedLinearMethod is conditionally imported inside a function body, making
-Python treat it as a local variable throughout the entire function. When the
-variable isn't assigned (because the conditional branch wasn't taken), accessing
-it raises UnboundLocalError.
+In vLLM 0.17.2rc1+ nightly, Qwen3.5-35B-A3B is treated as a VL model.
+The VisionTransformer layers (e.g. visual.merger.linear_fc1) are not in
+the AWQ quant config, so get_scheme() raises ValueError.
 
-Fix: Add 'from vllm.model_executor.layers.linear import UnquantizedLinearMethod'
-at the MODULE level so it's always available as a module-level name.
+Fix: wrap get_scheme() in try/except and return an unquantized method for
+unmatched layers. Vision layers run in BF16; all other layers stay AWQ-quantized.
 
-This also covers the fused_qkv_a_proj ValueError fix for GLM-4.7-Flash AWQ.
+IMPORTANT: Uses import alias '_ULM' to avoid Python 3.12 UnboundLocalError.
+The scoping bug occurs when 'UnquantizedLinearMethod' is imported inside an
+except block — Python treats it as local throughout the entire function,
+causing UnboundLocalError if the try block succeeds. The alias sidesteps this.
 """
 import pathlib
 import py_compile
@@ -21,34 +22,50 @@ CT_FILE = pathlib.Path(
     "/layers/quantization/compressed_tensors/compressed_tensors.py"
 )
 
+NEEDLE = "quant_scheme = self.get_scheme(layer=layer, layer_name=prefix)"
+
 if not CT_FILE.exists():
     print(f"ERROR: {CT_FILE} not found", file=sys.stderr)
     sys.exit(1)
 
-content = CT_FILE.read_text()
+lines = CT_FILE.read_text().splitlines(keepends=True)
+print(f"File has {len(lines)} lines. Searching for NEEDLE...")
+found_at = [i for i, l in enumerate(lines) if NEEDLE in l]
+print(f"NEEDLE found at lines (0-indexed): {found_at}")
+for idx in found_at:
+    lo = max(0, idx - 2)
+    hi = min(len(lines), idx + 3)
+    for j in range(lo, hi):
+        marker = ">>>" if j == idx else "   "
+        print(f"  {marker} {j+1}: {repr(lines[j])}")
 
-# Check if UnquantizedLinearMethod is already imported at module level
-if "from vllm.model_executor.layers.linear import UnquantizedLinearMethod" in content:
-    print("UnquantizedLinearMethod already imported at module level — skipping.")
-else:
-    # Add module-level import after the existing linear imports (or at end of imports)
-    # Find a good insertion point: after the last 'from vllm' import line
-    lines = content.splitlines(keepends=True)
-    insert_at = 0
-    for i, line in enumerate(lines):
-        if line.startswith("from vllm") or line.startswith("import vllm"):
-            insert_at = i + 1
+patched = False
+for i, line in enumerate(lines):
+    if NEEDLE in line and "try:" not in lines[max(0, i - 1)]:
+        indent = len(line) - len(line.lstrip())
+        pad = " " * indent
+        inner = " " * (indent + 4)
 
-    if insert_at == 0:
-        print("WARNING: Could not find insertion point, prepending import.")
-        lines.insert(0, "from vllm.model_executor.layers.linear import UnquantizedLinearMethod\n")
-    else:
-        lines.insert(insert_at, "from vllm.model_executor.layers.linear import UnquantizedLinearMethod  # patch: fix UnboundLocalError\n")
+        lines[i] = (
+            f"{pad}from vllm.model_executor.layers.linear import UnquantizedLinearMethod as _ULM\n"
+            f"{pad}try:\n"
+            f"{inner}quant_scheme = self.get_scheme(layer=layer, layer_name=prefix)\n"
+            f"{pad}except ValueError:\n"
+            f"{inner}# Layer not in AWQ config (e.g. VisionTransformer) → run unquantized (BF16)\n"
+            f"{inner}return _ULM()\n"
+        )
+        patched = True
+        print(f"OK: patched line {i + 1} (indent={indent})")
+        break
 
-    CT_FILE.write_text("".join(lines))
-    print(f"OK: added UnquantizedLinearMethod import at line {insert_at + 1}")
+if not patched:
+    print("WARNING: patch target not found or already patched. Skipping.")
+    sys.exit(0)
 
-# Invalidate .pyc cache
+CT_FILE.write_text("".join(lines))
+print("Written patched source.")
+
+# Invalidate .pyc bytecode cache
 cache_dir = CT_FILE.parent / "__pycache__"
 if cache_dir.exists():
     removed = []
