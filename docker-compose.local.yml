@@ -1450,7 +1450,7 @@ services:
     environment:
       - TTS_HOME=voices
       - HF_HOME=voices
-      - CUDA_VISIBLE_DEVICES=  # hide GPU — vLLM occupies it, use CPU for TTS
+      - NVIDIA_VISIBLE_DEVICES=none  # hide GPU from NVIDIA runtime — vLLM occupies it
 
   # Speech Services - GPU Version (4-5x faster with NVIDIA GPU)
   faster-whisper-gpu:
