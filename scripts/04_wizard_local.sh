@@ -65,7 +65,6 @@ base_services_data=(
     "neo4j" "Neo4j (Graph Database) - Port 8028"
     "letta" "Letta (Agent Server & SDK) - Port 8031"
     "vllm" "vLLM (Qwen3.5-35B, High-Performance LLM Server - GPU only) - Port 8032"
-    "vllm-embed" "vLLM Embedding Service (Qwen3-Embedding, OpenAI-compatible) - Port 8033"
     "gotenberg" "Gotenberg (Document Conversion API) - Port 8094"
     "stirling-pdf" "Stirling-PDF (100+ PDF Tools) - Port 8086"
     "crawl4ai" "Crawl4ai (Web Crawler for AI) - Port 8093"

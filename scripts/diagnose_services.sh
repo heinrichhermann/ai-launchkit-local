@@ -106,7 +106,6 @@ test_service "n8n Workflows" "http://$SERVER_IP:8000" && ((SUCCESS++)) || ((FAIL
 test_service "Flowise AI Agents" "http://$SERVER_IP:8022" && ((SUCCESS++)) || ((FAILED++))
 test_service "Open WebUI" "http://$SERVER_IP:8020" && ((SUCCESS++)) || ((FAILED++))
 test_service "vLLM" "http://$SERVER_IP:8032/health" && ((SUCCESS++)) || ((FAILED++))
-test_service "vLLM Embedding" "http://$SERVER_IP:8033/health" && ((SUCCESS++)) || ((FAILED++))
 test_service "bolt.diy" "http://$SERVER_IP:8023" && ((SUCCESS++)) || ((FAILED++))
 test_service "ComfyUI" "http://$SERVER_IP:8024" && ((SUCCESS++)) || ((FAILED++))
 test_service "OpenUI" "http://$SERVER_IP:8025" && ((SUCCESS++)) || ((FAILED++))

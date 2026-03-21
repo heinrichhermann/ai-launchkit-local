@@ -522,13 +522,6 @@ if [[ "$COMPOSE_PROFILES" == *"vllm"* ]]; then
     fi
 fi
 
-if [[ "$COMPOSE_PROFILES" == *"vllm-embed"* ]]; then
-    if docker ps | grep -q "vllm-embed"; then
-        log_success "✅ vLLM Embedding is running (Port 8033)"
-    else
-        FAILED_SERVICES+=("vllm-embed")
-    fi
-fi
 
 # Check research & notebooks
 if [[ "$COMPOSE_PROFILES" == *"open-notebook"* ]]; then
