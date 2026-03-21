@@ -739,7 +739,6 @@ services:
       --tensor-parallel-size ${VLLM_TENSOR_PARALLEL_SIZE:-2}
       --dtype ${VLLM_DTYPE:-auto}
       --trust-remote-code
-      --language-model-only
       --enable-prefix-caching
       --enable-chunked-prefill
       --enable-sleep-mode

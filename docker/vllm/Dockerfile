@@ -28,11 +28,10 @@ RUN uv pip install --system -U https://github.com/huggingface/transformers/archi
     uv pip install --system --force-reinstall numba && \
     python3 -c "import transformers; print(f'Transformers {transformers.__version__} installed successfully')"
 
-# AWQ patch for fused_qkv_a_proj (GLM-4.7-Flash only) is NOT applied by default.
-# Qwen3.5 AWQ works natively without patching.
-# To use GLM-4.7-Flash, uncomment:
-# COPY patch_awq.py /tmp/patch_awq.py
-# RUN python3 /tmp/patch_awq.py && rm /tmp/patch_awq.py
+# Patch compressed-tensors to fix UnboundLocalError for UnquantizedLinearMethod.
+# vLLM nightly has a Python scoping bug — the import is added at module level.
+COPY patch_awq.py /tmp/patch_awq.py
+RUN python3 /tmp/patch_awq.py && rm /tmp/patch_awq.py
 
 # Set default environment variables
 ENV HF_HOME=/root/.cache/huggingface
