@@ -13,7 +13,7 @@
 # - Fix: patch get_quant_method() to catch ValueError for unmatched layers
 #   and return None (layer runs unquantized in BF16 — small accuracy impact)
 
-FROM vllm/vllm-openai:v0.18.0-cu130
+FROM vllm/vllm-openai:cu130-nightly
 
 # Set library paths for CUDA/cuDNN
 ENV LD_LIBRARY_PATH=/usr/lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nvidia/lib
