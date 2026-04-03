@@ -1,30 +1,26 @@
-# vLLM with transformers from main branch for GLM-4.7-Flash support
-# Based on official vllm-openai image
+# vLLM with latest transformers for Gemma 4 / Qwen3.5 support
+# Based on official vllm-openai stable image (latest-cu130 = latest stable)
 #
 # IMPORTANT: CUDA/Driver Compatibility
 # - Driver 580.x requires CUDA 13.0 runtime (Error 803 with older runtimes)
-# - cu130-nightly has the actual CUDA 13.0 runtime → works with driver 580
-# - v0.15.1-cu130 only has cu130 PyTorch WHEELS but an older CUDA runtime
-#   → still gets Error 803 with driver 580
+# - latest-cu130 = v0.19.0+ with CUDA 13.0 runtime → works with driver 580
 #
-# AWQ FIX for nightly (0.16.x):
-# - vLLM 0.16.x introduced DeepSeekV2FusedQkvAProj for fused_qkv_a_proj
-# - AWQ quant configs only have targets for q_a_proj/kv_a_proj (not fused)
-# - Fix: patch get_quant_method() to catch ValueError for unmatched layers
-#   and return None (layer runs unquantized in BF16 — small accuracy impact)
+# AWQ FIX: patch compressed-tensors for VisionTransformer layers in AWQ models
+# - Catches ValueError for unmatched layers (e.g. vision layers not in AWQ config)
+# - Layer runs unquantized in BF16 — minimal accuracy impact
 
-FROM vllm/vllm-openai:cu130-nightly
+FROM vllm/vllm-openai:latest-cu130
 
 # Set library paths for CUDA/cuDNN
 ENV LD_LIBRARY_PATH=/usr/lib64:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nvidia/lib
 ENV CUDA_VERSION=130
 ENV UV_TORCH_BACKEND=cu130
 
-# Install transformers from main branch for GLM-4.7-Flash support
-# - GLM-4.7-Flash (glm4_moe_lite) requires unreleased transformers
+# Install transformers>=5.5.0 (required for Gemma 4 support per vLLM v0.19.0 release notes)
+# - Gemma 4 requires transformers>=5.5.0
 # - Force reinstall numba to fix compatibility issues
 # - Use uv for faster installation (already in vllm image)
-RUN uv pip install --system -U https://github.com/huggingface/transformers/archive/refs/heads/main.zip && \
+RUN uv pip install --system "transformers>=5.5.0" && \
     uv pip install --system --force-reinstall numba && \
     python3 -c "import transformers; print(f'Transformers {transformers.__version__} installed successfully')"
 
