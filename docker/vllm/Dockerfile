@@ -35,6 +35,7 @@ ENV HF_HOME=/root/.cache/huggingface
 # Entrypoint wrapper: injects --override-generation-config '{"enable_thinking": false}'
 # before all other args. Single quotes in the shell script work correctly —
 # avoids docker-compose command string quoting issues entirely.
+COPY qwen3.5_chat_template.jinja /opt/qwen3.5_chat_template.jinja
 COPY entrypoint.sh /opt/vllm-entrypoint.sh
 RUN chmod +x /opt/vllm-entrypoint.sh
 
